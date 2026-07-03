@@ -1,9 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
 import type { Profile } from "@/types/database";
+import { User } from "@supabase/supabase-js";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 interface AuthContextType {
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             country: parsed.country || null,
             city: parsed.city || null,
             role: parsed.role || "user",
+            is_blocked: false,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               country: null,
               city: null,
               role: (session.user.user_metadata?.role as any) || "user",
+              is_blocked: false,
               created_at: session.user.created_at,
               updated_at: session.user.created_at,
             });
@@ -102,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             country: null,
             city: null,
             role: "user",
+            is_blocked: false,
             created_at: session.user.created_at,
             updated_at: session.user.created_at,
           });

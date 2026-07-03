@@ -5,12 +5,11 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type {
-  Product,
-  Category,
-  Order,
-  CartItem,
-  Profile,
-  Review,
+    Category,
+    Order,
+    Product,
+    Profile,
+    Review
 } from "@/types/database";
 
 // ---- Mock Data Fallbacks ----
@@ -85,6 +84,7 @@ const MOCK_PRODUCTS: Product[] = [
     images: ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"],
     is_featured: true,
     is_active: true,
+    tags: [],
     metadata: { origin_district: "Rajshahi", weight_options: ["5kg", "10kg"], badge: "King of Bengal" },
     created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
     updated_at: new Date().toISOString(),
@@ -102,6 +102,7 @@ const MOCK_PRODUCTS: Product[] = [
     images: ["https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=600&auto=format&fit=crop&q=80"],
     is_featured: true,
     is_active: true,
+    tags: [],
     metadata: { origin_district: "Rangpur", weight_options: ["5kg", "10kg"], badge: "Fleshy & Fiberless" },
     created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
     updated_at: new Date().toISOString(),
@@ -119,6 +120,7 @@ const MOCK_PRODUCTS: Product[] = [
     images: ["https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&auto=format&fit=crop&q=80"],
     is_featured: true,
     is_active: true,
+    tags: [],
     metadata: { origin_district: "Chapainawabganj", weight_options: ["5kg", "10kg"], badge: "Aromatic Delight" },
     created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
     updated_at: new Date().toISOString(),
@@ -136,6 +138,7 @@ const MOCK_PRODUCTS: Product[] = [
     images: ["https://images.unsplash.com/photo-1552474030-b3a5b5f04e2e?w=600&auto=format&fit=crop&q=80"],
     is_featured: true,
     is_active: true,
+    tags: [],
     metadata: { origin_district: "Chapai Nawabganj", weight_options: ["5kg", "10kg"], badge: "Intensely Sweet" },
     created_at: new Date(Date.now() - 86400000).toISOString(),
     updated_at: new Date().toISOString(),
@@ -153,6 +156,7 @@ const MOCK_PRODUCTS: Product[] = [
     images: ["https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=600&auto=format&fit=crop&q=80"],
     is_featured: false,
     is_active: true,
+    tags: [],
     metadata: { origin_district: "Rajshahi", weight_options: ["5kg", "10kg"], badge: "Early Harvest" },
     created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
     updated_at: new Date().toISOString(),
@@ -170,6 +174,7 @@ const MOCK_PRODUCTS: Product[] = [
     images: ["https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&auto=format&fit=crop&q=80"],
     is_featured: false,
     is_active: true,
+    tags: [],
     metadata: { origin_district: "Rajshahi", weight_options: ["1kg", "2kg"], badge: "Sun Dried" },
     created_at: new Date(Date.now() - 86400000 * 12).toISOString(),
     updated_at: new Date().toISOString(),
@@ -187,6 +192,7 @@ const MOCK_PRODUCTS: Product[] = [
     images: ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"],
     is_featured: false,
     is_active: true,
+    tags: [],
     metadata: { origin_district: "Rajshahi", weight_options: ["1L"], badge: "100% Natural" },
     created_at: new Date(Date.now() - 86400000 * 6).toISOString(),
     updated_at: new Date().toISOString(),
@@ -204,6 +210,7 @@ const MOCK_PRODUCTS: Product[] = [
     images: ["https://images.unsplash.com/photo-1552474030-b3a5b5f04e2e?w=600&auto=format&fit=crop&q=80"],
     is_featured: false,
     is_active: true,
+    tags: [],
     metadata: { origin_district: "Rajshahi", weight_options: ["15kg"], badge: "Gift Special" },
     created_at: new Date(Date.now() - 86400000 * 4).toISOString(),
     updated_at: new Date().toISOString(),
@@ -589,6 +596,7 @@ export async function getProductReviews(productId: string) {
         product_id: productId,
         rating: 5,
         comment: "Excellent quality mangoes! Fiberless and sweet as honey. Sourced very fresh. Fully satisfied.",
+        is_approved: true,
         created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
         profile: {
           id: "user-1",
@@ -597,6 +605,11 @@ export async function getProductReviews(productId: string) {
           phone: "01728394819",
           avatar_url: null,
           role: "user",
+          dob: null,
+          gender: null,
+          country: null,
+          city: null,
+          is_blocked: false,
           created_at: "",
           updated_at: ""
         }
@@ -607,6 +620,7 @@ export async function getProductReviews(productId: string) {
         product_id: productId,
         rating: 4,
         comment: "Very aromatic lengra mangoes. The packaging was top grade. Recommended!",
+        is_approved: true,
         created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
         profile: {
           id: "user-2",
@@ -615,6 +629,11 @@ export async function getProductReviews(productId: string) {
           phone: "01928394829",
           avatar_url: null,
           role: "user",
+          dob: null,
+          gender: null,
+          country: null,
+          city: null,
+          is_blocked: false,
           created_at: "",
           updated_at: ""
         }

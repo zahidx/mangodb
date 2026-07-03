@@ -151,6 +151,11 @@ export default function ProductDetailsPage() {
         email: profile.email,
         phone: profile.phone,
         role: profile.role,
+        dob: null,
+        gender: null,
+        country: null,
+        city: null,
+        is_blocked: false,
         created_at: "",
         updated_at: ""
       }
