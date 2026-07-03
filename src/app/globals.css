@@ -575,3 +575,20 @@ body {
 .hero-delay-6 { animation-delay: 0.6s; }
 .hero-delay-7 { animation-delay: 0.7s; }
 .hero-delay-8 { animation-delay: 0.8s; }
+
+/* Custom Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+

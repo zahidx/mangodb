@@ -19,9 +19,11 @@ import {
     ShoppingBag,
     Star,
     Truck,
-    User
+    User,
+    X
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -49,6 +51,7 @@ export default function ProductDetailsPage() {
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   useEffect(() => {
     async function loadDetails() {
@@ -250,26 +253,30 @@ export default function ProductDetailsPage() {
       <div className="w-full flex justify-center">
         <main className="grow max-w-7xl w-full px-4 sm:px-6 lg:px-8 pt-32 pb-24 relative z-10 space-y-16">
         
-        {/* Back Link */}
-        <Link 
-          href="/products"
-          className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-[#fbbf24] transition-colors bg-card/80 border border-border px-4 py-2 rounded-xl"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Shop
-        </Link>
+        {/* Breadcrumbs */}
+        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-card/80 border border-border px-4 py-2.5 rounded-xl w-fit shadow-sm">
+          <Link href="/" className="hover:text-[#fbbf24] transition-colors">Home</Link>
+          <span className="opacity-50">/</span>
+          <Link href="/products" className="hover:text-[#fbbf24] transition-colors">Shop Mangoes</Link>
+          <span className="opacity-50">/</span>
+          <span className="text-hero-text bg-[#fbbf24]/10 px-2 py-0.5 rounded text-[#fbbf24]">{product.name}</span>
+        </div>
 
         {/* Product Details Section */}
         <div className="grid md:grid-cols-12 gap-12 items-start">
           
           {/* Left Column: Image Gallery */}
           <div className="md:col-span-6 space-y-4">
-            <div className="relative h-[320px] sm:h-[450px] w-full rounded-3xl overflow-hidden glass-card p-4 border border-border/80 shadow-2xl">
-              <img
-                src={product.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
-                alt={product.name}
-                className="w-full h-full object-cover rounded-2xl"
-              />
+            <div className="relative h-[320px] sm:h-[450px] w-full rounded-3xl overflow-hidden glass-card p-4 border border-border/80 shadow-2xl group cursor-zoom-in" onClick={() => setIsZoomed(true)}>
+              <div className="relative w-full h-full rounded-2xl overflow-hidden">
+                <Image
+                  src={product.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
               {badge && (
                 <span className="absolute top-6 left-6 px-3 py-1.5 text-[10px] font-black text-black bg-[#fbbf24] rounded-full uppercase tracking-wider shadow-md">
                   {badge}
@@ -420,8 +427,25 @@ export default function ProductDetailsPage() {
               </div>
             </div>
 
+            {/* Social Share Buttons */}
+            <div className="flex items-center gap-3 pt-6 border-t border-border">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Share:</span>
+              <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')} className="w-8 h-8 rounded-full bg-[#1877F2]/10 text-[#1877F2] flex items-center justify-center hover:bg-[#1877F2]/20 transition-colors cursor-pointer" aria-label="Share on Facebook">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+              </button>
+              <button onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Check out ${product.name} on MangoDB!`)}`, '_blank')} className="w-8 h-8 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] flex items-center justify-center hover:bg-[#1DA1F2]/20 transition-colors cursor-pointer" aria-label="Share on Twitter">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+              </button>
+              <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out ${product.name} on MangoDB! ${window.location.href}`)}`, '_blank')} className="w-8 h-8 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center hover:bg-[#25D366]/20 transition-colors cursor-pointer" aria-label="Share on WhatsApp">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              </button>
+              <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }} className="w-8 h-8 rounded-full bg-muted-bg border border-border text-muted-foreground flex items-center justify-center hover:bg-muted-bg/80 transition-colors cursor-pointer" aria-label="Copy Link">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+              </button>
+            </div>
+
             {/* Trust indicators */}
-            <div className="grid grid-cols-3 gap-3 pt-6 text-center text-[10px] text-muted-foreground font-sans">
+            <div className="grid grid-cols-3 gap-3 pt-6 border-t border-border text-center text-[10px] text-muted-foreground font-sans">
               <div className="p-3 bg-card/30 border border-border/60 rounded-xl space-y-1.5">
                 <Truck className="w-4 h-4 mx-auto text-emerald-600 dark:text-emerald-400" />
                 <p className="font-extrabold text-hero-text">Express Delivery</p>
@@ -528,14 +552,19 @@ export default function ProductDetailsPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 shrink-0">
                             <User className="w-4.5 h-4.5" />
                           </div>
                           <div>
-                            <h4 className="text-xs font-extrabold text-hero-text">
-                              {rev.profile?.full_name || "Premium customer"}
-                            </h4>
-                            <p className="text-[9px] text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <h4 className="text-xs font-extrabold text-hero-text">
+                                {rev.profile?.full_name || "Premium customer"}
+                              </h4>
+                              <span className="flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                                <ShieldCheck className="w-2.5 h-2.5" /> Verified Purchaser
+                              </span>
+                            </div>
+                            <p className="text-[9px] text-muted-foreground mt-0.5">
                               {new Date(rev.created_at).toLocaleDateString()}
                             </p>
                           </div>
@@ -578,10 +607,12 @@ export default function ProductDetailsPage() {
                   >
                     <div className="relative h-44 w-full overflow-hidden shrink-0">
                       <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
-                        <img
-                          src={prod.images?.[0]}
+                        <Image
+                          src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
                           alt={prod.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </Link>
                     </div>
@@ -614,6 +645,30 @@ export default function ProductDetailsPage() {
 
       </main>
       </div>
+
+      {/* Image Zoom Lightbox */}
+      {isZoomed && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
+          onClick={() => setIsZoomed(false)}
+        >
+          <button 
+            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/25 transition-colors"
+            onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="relative w-full max-w-4xl h-[80vh] rounded-2xl overflow-hidden shadow-2xl animate-hero-scale-in">
+            <Image
+              src={product.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078"}
+              alt={product.name}
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

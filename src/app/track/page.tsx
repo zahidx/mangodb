@@ -238,8 +238,8 @@ function TrackContent() {
           {/* Subtle background decoration */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50 -z-10 translate-x-1/2 -translate-y-1/2"></div>
           
-          <div className="w-24 h-24 rounded-3xl bg-[#eaf2ed] flex items-center justify-center mb-2 shadow-sm border border-[#4b6d5e]/20 relative z-10">
-            <Map className="w-12 h-12 text-[#4b6d5e]" />
+          <div className="w-24 h-24 rounded-3xl bg-emerald-500/10 flex items-center justify-center mb-2 shadow-sm border border-emerald-500/20 relative z-10">
+            <Map className="w-12 h-12 text-emerald-600" />
           </div>
 
           <div className="space-y-2 relative z-10">
@@ -256,7 +256,7 @@ function TrackContent() {
                 placeholder="152305"
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
-                className="w-full pl-12 pr-10 py-3.5 bg-background border border-border rounded-md focus:ring-2 focus:ring-[#4b6d5e]/20 focus:border-[#4b6d5e] transition-all text-sm font-medium"
+                className="w-full pl-12 pr-10 py-3.5 bg-background border border-border rounded-md focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm font-medium"
               />
               {searchId && (
                 <button 
@@ -271,7 +271,7 @@ function TrackContent() {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto bg-[#4b6d5e] hover:bg-[#3b574a] text-white px-8 py-3.5 rounded-md font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-md font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} 
               Track Order
@@ -291,7 +291,7 @@ function TrackContent() {
               {/* Shipping Info Card */}
               <div className="bg-card rounded-md p-6 sm:p-8 shadow-sm border border-border flex flex-col sm:flex-row justify-between gap-6">
                 <div className="space-y-4">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#eaf2ed] text-[#4b6d5e] rounded-full text-xs font-bold">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-600 rounded-full text-xs font-bold">
                     <User className="w-3.5 h-3.5" /> Shipping Info
                   </div>
                   <div>
@@ -304,7 +304,7 @@ function TrackContent() {
                     <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold uppercase tracking-wider">
                       <CreditCard className="w-3.5 h-3.5" /> {order.payment_status === 'paid' ? 'Paid' : 'Partial / COD'}
                     </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-[#eaf2ed] text-[#4b6d5e] rounded-lg text-xs font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-xs font-bold uppercase tracking-wider">
                       <Package className="w-3.5 h-3.5" /> {order.status}
                     </div>
                   </div>
@@ -312,8 +312,8 @@ function TrackContent() {
                 
                 <div className="flex flex-col items-start sm:items-end justify-start space-y-3 pt-2 sm:pt-0">
                   <p className="text-[10px] font-black text-muted-foreground tracking-widest uppercase mb-1">Need Help?</p>
-                  <a href="tel:+8809677654321" className="flex items-center gap-2.5 text-[#4b6d5e] font-bold text-sm hover:opacity-80 transition-opacity">
-                    <Phone className="w-6 h-6 bg-[#eaf2ed] p-1.5 rounded-full" /> +88 09677654321
+                  <a href="tel:+8809677654321" className="flex items-center gap-2.5 text-emerald-600 font-bold text-sm hover:opacity-80 transition-opacity">
+                    <Phone className="w-6 h-6 bg-emerald-500/10 p-1.5 rounded-full" /> +88 09677654321
                   </a>
                   <a href="#" className="flex items-center gap-2.5 text-emerald-500 font-bold text-sm hover:opacity-80 transition-opacity">
                     <MessageCircle className="w-6 h-6 bg-emerald-50 p-1.5 rounded-full" /> +88 01742-805845
@@ -324,7 +324,7 @@ function TrackContent() {
               {/* Delivery Progress Card */}
               <div className="bg-card rounded-md p-6 sm:p-8 shadow-sm border border-border space-y-8 overflow-hidden">
                 <div className="flex items-center gap-2 font-bold text-slate-700 text-lg tracking-tight">
-                  <Map className="w-5 h-5 text-[#3b574a]" /> Delivery Progress
+                  <Map className="w-5 h-5 text-emerald-700" /> Delivery Progress
                 </div>
                 
                 <div className="relative pt-6 pb-4 overflow-x-auto no-scrollbar">
@@ -333,16 +333,16 @@ function TrackContent() {
                     <div className="absolute top-[28px] left-[10%] right-[10%] h-1.5 bg-[#e2e8f0] rounded-full"></div>
                     {/* Progress Bar Active */}
                     <div 
-                      className="absolute top-[28px] left-[10%] h-1.5 bg-[#4b6d5e] rounded-full transition-all duration-1000" 
+                      className="absolute top-[28px] left-[10%] h-1.5 bg-emerald-600 rounded-full transition-all duration-1000" 
                       style={{ width: `${activeIndex >= 0 ? (activeIndex / (steps.length - 1)) * 80 : 0}%` }}
                     ></div>
                     
                     <div className="flex justify-between relative z-10">
                       {steps.map((step, idx) => (
                         <div key={idx} className="flex flex-col items-center w-1/5 relative">
-                          <div className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 ${step.isActive ? 'bg-[#eaf2ed]' : ''}`}>
-                            <div className={`w-14 h-14 rounded-full flex items-center justify-center relative z-10 transition-colors duration-500 ${step.isCompleted ? 'bg-white border-[1.5px] border-[#3b574a]' : 'bg-[#f1f5f9] border-[1.5px] border-transparent'}`}>
-                                <step.icon className={`w-5 h-5 ${step.isCompleted ? 'text-[#3b574a]' : step.color}`} />
+                          <div className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 ${step.isActive ? 'bg-emerald-500/10' : ''}`}>
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center relative z-10 transition-colors duration-500 ${step.isCompleted ? 'bg-white border-[1.5px] border-emerald-700' : 'bg-muted-bg border-[1.5px] border-transparent'}`}>
+                                <step.icon className={`w-5 h-5 ${step.isCompleted ? 'text-emerald-700' : step.color}`} />
                                 {step.isCompleted && (
                                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
                                     <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
@@ -366,7 +366,7 @@ function TrackContent() {
               {/* Tracking History Card */}
               <div className="bg-card rounded-md p-6 sm:p-8 shadow-sm border border-border space-y-8">
                 <div className="flex items-center gap-2 font-bold text-slate-700 text-lg tracking-tight">
-                  <Clock className="w-5 h-5 text-[#3b574a]" /> Tracking History
+                  <Clock className="w-5 h-5 text-emerald-700" /> Tracking History
                 </div>
                 
                 <div className="space-y-0 pl-2">
@@ -377,8 +377,8 @@ function TrackContent() {
                         <div className="absolute left-[13px] top-7 bottom-[-8px] w-[2px] bg-[#e2e8f0]"></div>
                       )}
                       {/* Circle node */}
-                      <div className="absolute left-0 top-1.5 w-7 h-7 rounded-full bg-[#eaf2ed] flex items-center justify-center">
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#4b6d5e]"></div>
+                      <div className="absolute left-0 top-1.5 w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-600"></div>
                       </div>
                       
                       <div className="pt-0.5">

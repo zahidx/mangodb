@@ -32,11 +32,26 @@ export default function CheckoutPage() {
     discount, 
     total, 
     deliveryDistrict, 
-    clearCart 
+    clearCart,
+    applyCoupon,
+    removeCoupon,
+    appliedCoupon
   } = useCart();
+
+  const [promoCode, setPromoCode] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const handleApplyCoupon = async () => {
+    if (!promoCode.trim()) return;
+    const success = await applyCoupon(promoCode);
+    if (!success) {
+      setPromoCode("");
+    }
+  };
 
   const [checkoutForm, setCheckoutForm] = useState({
     name: "",
+    email: "",
     phone: "",
     address: "",
     paymentMethod: "cod" // "cod" | "sslcommerz"
@@ -48,12 +63,38 @@ export default function CheckoutPage() {
   const [finalAddress, setFinalAddress] = useState<string>("");
   const [finalItems, setFinalItems] = useState<any[]>([]);
 
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<any[]>([]);
+
+  // Load saved payment methods and address
+  useEffect(() => {
+    async function loadSavedData() {
+      if (!profile) return;
+      try {
+        let payments: any[] = [];
+        if (!profile.id.startsWith("demo-")) {
+          const { data } = await supabase.from("user_payment_methods").select("*").eq("user_id", profile.id).order("is_default", { ascending: false });
+          if (data) payments = data;
+        } else {
+          const stored = localStorage.getItem(`mangodb-payments-${profile.id}`);
+          if (stored) payments = JSON.parse(stored);
+        }
+        setSavedPaymentMethods(payments);
+        const defPayment = payments.find(p => p.is_default);
+        if (defPayment) {
+          setCheckoutForm(prev => ({ ...prev, paymentMethod: `saved-${defPayment.id}` }));
+        }
+      } catch (err) {}
+    }
+    loadSavedData();
+  }, [profile]);
+
   // Prefill name & phone if logged in
   useEffect(() => {
     if (profile) {
       setCheckoutForm(prev => ({
         ...prev,
         name: profile.full_name || prev.name,
+        email: profile.email || prev.email,
         phone: profile.phone || prev.phone
       }));
     }
@@ -166,6 +207,14 @@ export default function CheckoutPage() {
           });
 
           await supabase.from("order_items").insert(itemsToInsert);
+          
+          // Generate notification
+          await supabase.from("notifications").insert({
+            user_id: userId,
+            title: "Order Placed Successfully",
+            message: `Your order #${data.id} has been placed and is being processed.`,
+            type: "order_placed"
+          });
         }
       } catch (dbErr) {
         console.warn("Error saving order to Supabase database:", dbErr);
@@ -176,22 +225,80 @@ export default function CheckoutPage() {
     const existingOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
     localStorage.setItem("mangodb-orders", JSON.stringify([orderData, ...existingOrders]));
 
-    // If online payment selected, simulate the redirect overlay briefly
-    if (checkoutForm.paymentMethod !== "cod") {
-      const gateNames: Record<string, string> = {
-        sslcommerz: "SSLCommerz",
-        bkash: "bKash",
-        nagad: "Nagad",
-        card: "Credit/Debit Card",
-        gpay: "Google Pay"
+    if (profile && profile.id.startsWith("demo-")) {
+      const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+      const newNotif = {
+        id: `notif-${Date.now()}`,
+        user_id: profile.id,
+        title: "Order Placed Successfully",
+        message: `Your order #${orderId} has been placed and is being processed.`,
+        type: "order_placed",
+        is_read: false,
+        created_at: new Date().toISOString()
       };
-      const gateName = gateNames[checkoutForm.paymentMethod] || "Payment Gateway";
-      toast.loading(`Redirecting to ${gateName} Secure Sandbox...`, { id: "payment-load" });
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.dismiss("payment-load");
-      toast.success(`${gateName} Payment Successful!`);
+      localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify([newNotif, ...storedNotifs]));
     }
 
+    // Trigger transactional email (we do this early so they get the receipt even if they drop off on payment gateway, acting as a pending invoice)
+    if (checkoutForm.email) {
+      try {
+        await fetch("/api/send-order-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: orderId,
+            customerName: checkoutForm.name,
+            email: checkoutForm.email,
+            total,
+            productName: cartItems.map(i => `${i.product.name} (${i.selected_weight})`).join(", "),
+            shippingAddress: checkoutForm.address,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to send order email:", err);
+      }
+    }
+
+    // If online payment selected, redirect to SSLCommerz!
+    if (checkoutForm.paymentMethod !== "cod") {
+      toast.loading(`Redirecting to Secure Payment Gateway...`, { id: "payment-load" });
+      try {
+        const response = await fetch("/api/payment/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            total,
+            customerName: checkoutForm.name,
+            email: checkoutForm.email,
+            phone: checkoutForm.phone,
+            address: checkoutForm.address
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.url) {
+          await clearCart();
+          // Redirect the user to the SSLCommerz hosted sandbox checkout page
+          window.location.href = data.url;
+          return; // Stop execution here because they are leaving the site
+        } else {
+          toast.error("Failed to connect to payment gateway.");
+          setIsSubmitting(false);
+          toast.dismiss("payment-load");
+          return;
+        }
+      } catch (err) {
+        console.error("Payment init error:", err);
+        toast.error("Payment initialization failed.");
+        setIsSubmitting(false);
+        toast.dismiss("payment-load");
+        return;
+      }
+    }
+
+    // If COD, show success screen
     setFinalTotal(total);
     setFinalAddress(checkoutForm.address);
     setFinalItems(cartItems);
@@ -348,6 +455,21 @@ export default function CheckoutPage() {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">
+                  Email Address (For Order Receipt)
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  value={checkoutForm.email}
+                  onChange={handleInputChange}
+                  placeholder="name@example.com"
+                  className="w-full bg-card border border-border rounded-xl px-4 py-3 text-xs font-semibold text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">
                   Detailed Delivery Address
                 </label>
                 <textarea
@@ -370,6 +492,29 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="grid sm:grid-cols-2 gap-3">
+                {/* Saved Payment Methods */}
+                {savedPaymentMethods.map(method => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setCheckoutForm(prev => ({ ...prev, paymentMethod: `saved-${method.id}` }))}
+                    className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
+                      checkoutForm.paymentMethod === `saved-${method.id}`
+                        ? "bg-purple-500/5 border-purple-500/30 text-hero-text ring-2 ring-purple-500/10"
+                        : "bg-card border-border text-muted hover:text-hero-text hover:border-purple-500/10"
+                    }`}
+                  >
+                    <CreditCard className="w-5 h-5 text-purple-500 shrink-0" />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-black text-hero-text capitalize">{method.provider}</p>
+                        <span className="text-[9px] bg-[#F8FAFC] dark:bg-muted-bg text-muted-foreground px-1.5 py-0.5 rounded uppercase font-bold tracking-wider border border-border">Saved</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-snug">{method.account_details}</p>
+                    </div>
+                  </button>
+                ))}
+
                 {/* Cash on Delivery */}
                 <button
                   type="button"
@@ -474,6 +619,21 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* Legal Agreement */}
+            <div className="border-t border-border pt-6 pb-2 font-sans flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-border text-emerald-600 focus:ring-emerald-500/20 bg-card cursor-pointer shrink-0"
+                required
+              />
+              <label htmlFor="terms" className="text-[11px] text-muted-foreground leading-snug cursor-pointer">
+                I have read and agree to the website <Link href="/legal/terms" className="text-emerald-600 hover:underline font-bold" target="_blank">Terms of Service</Link> and <Link href="/legal/privacy" className="text-emerald-600 hover:underline font-bold" target="_blank">Privacy Policy</Link>. I understand my order is subject to these conditions.
+              </label>
+            </div>
+
             {/* Bottom Form Actions */}
             <div className="flex items-center justify-between border-t border-border pt-6 font-sans">
               <span className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -482,7 +642,7 @@ export default function CheckoutPage() {
               </span>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !agreedToTerms}
                 className="px-8 py-3.5 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] border border-[#fbbf24]/20 hover:shadow-[0_0_15px_rgba(251,191,36,0.2)] text-black font-extrabold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 tracking-wider uppercase font-sans shrink-0"
               >
                 {isSubmitting ? (
@@ -529,6 +689,44 @@ export default function CheckoutPage() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Promo Code Input */}
+            <div className="border-t border-border pt-4">
+              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block mb-2">
+                Have a promo code?
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. MANGOLOVE"
+                  value={appliedCoupon || promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  className="w-full bg-input-bg border border-border rounded-xl px-4 py-2 text-xs font-semibold text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50"
+                  disabled={!!appliedCoupon}
+                />
+                {!appliedCoupon ? (
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={!promoCode.trim()}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs disabled:opacity-50 transition-colors"
+                  >
+                    Apply
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeCoupon();
+                      setPromoCode("");
+                    }}
+                    className="px-4 py-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-xs transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Sum stats */}

@@ -3,6 +3,10 @@ import { Geist, Geist_Mono, Playfair_Display, Outfit } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
+import MarketingScripts from "@/components/MarketingScripts";
+import BackToTop from "@/components/BackToTop";
+import CookieConsent from "@/components/CookieConsent";
 import Script from "next/script";
 import "./globals.css";
 
@@ -28,20 +32,35 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: "MangoDB — Fresh Mangoes Marketplace",
+    default: "MangoDB — Premium Rajshahi Mangoes Delivered",
     template: "%s | MangoDB",
   },
   description:
-    "Buy fresh, premium mangoes online. Farm-fresh Alphonso, Kesar, Haden and more delivered to your doorstep.",
-  keywords: ["mangoes", "fresh fruit", "online marketplace", "mango delivery", "premium mangoes"],
+    "Buy fresh, premium carbide-free mangoes online. Handpicked Himsagar, Lengra, Haribhanga and more delivered directly from Rajshahi to your doorstep.",
+  keywords: ["mangoes bangladesh", "rajshahi mango", "himsagar mango", "lengra", "fresh mango delivery", "carbide-free mangoes", "MangoDB"],
   authors: [{ name: "MangoDB" }],
   openGraph: {
-    title: "MangoDB — Fresh Mangoes Marketplace",
+    title: "MangoDB — Premium Rajshahi Mangoes Delivered",
     description:
-      "Buy fresh, premium mangoes online. Farm-fresh mangoes delivered to your doorstep.",
+      "Buy fresh, premium carbide-free mangoes online. Handpicked Himsagar, Lengra, Haribhanga and more delivered directly from Rajshahi to your doorstep.",
     type: "website",
     locale: "en_US",
+    siteName: "MangoDB",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=1200&h=630&fit=crop&q=80",
+        width: 1200,
+        height: 630,
+        alt: "MangoDB Premium Harvest",
+      },
+    ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "MangoDB — Premium Rajshahi Mangoes",
+    description: "Handpicked premium mangoes delivered from orchard to your doorstep.",
+    images: ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=1200&h=630&fit=crop&q=80"],
+  }
 };
 
 export default function RootLayout({
@@ -100,6 +119,10 @@ export default function RootLayout({
             },
           }}
         />
+        <WhatsAppWidget />
+        <BackToTop />
+        <CookieConsent />
+        <MarketingScripts />
       </body>
     </html>
   );

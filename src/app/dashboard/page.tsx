@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getUserOrders } from "@/lib/supabase/queries";
 import type { Order, Product, UserAddress } from "@/types/database";
 import {
+    ArrowRight,
     Bell,
     Calendar,
     Camera,
@@ -41,6 +42,8 @@ function DashboardContent() {
 
   const initialTab = (searchParams.get("tab") as any) || "overview";
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "wishlist" | "addresses" | "account" | "payment" | "notifications" | "password" | "security">(initialTab);
+  const [orderTab, setOrderTab] = useState<'active' | 'past'>('active');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Sync tab with URL
   useEffect(() => {
@@ -66,9 +69,9 @@ function DashboardContent() {
 
   // Address form
   const defaultAddressForm = {
-    full_name: "",
-    phone: "",
-    email: "",
+    full_name: profile?.full_name || "",
+    phone: profile?.phone || "",
+    email: profile?.email || "",
     country: "Bangladesh",
     state: "",
     city: "",
@@ -83,6 +86,19 @@ function DashboardContent() {
   const [addingAddress, setAddingAddress] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
+
+  // Payment form
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [paymentForm, setPaymentForm] = useState({
+    provider: "card",
+    account_details: "",
+    is_default: false
+  });
+  const [addingPayment, setAddingPayment] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+
+  // Notifications
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   // Password form
   const [passwordForm, setPasswordForm] = useState({
@@ -149,10 +165,19 @@ function DashboardContent() {
     setLoadingData(true);
     try {
       // 1. Fetch Orders
+      let allOrders: any[] = [];
+      const localOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
+      allOrders = [...localOrders];
+
       const orderRes = await getUserOrders(profile.id);
       if (orderRes.data) {
-        setOrders(orderRes.data);
+        const existingIds = new Set(allOrders.map(o => o.id));
+        const dbOrders = orderRes.data.filter((o: any) => !existingIds.has(o.id));
+        allOrders = [...allOrders, ...dbOrders];
       }
+      
+      allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setOrders(allOrders);
 
       // 2. Fetch Wishlist items from local storage
       const savedWishIds = JSON.parse(localStorage.getItem("mangodb-wishlist") || "[]");
@@ -191,10 +216,78 @@ function DashboardContent() {
         if (storedAddresses) setAddresses(JSON.parse(storedAddresses));
       }
 
+      // 4. Load Notifications
+      if (!profile.id.startsWith("demo-")) {
+        const { data: notifs } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", profile.id)
+          .order("created_at", { ascending: false });
+        if (notifs) setNotifications(notifs);
+      } else {
+        const storedNotifs = localStorage.getItem(`mangodb-notifications-${profile.id}`);
+        if (storedNotifs) setNotifications(JSON.parse(storedNotifs));
+      }
+
+      // 5. Load Saved Payment Methods
+      if (!profile.id.startsWith("demo-")) {
+        const { data: payments } = await supabase
+          .from("user_payment_methods")
+          .select("*")
+          .eq("user_id", profile.id)
+          .order("is_default", { ascending: false });
+        if (payments) setPaymentMethods(payments);
+      } else {
+        const storedPayments = localStorage.getItem(`mangodb-payments-${profile.id}`);
+        if (storedPayments) setPaymentMethods(JSON.parse(storedPayments));
+      }
+
     } catch (err) {
       console.error("Error loading dashboard data:", err);
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!profile) return;
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+
+    try {
+      if (!profile.id.startsWith("demo-")) {
+        await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+        
+        // Add Notification
+        await supabase.from("notifications").insert({
+          user_id: profile.id,
+          title: "Order Cancelled",
+          message: `Your order #${orderId} has been cancelled successfully.`,
+          type: "order_cancelled"
+        });
+
+      } else {
+        const storedOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
+        const updatedOrders = storedOrders.map((o: any) => o.id === orderId ? { ...o, status: "cancelled" } : o);
+        localStorage.setItem("mangodb-orders", JSON.stringify(updatedOrders));
+
+        const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+        const newNotif = {
+          id: `notif-${Date.now()}`,
+          user_id: profile.id,
+          title: "Order Cancelled",
+          message: `Your order #${orderId} has been cancelled successfully.`,
+          type: "order_cancelled",
+          is_read: false,
+          created_at: new Date().toISOString()
+        };
+        localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify([newNotif, ...storedNotifs]));
+        setNotifications(prev => [newNotif, ...prev]);
+      }
+      
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "cancelled" } : o));
+      toast.success("Order cancelled");
+    } catch (err) {
+      toast.error("Failed to cancel order");
     }
   };
 
@@ -332,6 +425,92 @@ function DashboardContent() {
     }
   };
 
+  const handleSavePaymentMethod = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile) return;
+    setAddingPayment(true);
+    
+    try {
+      const newMethod = {
+        user_id: profile.id,
+        provider: paymentForm.provider,
+        account_details: paymentForm.account_details,
+        is_default: paymentMethods.length === 0 ? true : paymentForm.is_default
+      };
+
+      if (!profile.id.startsWith("demo-")) {
+        if (newMethod.is_default) {
+          await supabase.from("user_payment_methods").update({ is_default: false }).eq("user_id", profile.id);
+        }
+        await supabase.from("user_payment_methods").insert(newMethod);
+        
+        const { data: payments } = await supabase
+          .from("user_payment_methods")
+          .select("*")
+          .eq("user_id", profile.id)
+          .order("is_default", { ascending: false });
+        if (payments) setPaymentMethods(payments);
+      } else {
+        const updated = [...paymentMethods, { ...newMethod, id: `pm-${Date.now()}` }];
+        if (newMethod.is_default) {
+          updated.forEach(p => { p.is_default = p.id === updated[updated.length - 1].id; });
+        }
+        setPaymentMethods(updated);
+        localStorage.setItem(`mangodb-payments-${profile.id}`, JSON.stringify(updated));
+      }
+      
+      toast.success("Payment method added");
+      setShowPaymentForm(false);
+      setPaymentForm({ provider: "card", account_details: "", is_default: false });
+    } catch (err) {
+      toast.error("Failed to add payment method");
+    } finally {
+      setAddingPayment(false);
+    }
+  };
+
+  const handleDeletePaymentMethod = async (id: string) => {
+    if (!profile) return;
+    if (!confirm("Remove this payment method?")) return;
+    
+    try {
+      if (!profile.id.startsWith("demo-")) {
+        await supabase.from("user_payment_methods").delete().eq("id", id);
+        setPaymentMethods(paymentMethods.filter(p => p.id !== id));
+      } else {
+        const updated = paymentMethods.filter(p => p.id !== id);
+        setPaymentMethods(updated);
+        localStorage.setItem(`mangodb-payments-${profile.id}`, JSON.stringify(updated));
+      }
+      toast.success("Payment method removed");
+    } catch (err) {
+      toast.error("Failed to remove payment method");
+    }
+  };
+
+  const handleSetDefaultPayment = async (id: string) => {
+    if (!profile) return;
+    try {
+      if (!profile.id.startsWith("demo-")) {
+        await supabase.from("user_payment_methods").update({ is_default: true }).eq("id", id);
+        await supabase.from("user_payment_methods").update({ is_default: false }).neq("id", id).eq("user_id", profile.id);
+        const { data: payments } = await supabase
+          .from("user_payment_methods")
+          .select("*")
+          .eq("user_id", profile.id)
+          .order("is_default", { ascending: false });
+        if (payments) setPaymentMethods(payments);
+      } else {
+        const updated = paymentMethods.map(p => ({ ...p, is_default: p.id === id }));
+        setPaymentMethods(updated);
+        localStorage.setItem(`mangodb-payments-${profile.id}`, JSON.stringify(updated));
+      }
+      toast.success("Default payment method updated");
+    } catch (err) {
+      toast.error("Failed to update default payment method");
+    }
+  };
+
   const handleRemoveWishlist = (id: string) => {
     if (!profile) return;
     const stored = localStorage.getItem(`mangodb-wishlist-${profile.id}`);
@@ -412,8 +591,18 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-background text-[#0F172A] dark:text-foreground selection:bg-[#fbbf24] selection:text-black">
       
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar (Fixed on the left) */}
-      <aside className="fixed left-0 top-0 h-screen w-[280px] bg-white dark:bg-card border-r border-[#EEF2F7] dark:border-border/50 z-30 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-none hidden lg:flex">
+      <aside className={`fixed left-0 top-0 h-screen w-[280px] bg-white dark:bg-card border-r border-[#EEF2F7] dark:border-border/50 z-40 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-none transition-transform duration-300 ${
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      } lg:translate-x-0 lg:flex`}>
         
         {/* Logo area */}
         <div className="h-[72px] flex items-center px-6 border-b border-[#EEF2F7] dark:border-border/50 shrink-0">
@@ -454,7 +643,10 @@ function DashboardContent() {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id as any)}
+                onClick={() => {
+                  setActiveTab(item.id as any);
+                  setIsSidebarOpen(false);
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer group ${
                   isActive
                     ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
@@ -473,6 +665,7 @@ function DashboardContent() {
           <button
             onClick={() => {
               logout();
+              setIsSidebarOpen(false);
               toast.success("Logged out successfully");
             }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 group"
@@ -489,8 +682,11 @@ function DashboardContent() {
         {/* Header (Top Nav for Dashboard) */}
         <header className="h-[72px] bg-white/80 dark:bg-card/80 backdrop-blur-md border-b border-[#EEF2F7] dark:border-border/50 px-6 sm:px-10 flex items-center justify-between sticky top-0 z-20">
           <div className="flex items-center gap-4">
-            {/* Mobile Menu Toggle (Placeholder, not fully functional here without full state wrapper, but present for visual) */}
-            <button className="lg:hidden p-2 bg-muted-bg rounded-lg">
+            {/* Mobile Menu Toggle */}
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 bg-muted-bg rounded-lg cursor-pointer animate-pulse-glow-subtle"
+            >
               <Menu className="w-5 h-5 text-muted-foreground" />
             </button>
             <h1 className="text-xl font-bold text-[#0F172A] dark:text-hero-text capitalize">
@@ -521,7 +717,7 @@ function DashboardContent() {
               <div className="flex-grow flex flex-col">
                 {/* 0. OVERVIEW TAB */}
                 {activeTab === "overview" && (
-                    <div className="space-y-8 h-full">
+                    <div className="flex flex-col gap-12 h-full">
                       
                       {/* Dashboard Stats */}
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -571,7 +767,7 @@ function DashboardContent() {
                       </div>
 
                       {/* Welcome Card */}
-                      <div className="mt-8 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden relative">
+                      <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden relative">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none -mr-32 -mt-32"></div>
                         
                         <div className="flex items-start gap-5 relative z-10">
@@ -597,73 +793,199 @@ function DashboardContent() {
                 )}
 
                 {/* 1. ORDERS TAB */}
-                {activeTab === "orders" && (
-                  <div className="space-y-6">
-                    <div className="border-b border-border pb-4">
-                      <h2 className="font-serif-heading text-xl font-bold text-hero-text">Your Order History</h2>
-                      <p className="text-xs text-muted-foreground">Track status and review bills for your mango orders.</p>
-                    </div>
-
-                    {orders.length === 0 ? (
-                      <div className="text-center py-12 space-y-4">
-                        <span className="text-4xl">📦</span>
-                        <p className="text-xs text-muted-foreground">You haven't placed any orders yet.</p>
-                        <Link
-                          href="/products"
-                          className="inline-block px-5 py-2.5 bg-[#fbbf24] hover:bg-[#f59e0b] rounded-xl text-xs font-bold text-black shadow-sm"
-                        >
-                          Explore Mangoes
-                        </Link>
+                {activeTab === "orders" && (() => {
+                  const activeOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
+                  const pastOrders = orders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
+                  const displayOrders = orderTab === 'active' ? activeOrders : pastOrders;
+                  
+                  return (
+                    <div className="space-y-6">
+                      <div className="border-b border-border pb-4">
+                        <h2 className="font-serif-heading text-xl font-bold text-hero-text">Your Order History</h2>
+                        <p className="text-xs text-muted-foreground">Track status and review bills for your mango orders.</p>
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {orders.map((order) => (
-                          <div 
-                            key={order.id}
-                            className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm hover:border-emerald-500/10 transition-all"
-                          >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3 text-xs">
-                              <div>
-                                <p className="font-black text-hero-text uppercase text-sm">{order.id}</p>
-                                <div className="flex items-center gap-1.5 text-muted-foreground mt-0.5 font-medium">
-                                  <Calendar className="w-3.5 h-3.5" />
-                                  {new Date(order.created_at).toLocaleDateString()}
-                                </div>
-                              </div>
 
-                              <div className="flex flex-wrap gap-2 items-center">
-                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                                  order.status === "delivered"
-                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                    : order.status === "cancelled"
-                                      ? "bg-red-500/10 text-red-500"
-                                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                                }`}>
-                                  Status: {order.status}
-                                </span>
-                                
-                                <span className="text-sm font-black text-hero-text">৳{order.total}</span>
-                              </div>
+                      {/* Tabs Navigation */}
+                      <div className="flex items-center gap-6 border-b border-border mb-6">
+                        <button 
+                          onClick={() => setOrderTab('active')}
+                          className={`pb-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+                            orderTab === 'active' 
+                              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-500' 
+                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                          }`}
+                        >
+                          Active Orders
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                            orderTab === 'active' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted'
+                          }`}>
+                            {activeOrders.length}
+                          </span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => setOrderTab('past')}
+                          className={`pb-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+                            orderTab === 'past' 
+                              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-500' 
+                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                          }`}
+                        >
+                          Past Orders
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                            orderTab === 'past' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted'
+                          }`}>
+                            {pastOrders.length}
+                          </span>
+                        </button>
+                      </div>
+
+                      {displayOrders.length === 0 ? (
+                        <div className="text-center py-20 bg-transparent space-y-4">
+                          <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+                            <Package className="w-10 h-10" />
+                          </div>
+                          <h3 className="text-xl font-bold text-hero-text">No {orderTab === 'active' ? 'Active' : 'Past'} Orders Found</h3>
+                          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                            {orderTab === 'active' 
+                              ? "You don't have any ongoing deliveries right now." 
+                              : "You haven't completed any orders yet."}
+                          </p>
+                          {orderTab === 'active' && (
+                            <div className="pt-6">
+                              <Link href="/products" className="inline-flex items-center justify-center px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-all shadow-md hover:shadow-lg">
+                                Start Shopping
+                              </Link>
                             </div>
-
-                            {/* Item list */}
-                            <div className="space-y-2">
-                              {order.order_items?.map((item: any) => (
-                                <div key={item.id} className="flex justify-between items-center text-xs">
-                                  <div className="truncate pr-4">
-                                    <span className="font-extrabold text-hero-text">{item.product?.name || "Premium Variety"}</span>
-                                    <span className="text-muted-foreground font-semibold"> (×{item.quantity})</span>
-                                  </div>
-                                  <span className="font-bold text-hero-text">৳{item.total_price}</span>
-                                </div>
-                              ))}
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full">
+                          {/* Table Header (Desktop Only) */}
+                          <div className="hidden lg:flex items-center w-full border-b-2 border-border/80 px-2 py-3">
+                            <div className="w-12 shrink-0 text-center text-[10px] font-black uppercase text-muted-foreground tracking-wider">No.</div>
+                            <div className="flex-1 min-w-0 grid grid-cols-12 gap-4">
+                              <div className="col-span-4 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Product Information</div>
+                              <div className="col-span-2 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Order ID & Date</div>
+                              <div className="col-span-2 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Delivery Details</div>
+                              <div className="col-span-1 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Payment</div>
+                              <div className="col-span-1 text-[10px] font-black uppercase text-muted-foreground tracking-wider text-right">Amount</div>
+                              <div className="col-span-2 text-[10px] font-black uppercase text-muted-foreground tracking-wider text-right pr-4">Action</div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+
+                          {/* Table Body */}
+                          <div className="flex flex-col">
+                            {displayOrders.map((order, index) => (
+                              <div 
+                                key={order.id} 
+                                className="flex flex-col lg:flex-row overflow-hidden w-full transition-all hover:bg-black/[0.03] dark:hover:bg-white/[0.03] group border-b border-border"
+                              >
+                                {/* Main Row Content */}
+                                <div className="py-4 px-2 flex-1 flex items-center w-full relative">
+                                  
+                                  {/* Mobile Numbering Badge */}
+                                  <div className="lg:hidden absolute top-4 right-2 bg-muted/60 text-muted-foreground font-mono text-[10px] font-bold px-2 py-0.5 rounded-md">
+                                    #{String(index + 1).padStart(2, '0')}
+                                  </div>
+
+                                  {/* Desktop Numbering */}
+                                  <div className="hidden lg:flex w-12 shrink-0 justify-center">
+                                    <span className="text-sm font-black text-muted-foreground/40 font-mono group-hover:text-emerald-500/60 transition-colors">
+                                      {String(index + 1).padStart(2, '0')}
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 w-full items-center">
+                                    
+                                    {/* 1. Product Summary (col-span-4) */}
+                                    <div className="sm:col-span-2 lg:col-span-4 flex items-center gap-3">
+                                      <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted border border-border relative">
+                                        <img 
+                                          src={order.order_items?.[0]?.product?.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=300&auto=format&fit=crop&q=80"} 
+                                          alt="Order Item" 
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                      <div className="space-y-0.5 min-w-0 flex-1">
+                                        <h3 className="font-bold text-hero-text text-sm leading-tight truncate">
+                                          {order.order_items?.[0]?.product?.name || "Premium Mango Crate"}
+                                        </h3>
+                                        <p className="text-[11px] font-semibold text-muted-foreground truncate">
+                                          {order.order_items?.map((item: any) => `${item.quantity}x ${item.product?.name || "Variety"}`).join(", ")}
+                                        </p>
+                                        <div className="pt-0.5">
+                                          <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                                            order.status === "delivered" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                                            order.status === "cancelled" ? "bg-red-500/10 text-red-500" :
+                                            "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                                          }`}>
+                                            {order.status || "Pending"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* 2. Order Details (col-span-2) */}
+                                    <div className="lg:col-span-2 space-y-0.5">
+                                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Order</p>
+                                      <p className="font-bold text-hero-text text-sm uppercase">#{order.id}</p>
+                                      <p className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5 pt-0.5">
+                                        <Calendar className="w-3 h-3" />
+                                        {new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                      </p>
+                                    </div>
+
+                                    {/* 3. Delivery Info (col-span-2) */}
+                                    <div className="lg:col-span-2 space-y-0.5">
+                                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Delivery To</p>
+                                      <p className="font-bold text-hero-text text-sm capitalize truncate">{order.shipping_address?.full_name}</p>
+                                      <p className="text-[11px] font-medium text-muted-foreground truncate">{order.shipping_address?.address_line_1}</p>
+                                    </div>
+
+                                    {/* 4. Payment Info (col-span-1) */}
+                                    <div className="lg:col-span-1 space-y-0.5">
+                                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Payment</p>
+                                      <p className="font-bold text-hero-text text-sm uppercase">{order.payment_method || "COD"}</p>
+                                      <p className={`text-[11px] font-bold ${order.payment_status === 'paid' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                                        {order.payment_status === 'paid' ? 'Verified' : 'Pending'}
+                                      </p>
+                                    </div>
+
+                                    {/* 5. Amount (col-span-1) */}
+                                    <div className="lg:col-span-1 flex flex-col justify-center text-left lg:text-right pt-4 sm:pt-0 border-t sm:border-t-0 border-border">
+                                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Amount</p>
+                                      <span className="text-lg font-black text-hero-text">৳{order.total}</span>
+                                    </div>
+
+                                    {/* 6. Action (col-span-2) */}
+                                    <div className="lg:col-span-2 flex items-center justify-start lg:justify-end pr-0 lg:pr-4 gap-2">
+                                      {orderTab === 'active' && order.status === 'pending' && (
+                                        <button
+                                          onClick={() => handleCancelOrder(order.id)}
+                                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg transition-all text-[11px] whitespace-nowrap"
+                                        >
+                                          Cancel
+                                        </button>
+                                      )}
+                                      <Link 
+                                        href={`/track?id=${order.id}`}
+                                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-all shadow-sm flex items-center justify-center gap-1.5 text-[11px] whitespace-nowrap"
+                                      >
+                                        {orderTab === 'past' ? 'View Details' : 'Track'} <ArrowRight className="w-3 h-3" />
+                                      </Link>
+                                    </div>
+
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* 2. WISHLIST TAB */}
                 {activeTab === "wishlist" && (
@@ -755,60 +1077,54 @@ function DashboardContent() {
                     </div>
 
                     {!showAddressForm ? (
-                      <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-4">
                         {addresses.length === 0 ? (
-                          <div className="col-span-full text-center py-12 space-y-3 bg-card border border-border rounded-2xl">
-                            <MapPin className="w-8 h-8 mx-auto text-muted-foreground" />
-                            <p className="text-sm font-semibold text-hero-text">No addresses saved</p>
-                            <p className="text-xs text-muted-foreground">Add a delivery address to make checkout faster.</p>
+                          <div className="text-center py-16 px-4 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl shadow-sm">
+                            <MapPin className="w-10 h-10 mx-auto text-[#CBD5E1] dark:text-muted-foreground mb-4" />
+                            <h3 className="text-lg font-bold text-[#0F172A] dark:text-hero-text mb-2">No addresses saved</h3>
+                            <p className="text-sm text-[#475569] dark:text-muted-foreground">Add a delivery address to ensure a seamless checkout experience.</p>
                           </div>
                         ) : (
                           addresses.map((addr) => (
                             <div 
                               key={addr.id}
-                              className={`relative p-5 bg-card border rounded-2xl transition-all ${
+                              className={`relative p-5 sm:p-6 bg-white dark:bg-card rounded-2xl transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-5 ${
                                 addr.is_default 
-                                  ? "border-emerald-500/50 shadow-[0_0_15px_rgba(52,211,153,0.1)]" 
-                                  : "border-border hover:border-emerald-500/30"
+                                  ? "border-2 border-emerald-500 shadow-[0_4px_20px_rgba(16,185,129,0.08)]" 
+                                  : "border border-[#EEF2F7] dark:border-border/50 hover:border-[#CBD5E1] dark:hover:border-border hover:shadow-sm"
                               }`}
                             >
-                              {addr.is_default && (
-                                <span className="absolute top-4 right-4 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider">
-                                  Default
-                                </span>
-                              )}
-                              
-                              <div className="space-y-3">
-                                <div>
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h4 className="font-bold text-hero-text text-sm">{addr.full_name}</h4>
-                                    <span className="bg-muted-bg text-muted-foreground px-2 py-0.5 rounded text-[10px] font-bold uppercase">{addr.label}</span>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground leading-relaxed">
-                                    {addr.street_address} {addr.apartment ? `, ${addr.apartment}` : ""} <br />
-                                    {addr.area}, {addr.city}, {addr.state} {addr.postal_code} <br />
-                                    {addr.country}
-                                  </p>
+                              <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <h4 className="font-bold text-[#0F172A] dark:text-hero-text text-base truncate max-w-[200px] sm:max-w-xs">{addr.full_name}</h4>
+                                  <span className="bg-[#F8FAFC] dark:bg-muted-bg border border-[#EEF2F7] dark:border-border/50 text-[#475569] dark:text-muted-foreground px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0">{addr.label}</span>
+                                  {addr.is_default && (
+                                    <span className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                      Default
+                                    </span>
+                                  )}
                                 </div>
-                                
-                                <div className="text-xs font-semibold text-hero-text">
-                                  📞 {addr.phone}
+                                <p className="text-sm text-[#475569] dark:text-muted-foreground leading-relaxed pr-4">
+                                  {addr.street_address}{addr.apartment ? `, ${addr.apartment}` : ""}, {addr.area}, {addr.city}, {addr.state} {addr.postal_code}, {addr.country}
+                                </p>
+                                <div className="flex items-center gap-2 text-sm font-semibold text-[#0F172A] dark:text-foreground">
+                                  <svg className="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                  {addr.phone}
                                 </div>
                               </div>
 
-                              <div className="mt-4 pt-4 border-t border-border flex items-center justify-between gap-2">
-                                {!addr.is_default ? (
+                              <div className="flex items-center gap-3 shrink-0 pt-4 sm:pt-0 sm:pl-6 border-t sm:border-t-0 sm:border-l border-[#EEF2F7] dark:border-border/50">
+                                {!addr.is_default && (
                                   <button
                                     onClick={() => handleSetDefaultAddress(addr.id)}
-                                    className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                                    className="text-xs font-bold text-[#475569] dark:text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors mr-auto sm:mr-4"
                                   >
-                                    Set as Default
+                                    Set Default
                                   </button>
-                                ) : (
-                                  <span className="text-[11px] font-bold text-muted-foreground">Default Address</span>
                                 )}
 
-                                <div className="flex gap-1">
+                                <div className={`flex items-center gap-2 ${addr.is_default ? 'ml-auto sm:ml-0' : ''}`}>
                                   <button
                                     onClick={() => {
                                       setAddressForm({
@@ -828,14 +1144,14 @@ function DashboardContent() {
                                       setEditingAddressId(addr.id);
                                       setShowAddressForm(true);
                                     }}
-                                    className="p-2 text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-500 rounded-lg transition-colors cursor-pointer"
+                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg transition-all"
                                     title="Edit"
                                   >
                                     <Settings className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteAddress(addr.id)}
-                                    className="p-2 text-muted-foreground hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors cursor-pointer"
+                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-all"
                                     title="Delete"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -847,161 +1163,338 @@ function DashboardContent() {
                         )}
                       </div>
                     ) : (
-                      <form onSubmit={handleSaveAddress} className="bg-card border border-border rounded-2xl p-6 space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-bold text-base text-hero-text">
+                      <form onSubmit={handleSaveAddress} className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 sm:p-8 space-y-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)] dark:shadow-none">
+                        <div>
+                          <h3 className="font-bold text-lg text-[#0F172A] dark:text-hero-text">
                             {editingAddressId ? "Edit Delivery Address" : "Add New Delivery Address"}
                           </h3>
+                          <p className="text-xs text-[#475569] dark:text-muted-foreground mt-1">Please provide accurate details to ensure smooth delivery.</p>
+                        </div>
+                        
+                        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-5">
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Full Name <span className="text-rose-500">*</span></label>
+                            <input
+                              type="text"
+                              required
+                              value={addressForm.full_name}
+                              onChange={(e) => setAddressForm(prev => ({ ...prev, full_name: e.target.value }))}
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              placeholder="e.g. John Doe"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Phone Number <span className="text-rose-500">*</span></label>
+                            <input
+                              type="tel"
+                              required
+                              value={addressForm.phone}
+                              onChange={(e) => setAddressForm(prev => ({ ...prev, phone: e.target.value }))}
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              placeholder="+880 1712-345678"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1.5 sm:col-span-2">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Street Address <span className="text-rose-500">*</span></label>
+                            <input
+                              type="text"
+                              required
+                              value={addressForm.street_address}
+                              onChange={(e) => setAddressForm(prev => ({ ...prev, street_address: e.target.value }))}
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              placeholder="House No, Road No, Block/Sector"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Area / Locality <span className="text-rose-500">*</span></label>
+                            <input
+                              type="text"
+                              required
+                              value={addressForm.area}
+                              onChange={(e) => setAddressForm(prev => ({ ...prev, area: e.target.value }))}
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              placeholder="e.g. Dhanmondi, Gulshan"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">City / Town <span className="text-rose-500">*</span></label>
+                            <input
+                              type="text"
+                              required
+                              value={addressForm.city}
+                              onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              placeholder="e.g. Dhaka"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">State / Division <span className="text-rose-500">*</span></label>
+                            <div className="relative">
+                              <select
+                                required
+                                value={addressForm.state}
+                                onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
+                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
+                              >
+                                <option value="" disabled>Select Division</option>
+                                <option value="Dhaka">Dhaka</option>
+                                <option value="Rajshahi">Rajshahi</option>
+                                <option value="Chittagong">Chittagong</option>
+                                <option value="Khulna">Khulna</option>
+                                <option value="Sylhet">Sylhet</option>
+                                <option value="Barisal">Barisal</option>
+                                <option value="Rangpur">Rangpur</option>
+                                <option value="Mymensingh">Mymensingh</option>
+                              </select>
+                              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Postal Code</label>
+                            <input
+                              type="text"
+                              value={addressForm.postal_code}
+                              onChange={(e) => setAddressForm(prev => ({ ...prev, postal_code: e.target.value }))}
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              placeholder="e.g. 1212"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Country <span className="text-rose-500">*</span></label>
+                            <input
+                              type="text"
+                              required
+                              value={addressForm.country}
+                              onChange={(e) => setAddressForm(prev => ({ ...prev, country: e.target.value }))}
+                              className="w-full bg-[#F8FAFC] dark:bg-muted/30 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#475569] dark:text-muted-foreground cursor-not-allowed"
+                              readOnly
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Address Label</label>
+                            <div className="relative">
+                              <select
+                                value={addressForm.label}
+                                onChange={(e) => setAddressForm(prev => ({ ...prev, label: e.target.value as any }))}
+                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
+                              >
+                                <option value="Home">Home</option>
+                                <option value="Office">Office</option>
+                                <option value="Other">Other</option>
+                              </select>
+                              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="sm:col-span-2 pt-2">
+                            <label className="flex items-center gap-3 cursor-pointer group w-max">
+                              <div className={`w-5 h-5 rounded flex items-center justify-center transition-all duration-200 ${
+                                addressForm.is_default 
+                                  ? "bg-emerald-600 border border-emerald-600 shadow-sm" 
+                                  : "bg-white dark:bg-card border border-[#CBD5E1] dark:border-border group-hover:border-emerald-500/50"
+                              }`}>
+                                {addressForm.is_default && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                              </div>
+                              <span className="text-sm font-semibold text-[#0F172A] dark:text-foreground select-none">Make this my default shipping address</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-[#EEF2F7] dark:border-border/50 mt-8">
                           <button
                             type="button"
                             onClick={() => {
                               setShowAddressForm(false);
                               setEditingAddressId(null);
                             }}
-                            className="text-xs font-bold text-muted-foreground hover:text-hero-text cursor-pointer"
+                            className="py-3 px-6 bg-white dark:bg-card hover:bg-[#F8FAFC] dark:hover:bg-muted-bg text-[#0F172A] dark:text-foreground text-sm font-bold rounded-xl border border-[#EEF2F7] dark:border-border/50 transition-all cursor-pointer flex-1 sm:flex-none text-center"
                           >
                             Cancel
                           </button>
+                          <button
+                            type="submit"
+                            disabled={addingAddress}
+                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98] flex-1 sm:flex-none"
+                          >
+                            {addingAddress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                            {editingAddressId ? "Update Address" : "Save Address"}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                )}
+
+                {/* 3B. PAYMENT METHODS TAB */}
+                {activeTab === "payment" && (
+                  <div className="space-y-6">
+                    <div className="border-b border-border pb-4 flex items-center justify-between">
+                      <div>
+                        <h2 className="font-serif-heading text-xl font-bold text-hero-text">Payment Methods</h2>
+                        <p className="text-xs text-muted-foreground">Manage your saved cards and mobile banking details.</p>
+                      </div>
+                      {!showPaymentForm && (
+                        <button
+                          onClick={() => {
+                            setPaymentForm({ provider: "card", account_details: "", is_default: false });
+                            setShowPaymentForm(true);
+                          }}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add Payment Method
+                        </button>
+                      )}
+                    </div>
+
+                    {!showPaymentForm ? (
+                      <div className="flex flex-col gap-4">
+                        {paymentMethods.length === 0 ? (
+                          <div className="text-center py-16 px-4 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl shadow-sm">
+                            <CreditCard className="w-10 h-10 mx-auto text-[#CBD5E1] dark:text-muted-foreground mb-4" />
+                            <h3 className="text-lg font-bold text-[#0F172A] dark:text-hero-text mb-2">No payment methods saved</h3>
+                            <p className="text-sm text-[#475569] dark:text-muted-foreground">Add a payment method for faster checkout.</p>
+                          </div>
+                        ) : (
+                          paymentMethods.map((method) => (
+                            <div 
+                              key={method.id}
+                              className={`relative p-5 sm:p-6 bg-white dark:bg-card rounded-2xl transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-5 ${
+                                method.is_default 
+                                  ? "border-2 border-emerald-500 shadow-[0_4px_20px_rgba(16,185,129,0.08)]" 
+                                  : "border border-[#EEF2F7] dark:border-border/50 hover:border-[#CBD5E1] dark:hover:border-border hover:shadow-sm"
+                              }`}
+                            >
+                              <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <h4 className="font-bold text-[#0F172A] dark:text-hero-text text-base capitalize">{method.provider}</h4>
+                                  <span className="bg-[#F8FAFC] dark:bg-muted-bg border border-[#EEF2F7] dark:border-border/50 text-[#475569] dark:text-muted-foreground px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wider shrink-0">
+                                    {method.account_details}
+                                  </span>
+                                  {method.is_default && (
+                                    <span className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                      Default
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 shrink-0 pt-4 sm:pt-0 sm:pl-6 border-t sm:border-t-0 sm:border-l border-[#EEF2F7] dark:border-border/50">
+                                {!method.is_default && (
+                                  <button
+                                    onClick={() => handleSetDefaultPayment(method.id)}
+                                    className="text-xs font-bold text-[#475569] dark:text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors mr-auto sm:mr-4"
+                                  >
+                                    Set Default
+                                  </button>
+                                )}
+
+                                <div className={`flex items-center gap-2 ${method.is_default ? 'ml-auto sm:ml-0' : ''}`}>
+                                  <button
+                                    onClick={() => handleDeletePaymentMethod(method.id)}
+                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-all"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    ) : (
+                      <form onSubmit={handleSavePaymentMethod} className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 sm:p-8 space-y-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)] dark:shadow-none">
+                        <div>
+                          <h3 className="font-bold text-lg text-[#0F172A] dark:text-hero-text">
+                            Add New Payment Method
+                          </h3>
+                          <p className="text-xs text-[#475569] dark:text-muted-foreground mt-1">Add your preferred payment option.</p>
                         </div>
                         
-                        <div className="grid sm:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">Full Name *</label>
-                            <input
-                              type="text"
-                              required
-                              value={addressForm.full_name}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, full_name: e.target.value }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                            />
+                        <div className="grid gap-x-6 gap-y-5">
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Provider <span className="text-rose-500">*</span></label>
+                            <div className="relative">
+                              <select
+                                required
+                                value={paymentForm.provider}
+                                onChange={(e) => setPaymentForm(prev => ({ ...prev, provider: e.target.value }))}
+                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
+                              >
+                                <option value="card">Credit / Debit Card</option>
+                                <option value="bkash">bKash</option>
+                                <option value="nagad">Nagad</option>
+                                <option value="gpay">Google Pay</option>
+                              </select>
+                              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                              </div>
+                            </div>
                           </div>
                           
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">Phone Number *</label>
-                            <input
-                              type="tel"
-                              required
-                              value={addressForm.phone}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, phone: e.target.value }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                            />
-                          </div>
-                          
-                          <div className="space-y-2 sm:col-span-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">Street Address *</label>
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Account Details (Number or Card Last 4) <span className="text-rose-500">*</span></label>
                             <input
                               type="text"
                               required
-                              value={addressForm.street_address}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, street_address: e.target.value }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                              placeholder="House, Road, Block..."
+                              value={paymentForm.account_details}
+                              onChange={(e) => setPaymentForm(prev => ({ ...prev, account_details: e.target.value }))}
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              placeholder={paymentForm.provider === 'card' ? "e.g. **** **** **** 4242" : "e.g. 01712345678"}
                             />
                           </div>
 
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">Area / Locality *</label>
-                            <input
-                              type="text"
-                              required
-                              value={addressForm.area}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, area: e.target.value }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                              placeholder="e.g. Dhanmondi, Gulshan"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">City / Town *</label>
-                            <input
-                              type="text"
-                              required
-                              value={addressForm.city}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">State / Division *</label>
-                            <select
-                              required
-                              value={addressForm.state}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 cursor-pointer appearance-none"
-                            >
-                              <option value="">Select Division</option>
-                              <option value="Dhaka">Dhaka</option>
-                              <option value="Rajshahi">Rajshahi</option>
-                              <option value="Chittagong">Chittagong</option>
-                              <option value="Khulna">Khulna</option>
-                              <option value="Sylhet">Sylhet</option>
-                              <option value="Barisal">Barisal</option>
-                              <option value="Rangpur">Rangpur</option>
-                              <option value="Mymensingh">Mymensingh</option>
-                            </select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">Postal Code</label>
-                            <input
-                              type="text"
-                              value={addressForm.postal_code}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, postal_code: e.target.value }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">Country *</label>
-                            <input
-                              type="text"
-                              required
-                              value={addressForm.country}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, country: e.target.value }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground block">Address Label</label>
-                            <select
-                              value={addressForm.label}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, label: e.target.value as any }))}
-                              className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 cursor-pointer appearance-none"
-                            >
-                              <option value="Home">Home</option>
-                              <option value="Office">Office</option>
-                              <option value="Other">Other</option>
-                            </select>
-                          </div>
-                          
-                          <div className="sm:col-span-2 pt-2">
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                              <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                                addressForm.is_default ? "bg-emerald-500 border-emerald-500" : "bg-card border-border group-hover:border-emerald-500/50"
+                          <div className="pt-2">
+                            <label className="flex items-center gap-3 cursor-pointer group w-max">
+                              <div className={`w-5 h-5 rounded flex items-center justify-center transition-all duration-200 ${
+                                paymentForm.is_default 
+                                  ? "bg-emerald-600 border border-emerald-600 shadow-sm" 
+                                  : "bg-white dark:bg-card border border-[#CBD5E1] dark:border-border group-hover:border-emerald-500/50"
                               }`}>
-                                {addressForm.is_default && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                                {paymentForm.is_default && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
                               </div>
                               <input
                                 type="checkbox"
                                 className="hidden"
-                                checked={addressForm.is_default}
-                                onChange={(e) => setAddressForm(prev => ({ ...prev, is_default: e.target.checked }))}
+                                checked={paymentForm.is_default}
+                                onChange={(e) => setPaymentForm(prev => ({ ...prev, is_default: e.target.checked }))}
                               />
-                              <span className="text-sm font-semibold text-hero-text">Make this my default shipping address</span>
+                              <span className="text-sm font-semibold text-[#0F172A] dark:text-foreground select-none">Make this my default payment method</span>
                             </label>
                           </div>
                         </div>
 
-                        <div className="flex justify-end pt-4 border-t border-border">
+                        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-[#EEF2F7] dark:border-border/50 mt-8">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowPaymentForm(false);
+                            }}
+                            className="py-3 px-6 bg-white dark:bg-card hover:bg-[#F8FAFC] dark:hover:bg-muted-bg text-[#0F172A] dark:text-foreground text-sm font-bold rounded-xl border border-[#EEF2F7] dark:border-border/50 transition-all cursor-pointer flex-1 sm:flex-none text-center"
+                          >
+                            Cancel
+                          </button>
                           <button
                             type="submit"
-                            disabled={addingAddress}
-                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-extrabold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+                            disabled={addingPayment}
+                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98] flex-1 sm:flex-none"
                           >
-                            {addingAddress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                            {editingAddressId ? "Update Address" : "Save Address"}
+                            {addingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                            Save Payment Method
                           </button>
                         </div>
                       </form>
@@ -1019,12 +1512,12 @@ function DashboardContent() {
 
                     <form onSubmit={handleUpdateProfile} className="space-y-8 font-sans">
                       {/* Profile Picture Section */}
-                      <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-muted-bg/50 border border-border rounded-2xl">
+                      <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-muted-bg/50 border border-border rounded-lg shadow-sm">
                         <div className="relative">
-                          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#fbbf24] to-[#f59e0b] flex items-center justify-center text-black text-3xl font-black shadow-lg">
+                          <div className="w-20 h-20 rounded-lg bg-gradient-to-tr from-[#fbbf24] to-[#f59e0b] flex items-center justify-center text-black text-3xl font-black shadow-md">
                             {profile.full_name ? profile.full_name[0].toUpperCase() : "U"}
                           </div>
-                          <button type="button" className="absolute bottom-0 right-0 p-2 bg-card border border-border rounded-full text-muted-foreground hover:text-emerald-500 shadow-sm transition-colors cursor-pointer" title="Update Picture">
+                          <button type="button" className="absolute -bottom-2 -right-2 p-1.5 bg-card border border-border rounded-md text-muted-foreground hover:text-emerald-500 shadow-sm transition-colors cursor-pointer" title="Update Picture">
                             <Camera className="w-4 h-4" />
                           </button>
                         </div>
@@ -1038,57 +1531,57 @@ function DashboardContent() {
 
                       {/* Personal Info Grid */}
                       <div className="grid sm:grid-cols-2 gap-6">
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">Full Name</label>
                           <input
                             type="text"
                             required
                             value={accountForm.fullName}
                             onChange={(e) => setAccountForm(prev => ({ ...prev, fullName: e.target.value }))}
-                            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
+                            className="w-full bg-card border border-border rounded-md px-3.5 py-2.5 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all shadow-sm"
                             placeholder="John Doe"
                           />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">Email Address (Read Only)</label>
                           <input
                             type="email"
                             disabled
                             value={accountForm.email}
-                            className="w-full bg-muted-bg/50 border border-border rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground cursor-not-allowed opacity-70"
+                            className="w-full bg-muted-bg/50 border border-border rounded-md px-3.5 py-2.5 text-sm font-semibold text-muted-foreground cursor-not-allowed opacity-70 shadow-sm"
                           />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">Phone Number</label>
                           <input
                             type="tel"
                             required
                             value={accountForm.phone}
                             onChange={(e) => setAccountForm(prev => ({ ...prev, phone: e.target.value }))}
-                            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
+                            className="w-full bg-card border border-border rounded-md px-3.5 py-2.5 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all shadow-sm"
                             placeholder="+880 1..."
                           />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">Date of Birth</label>
                           <input
                             type="date"
                             value={accountForm.dob}
                             onChange={(e) => setAccountForm(prev => ({ ...prev, dob: e.target.value }))}
-                            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
+                            className="w-full bg-card border border-border rounded-md px-3.5 py-2.5 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all shadow-sm"
                           />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">Gender</label>
                           <div className="relative">
                             <select
                               value={accountForm.gender}
                               onChange={(e) => setAccountForm(prev => ({ ...prev, gender: e.target.value }))}
-                              className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
+                              className="w-full bg-card border border-border rounded-md px-3.5 py-2.5 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all appearance-none cursor-pointer shadow-sm"
                             >
                               <option value="">Select Gender</option>
                               <option value="male">Male</option>
@@ -1101,13 +1594,13 @@ function DashboardContent() {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">Country</label>
                           <div className="relative">
                             <select
                               value={accountForm.country}
                               onChange={(e) => setAccountForm(prev => ({ ...prev, country: e.target.value }))}
-                              className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
+                              className="w-full bg-card border border-border rounded-md px-3.5 py-2.5 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all appearance-none cursor-pointer shadow-sm"
                             >
                               <option value="">Select Country</option>
                               <option value="Bangladesh">Bangladesh</option>
@@ -1121,13 +1614,13 @@ function DashboardContent() {
                           </div>
                         </div>
 
-                        <div className="space-y-2 sm:col-span-2">
+                        <div className="space-y-1.5 sm:col-span-2">
                           <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">City / Region</label>
                           <input
                             type="text"
                             value={accountForm.city}
                             onChange={(e) => setAccountForm(prev => ({ ...prev, city: e.target.value }))}
-                            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
+                            className="w-full bg-card border border-border rounded-md px-3.5 py-2.5 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all shadow-sm"
                             placeholder="Dhaka, Rajshahi..."
                           />
                         </div>
@@ -1137,7 +1630,7 @@ function DashboardContent() {
                         <button
                           type="submit"
                           disabled={savingAccount}
-                          className="py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-[0_0_15px_rgba(52,211,153,0.2)] hover:shadow-[0_0_20px_rgba(52,211,153,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+                          className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-md shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98]"
                         >
                           {savingAccount ? (
                             <>
@@ -1153,25 +1646,63 @@ function DashboardContent() {
                   </div>
                 )}
 
-                {/* 5. PAYMENT METHODS TAB */}
-                {activeTab === "payment" && (
-                  <div className="space-y-6 flex flex-col items-center justify-center text-center py-20 h-full">
-                    <div className="p-4 bg-muted-bg rounded-full text-muted-foreground mb-4">
-                      <CreditCard className="w-8 h-8" />
-                    </div>
-                    <h2 className="font-serif-heading text-xl font-bold text-hero-text">Payment Methods</h2>
-                    <p className="text-xs text-muted-foreground max-w-sm">
-                      Securely save your payment methods for faster checkout. This feature is coming soon.
-                    </p>
-                  </div>
-                )}
-
                 {/* 6. PREFERENCES / NOTIFICATIONS TAB */}
                 {activeTab === "notifications" && (
-                  <div className="space-y-6">
-                    <div className="border-b border-border pb-4">
-                      <h2 className="font-serif-heading text-xl font-bold text-hero-text">Preferences & Notifications</h2>
-                      <p className="text-xs text-muted-foreground">Customize your MangoDB experience and manage alerts.</p>
+                  <div className="space-y-8">
+                    <div className="space-y-6">
+                      <div className="border-b border-border pb-4 flex justify-between items-center">
+                        <div>
+                          <h2 className="font-serif-heading text-xl font-bold text-hero-text">Recent Notifications</h2>
+                          <p className="text-xs text-muted-foreground">Stay updated on your orders and account activity.</p>
+                        </div>
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={async () => {
+                              if (!profile) return;
+                              if (!profile.id.startsWith("demo-")) {
+                                await supabase.from("notifications").update({ is_read: true }).eq("user_id", profile.id);
+                              }
+                              setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+                              localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(notifications.map(n => ({ ...n, is_read: true }))));
+                            }}
+                            className="text-xs font-bold text-emerald-600 hover:text-emerald-500"
+                          >
+                            Mark all as read
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col gap-3">
+                        {notifications.length === 0 ? (
+                          <div className="text-center py-10 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl shadow-sm">
+                            <Bell className="w-8 h-8 mx-auto text-[#CBD5E1] dark:text-muted-foreground mb-3" />
+                            <p className="text-sm font-semibold text-hero-text">No notifications yet</p>
+                          </div>
+                        ) : (
+                          notifications.map((notif) => (
+                            <div key={notif.id} className={`p-4 rounded-xl border flex gap-4 transition-all ${notif.is_read ? 'bg-transparent border-border/50' : 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-500/20'}`}>
+                              <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${
+                                notif.type === 'order_placed' ? 'bg-blue-100 text-blue-600' :
+                                notif.type === 'order_cancelled' ? 'bg-rose-100 text-rose-600' :
+                                'bg-emerald-100 text-emerald-600'
+                              }`}>
+                                <Bell className="w-4 h-4" />
+                              </div>
+                              <div className="space-y-1">
+                                <h4 className="text-sm font-bold text-hero-text">{notif.title}</h4>
+                                <p className="text-xs text-muted-foreground">{notif.message}</p>
+                                <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider block pt-1">
+                                  {new Date(notif.created_at).toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="border-b border-border pb-4 mt-12">
+                      <h2 className="font-serif-heading text-xl font-bold text-hero-text">Display Preferences</h2>
                     </div>
 
                     <form onSubmit={handleUpdatePreferences} className="space-y-8 font-sans max-w-2xl">

@@ -15,20 +15,52 @@ import {
     ChevronDown,
     Package,
     Settings,
-    User
+    User,
+    Bell
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import GlobalSearch from "./GlobalSearch";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, logout } = useAuth();
+  const supabase = createClient() as any;
   const { cartItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+
+  // Load unread notifications
+  useEffect(() => {
+    async function loadNotifs() {
+      if (!profile) {
+        setUnreadNotifs(0);
+        return;
+      }
+      if (!profile.id.startsWith("demo-")) {
+        const { count } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", profile.id)
+          .eq("is_read", false);
+        if (count !== null) setUnreadNotifs(count);
+      } else {
+        const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+        const count = storedNotifs.filter((n: any) => !n.is_read).length;
+        setUnreadNotifs(count);
+      }
+    }
+    loadNotifs();
+
+    // Optionally set up an interval to refresh notifs
+    const interval = setInterval(loadNotifs, 10000); // Check every 10s
+    return () => clearInterval(interval);
+  }, [profile]);
 
   // Sync theme state on mount
   useEffect(() => {
@@ -58,8 +90,8 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#f4f7f5] dark:bg-background border-b border-gray-200 dark:border-border/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
+        <div className="flex items-center justify-between lg:justify-start h-20 lg:gap-12">
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
@@ -72,7 +104,7 @@ export default function Navbar() {
           </Link>
 
           {/* Nav Links - Desktop */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-8 mr-auto">
             <Link
               href="/products"
               className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
@@ -123,6 +155,31 @@ export default function Navbar() {
 
           {/* Auth + Theme Toggle + Cart */}
           <div className="flex items-center gap-3 shrink-0">
+            {/* Global Search Bar */}
+            <GlobalSearch />
+
+            {/* Notification Bell */}
+            {profile && (
+              <button
+                onClick={() => {
+                  if (pathname === "/dashboard") {
+                    window.location.href = "/dashboard?tab=notifications";
+                  } else {
+                    router.push("/dashboard?tab=notifications");
+                  }
+                }}
+                className="relative p-2.5 rounded-xl bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
+                aria-label="View Notifications"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadNotifs > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-rose-600 text-[10px] font-black text-white ring-2 ring-background animate-pulse-slow">
+                    {unreadNotifs}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Shopping Cart Indicator */}
             <Link
               href="/cart"
@@ -245,7 +302,7 @@ export default function Navbar() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2.5 rounded-xl bg-muted-bg border border-border text-foreground hover:border-[#fbbf24]/30 transition-all cursor-pointer shadow-sm"
+              className="lg:hidden p-2.5 rounded-xl bg-muted-bg border border-border text-foreground hover:border-[#fbbf24]/30 transition-all cursor-pointer shadow-sm"
               aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -256,7 +313,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background shadow-lg animate-fade-in">
+        <div className="lg:hidden border-t border-border bg-background shadow-lg animate-fade-in">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
             <Link
               href="/products"
@@ -298,6 +355,31 @@ export default function Navbar() {
               Our Story
             </Link>
 
+            {/* Notifications Link in Mobile */}
+            {profile && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (pathname === "/dashboard") {
+                    window.location.href = "/dashboard?tab=notifications";
+                  } else {
+                    router.push("/dashboard?tab=notifications");
+                  }
+                }}
+                className="w-full flex items-center justify-between text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2 cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5" />
+                  Notifications
+                </div>
+                {unreadNotifs > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-xs font-bold">
+                    {unreadNotifs} new
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Cart Link in Mobile */}
             <Link
               href="/cart"
@@ -330,23 +412,39 @@ export default function Navbar() {
                     </span>
                   </div>
                   
-                  {profile.role === "admin" ? (
+                  {profile.role === "admin" && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full text-center text-sm font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 py-3 rounded-xl hover:bg-amber-500/20 transition-all"
+                      className="block w-full text-center text-sm font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 py-3 rounded-xl hover:bg-amber-500/20 transition-all mb-2"
                     >
                       Admin Panel
                     </Link>
-                  ) : (
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2">
                     <Link
-                      href="/dashboard"
+                      href="/dashboard?tab=overview"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full text-center text-sm font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 py-3 rounded-xl hover:bg-emerald-500/20 transition-all"
+                      className="block text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 py-3 rounded-xl hover:bg-emerald-500/20 transition-all"
                     >
                       My Dashboard
                     </Link>
-                  )}
+                    <Link
+                      href="/dashboard?tab=orders"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block text-center text-xs font-bold text-hero-text bg-muted-bg border border-border py-3 rounded-xl hover:bg-section-alt transition-all"
+                    >
+                      My Orders
+                    </Link>
+                    <Link
+                      href="/dashboard?tab=account"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block text-center text-xs font-bold text-hero-text bg-muted-bg border border-border py-3 rounded-xl hover:bg-section-alt transition-all col-span-2"
+                    >
+                      Update Profile
+                    </Link>
+                  </div>
 
                   <button
                     onClick={() => {

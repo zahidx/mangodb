@@ -33,19 +33,20 @@ export default function Footer() {
               ],
             },
             {
-              title: "For Farmers",
+              title: "Company",
               links: [
+                { label: "Track Your Order", href: "/track" },
+                { label: "Browse All Products", href: "/products" },
                 { label: "Become a Seller", href: "/signup?seller=true" },
-                { label: "Quality Standards", href: "#" },
-                { label: "Payment Verification", href: "#" },
               ],
             },
             {
-              title: "Support",
+              title: "Legal & Support",
               links: [
-                { label: "Help Center", href: "#" },
-                { label: "Shipping Policy (BD)", href: "#" },
-                { label: "Terms of Service", href: "#" },
+                { label: "Shipping & Delivery", href: "/legal/shipping" },
+                { label: "Refund & Return Policy", href: "/legal/refund" },
+                { label: "Terms of Service", href: "/legal/terms" },
+                { label: "Privacy Policy", href: "/legal/privacy" },
               ],
             },
           ].map((col) => (

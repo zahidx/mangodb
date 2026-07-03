@@ -42,7 +42,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   
   // Coupon state
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [discountData, setDiscountData] = useState<{ type: 'percentage' | 'fixed', value: number }>({ type: 'percentage', value: 0 });
   
   // Location/Delivery state
   const [deliveryDistrict, setDeliveryDistrict] = useState<string>("Dhaka");
@@ -228,7 +228,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = async () => {
     saveLocalCart([]);
     setAppliedCoupon(null);
-    setDiscountPercent(0);
+    setDiscountData({ type: 'percentage', value: 0 });
 
     // Sync database
     if (profile && !profile.id.startsWith("demo-")) {
@@ -243,13 +243,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const applyCoupon = async (code: string): Promise<boolean> => {
     const formattedCode = code.trim().toUpperCase();
     
-    // Check local coupon mocks if database tables are not loaded
-    const mockCoupons: Record<string, number> = {
-      "MANGO10": 10,
-      "EATFRESH": 15,
-      "FREEBENGAL": 5
-    };
-
     if (profile && !profile.id.startsWith("demo-")) {
       try {
         const { data, error } = await supabase
@@ -261,8 +254,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         if (!error && data) {
           setAppliedCoupon(data.code);
-          setDiscountPercent(data.discount_percentage);
-          toast.success(`Coupon "${data.code}" applied! (${data.discount_percentage}% off)`);
+          setDiscountData({ type: data.discount_type, value: data.discount_value });
+          toast.success(`Promo Code "${data.code}" applied!`);
           return true;
         }
       } catch (e) {
@@ -271,21 +264,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Fallback/Local checks
+    const mockCoupons: Record<string, { type: 'percentage' | 'fixed', value: number }> = {
+      "MANGOLOVE": { type: 'percentage', value: 10 },
+      "FRESH100": { type: 'fixed', value: 100 },
+      "EIDSPL": { type: 'percentage', value: 15 }
+    };
+
     if (formattedCode in mockCoupons) {
       setAppliedCoupon(formattedCode);
-      setDiscountPercent(mockCoupons[formattedCode]);
-      toast.success(`Coupon "${formattedCode}" applied! (${mockCoupons[formattedCode]}% off)`);
+      setDiscountData(mockCoupons[formattedCode]);
+      toast.success(`Promo Code "${formattedCode}" applied!`);
       return true;
     }
 
-    toast.error("Invalid or expired coupon code");
+    toast.error("Invalid or expired promo code");
     return false;
   };
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
-    setDiscountPercent(0);
-    toast.success("Coupon removed");
+    setDiscountData({ type: 'percentage', value: 0 });
+    toast.success("Promo code removed");
   };
 
   // Pricing calculations
@@ -304,7 +303,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const isInsideDhaka = deliveryDistrict.toLowerCase().includes("dhaka");
   const deliveryCharge = cartItems.length > 0 ? (isInsideDhaka ? 120 : 200) : 0;
 
-  const discount = Math.round(subtotal * (discountPercent / 100));
+  let discount = 0;
+  if (discountData.type === 'percentage') {
+    discount = Math.round(subtotal * (discountData.value / 100));
+  } else if (discountData.type === 'fixed') {
+    discount = discountData.value;
+  }
+  
+  // Ensure discount doesn't exceed subtotal
+  if (discount > subtotal) discount = subtotal;
+
   const total = subtotal - discount + deliveryCharge;
 
   return (

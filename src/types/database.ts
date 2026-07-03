@@ -75,6 +75,7 @@ export interface Order {
   shipping_address: ShippingAddress | null;
   payment_status: PaymentStatus;
   payment_id: string | null;
+  payment_method?: string | null;
   created_at: string;
   updated_at: string;
   // Joined fields

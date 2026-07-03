@@ -23,9 +23,11 @@ import {
     Sparkles,
     Star,
     Truck,
-    X
+    X,
+    Zap
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -43,6 +45,7 @@ export default function HomePage() {
   const [selectedWeight, setSelectedWeight] = useState<5 | 10>(10);
   const [checkoutForm, setCheckoutForm] = useState({
     name: "",
+    email: "",
     phone: "",
     address: "",
     paymentMethod: "cod"
@@ -83,6 +86,7 @@ export default function HomePage() {
       setCheckoutForm(prev => ({
         ...prev,
         name: user.full_name || "",
+        email: user.email || "",
         phone: user.phone || ""
       }));
     }
@@ -219,6 +223,26 @@ export default function HomePage() {
       }
     }));
 
+    // Trigger transactional email
+    if (checkoutForm.email) {
+      try {
+        await fetch("/api/send-order-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: newOrderId,
+            customerName: checkoutForm.name,
+            email: checkoutForm.email,
+            total,
+            productName: `${checkoutProduct.name} (${selectedWeight}kg)`,
+            shippingAddress: checkoutForm.address,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to send order email:", err);
+      }
+    }
+
     setIsSubmittingOrder(false);
     setOrderSuccessId(newOrderId);
   };
@@ -336,592 +360,285 @@ export default function HomePage() {
       <Navbar />
 
       {/* ====== MAIN CONTENT WRAPPER ====== */}
-      <div className="grow flex flex-col relative z-10">
+      <div className="grow flex flex-col relative z-10 pt-16">
         
-        {/* ====== HERO SECTION ====== */}
-        <section className="relative min-h-[calc(100vh-5rem)] flex items-center overflow-hidden bg-gradient-to-b from-[#f2f7f4] to-[#eaf1ec] dark:from-background dark:to-background">
-          
-          {/* Background Orbs */}
-          <div className="absolute -top-50 -left-25 w-150 h-150 rounded-full bg-primary/8 dark:bg-primary/5 blur-[120px] pointer-events-none" />
-          <div className="absolute -bottom-37.5 -right-25 w-125 h-125 rounded-full bg-accent/6 dark:bg-accent/3 blur-[120px] pointer-events-none" />
-
-          {/* Decorative leaf */}
-          <div className="absolute top-[15%] right-[10%] text-accent/8 dark:text-accent-light/5 animate-leaf-1 pointer-events-none">
-            <Leaf className="w-24 h-24 rotate-12" strokeWidth={1.5} />
+        {/* 1. Hero Section (Rustic background, white text, green buttons) */}
+        <section className="relative w-full h-[550px] flex items-center justify-center overflow-hidden">
+          {/* Background Image */}
+          <div className="absolute inset-0 z-0">
+             <Image src="https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=1600&auto=format&fit=crop&q=80" alt="Gardeners" fill className="object-cover brightness-50" />
           </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              
-              {/* ===== LEFT — Content ===== */}
-              <div className="space-y-7 text-center lg:text-left pt-[40px]">
-                
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/8 dark:bg-accent/10 border border-accent/20 dark:border-accent/20 text-xs font-semibold text-accent-dark dark:text-accent-light tracking-wide opacity-0 animate-hero-slide-up hero-delay-1">
-                  <Leaf className="w-3 h-3" />
-                  <span>Rajshahi Orchard Fresh</span>
-                </div>
-
-                {/* Heading */}
-                <h1 className="font-serif-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-hero-text opacity-0 animate-hero-slide-up hero-delay-2">
-                  Explore the Finest
-                  <br />
-                  <span className="text-primary-dark">Mango Selection</span>
-                </h1>
-
-                {/* Subheading */}
-                <p className="text-base sm:text-lg text-hero-text-secondary max-w-lg mx-auto lg:mx-0 leading-relaxed opacity-0 animate-hero-slide-up hero-delay-3">
-                  Taste the sweetness of pure, carbide-free premium mangoes — handpicked from the historic orchards of Rajshahi and delivered to your doorstep across Bangladesh.
-                </p>
-
-                {/* CTA Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 opacity-0 animate-hero-slide-up hero-delay-4">
-                  <Link
-                    href="/products"
-                    className="px-8 py-3.5 bg-primary hover:bg-primary-dark text-black font-bold rounded-xl transition-all duration-200 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.97] flex items-center gap-2 group"
-                  >
-                    Shop Mangoes
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                  <Link
-                    href="/#varieties"
-                    className="px-8 py-3.5 border border-border text-hero-text-secondary font-semibold rounded-xl hover:bg-white/50 dark:hover:bg-white/5 transition-all duration-200 active:scale-[0.97]"
-                  >
-                    Explore Varieties
-                  </Link>
-                </div>
-
-                {/* Trust Bar */}
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 pt-2 opacity-0 animate-hero-slide-up hero-delay-5">
-                  
-                  {/* Stars */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex -space-x-2">
-                      <img className="w-8 h-8 rounded-full border-2 border-white dark:border-background object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="" />
-                      <img className="w-8 h-8 rounded-full border-2 border-white dark:border-background object-cover" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80" alt="" />
-                      <img className="w-8 h-8 rounded-full border-2 border-white dark:border-background object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" alt="" />
-                    </div>
-                    <div className="flex items-center gap-1 text-primary">
-                      <Star className="w-3 h-3 fill-current" />
-                      <Star className="w-3 h-3 fill-current" />
-                      <Star className="w-3 h-3 fill-current" />
-                      <Star className="w-3 h-3 fill-current" />
-                      <Star className="w-3 h-3 fill-current" />
-                      <span className="text-sm font-bold text-hero-text ml-1">4.9</span>
-                      <span className="text-xs text-muted-foreground">(10K+ reviews)</span>
-                    </div>
-                  </div>
-
-                  {/* Divider */}
-                  <span className="hidden sm:block w-px h-6 bg-border" />
-
-                  {/* Quick stats */}
-                  <div className="flex items-center gap-4 text-xs">
-                    <span className="flex items-center gap-1.5 text-hero-text-secondary">
-                      <Truck className="w-3.5 h-3.5 text-accent" /> Free Delivery
-                    </span>
-                    <span className="flex items-center gap-1.5 text-hero-text-secondary">
-                      <Shield className="w-3.5 h-3.5 text-accent" /> Carbide-Free
-                    </span>
-                    <span className="flex items-center gap-1.5 text-hero-text-secondary">
-                      <Leaf className="w-3.5 h-3.5 text-accent" /> 15+ Varieties
-                    </span>
-                  </div>
-                </div>
-
-                {/* Search */}
-                <div className="max-w-lg mx-auto lg:mx-0 pt-2 opacity-0 animate-hero-slide-up hero-delay-6">
-                  <div className="flex items-center bg-white dark:bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
-                    <Search className="w-4 h-4 text-muted-foreground mr-2.5 shrink-0" />
-                    <input
-                      type="text"
-                      placeholder="Search Himsagar, Lengra, Amrapali..."
-                      className="w-full bg-transparent border-0 text-sm text-hero-text placeholder-muted-foreground focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-              </div>
-
-              {/* ===== RIGHT — Visual Showcase ===== */}
-              <div className="relative hidden lg:flex items-center justify-center pt-[60px]">
-                
-                {/* Main Image */}
-                <div className="relative w-95 h-120 rounded-3xl overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 opacity-0 animate-hero-scale-in hero-delay-3 group">
-                  <img 
-                    src="https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80" 
-                    alt="Premium mango selection"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                  
-                  {/* Bottom caption */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <div className="flex items-center gap-2 text-white">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-semibold">Handpicked Premium Quality</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating card — top right */}
-                <div className="absolute top-[8%] -right-[5%] w-45 bg-white/95 dark:bg-card/95 backdrop-blur-lg rounded-xl border border-border/60 shadow-lg p-3.5 opacity-0 animate-reveal-card hero-delay-5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                      <img src="https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=200&auto=format&fit=crop&q=80" alt="Himsagar" className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-accent uppercase tracking-wider">Best Seller</p>
-                      <p className="text-xs font-bold text-hero-text">Himsagar</p>
-                      <p className="text-xs font-bold text-hero-text">৳999 <span className="text-[10px] text-muted-foreground line-through">৳1,200</span></p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating card — bottom left */}
-                <div className="absolute bottom-[12%] -left-[6%] w-45 bg-white/95 dark:bg-card/95 backdrop-blur-lg rounded-xl border border-border/60 shadow-lg p-3.5 opacity-0 animate-reveal-card hero-delay-6">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                      <img src="https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=200&auto=format&fit=crop&q=80" alt="Lengra" className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-warning uppercase tracking-wider">Trending</p>
-                      <p className="text-xs font-bold text-hero-text">Amrapali</p>
-                      <p className="text-xs font-bold text-hero-text">৳1,150 <span className="text-[10px] text-muted-foreground line-through">৳1,300</span></p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Decorative ring */}
-                <div className="absolute w-105 h-105 rounded-full border border-dashed border-primary/15 dark:border-primary/10 animate-rotate-slow pointer-events-none" />
-              </div>
-
-            </div>
+          <div className="relative z-10 text-center max-w-4xl px-4 flex flex-col items-center">
+             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight mb-6 tracking-tight">
+               Fresh & Chemical-Free<br />Mangoes from Rajshahi
+             </h1>
+             <p className="text-lg text-gray-200 mb-8 max-w-2xl">
+               Taste the sweetness of pure, carbide-free premium mangoes. Handpicked from our contracted orchards and delivered directly to your home.
+             </p>
+             <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Link href="/products" className="px-8 py-3.5 bg-transparent border-2 border-[#527d62] text-white hover:bg-[#527d62] hover:border-transparent font-bold rounded transition-all">
+                  Our Contracted Gardens
+                </Link>
+                <Link href="/products" className="px-8 py-3.5 bg-[#527d62] text-white font-bold rounded border-2 border-[#527d62] hover:bg-[#436750] hover:border-[#436750] transition-all">
+                  Try our fruits
+                </Link>
+             </div>
           </div>
         </section>
 
-        {/* Spacer between hero and sections below */}
-        <div className="h-16 lg:h-20" />
-
-        {/* ====== CATEGORIES SECTION ====== */}
-        <section className="py-24 relative border-t border-border bg-section-alt">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-14">
-              <div className="space-y-3">
-                <span className="inline-block text-xs font-bold text-accent-dark dark:text-accent-light tracking-[0.15em] uppercase">Pure Mango Goodness</span>
-                <h2 className="font-serif-heading text-3xl sm:text-4xl font-bold text-hero-text tracking-tight">
-                  Shop by Category
-                </h2>
-              </div>
-              <Link
-                href="/categories"
-                className="mt-4 md:mt-0 flex items-center gap-2 text-sm font-semibold text-accent-dark dark:text-accent-light hover:text-hero-text transition-colors group"
-              >
-                View all categories
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {categories.map((cat) => {
-                const IconComponent = cat.icon;
-                return (
-                  <Link
-                    key={cat.name}
-                    href={`/categories/${cat.slug}`}
-                    className={`group p-6 rounded-2xl bg-card border border-border ${cat.border} transition-all duration-300 hover:-translate-y-1 flex flex-col items-center text-center`}
-                  >
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      <IconComponent className="w-6 h-6 text-accent-dark dark:text-accent-light" />
-                    </div>
-                    <h3 className="font-bold text-hero-text text-sm group-hover:text-primary transition-colors">{cat.name}</h3>
-                    <span className="text-xs text-muted-foreground mt-1.5">{cat.count}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+        {/* 2. Category Navigation Tabs */}
+        <section className="max-w-7xl mx-auto w-full px-4 -mt-8 relative z-20">
+           <div className="flex flex-wrap items-center justify-center gap-3">
+              {['All Products', 'Combo Package', 'Mango', 'Dragon Fruit'].map((cat, i) => (
+                 <Link key={i} href="/products" className={`px-6 py-3 rounded-full text-sm font-bold shadow-md transition-all ${i === 0 ? 'bg-[#527d62] text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100'}`}>
+                    {cat}
+                 </Link>
+              ))}
+           </div>
         </section>
 
-        {/* ====== FEATURED MANGOES SECTION ====== */}
-        <section className="py-24 relative bg-background">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
-              <div>
-                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase block mb-2">Handpicked for You</span>
-                <h2 className="font-serif-heading text-3xl sm:text-4xl font-bold text-hero-text tracking-tight">
-                  Featured Mango Varieties
-                </h2>
-              </div>
-              <Link
-                href="/products"
-                className="mt-4 md:mt-0 flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-[#34d399] hover:text-hero-text transition-colors group"
-              >
-                Browse all mangoes
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
+        {/* 3. All Products Grid (Retail format like products page) */}
+        <section className="py-16 max-w-7xl mx-auto w-full px-4">
+           <div className="text-center mb-10">
+              <h2 className="text-3xl font-black text-gray-800">Our Premium Products</h2>
+              <div className="w-16 h-1 bg-[#527d62] mx-auto mt-4 rounded"></div>
+           </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredProducts.map((prod) => (
-                <div
-                  key={prod.id}
-                  className="group glass-card rounded-2xl overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300"
-                >
-                  <div className="relative h-48 w-full overflow-hidden shrink-0">
-                    <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
-                      <img
-                        src={prod.image}
-                        alt={prod.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      {prod.badge && (
-                        <span className="absolute top-3 left-3 px-2.5 py-0.5 text-[10px] font-extrabold text-black bg-[#fbbf24] rounded-full uppercase tracking-wider">
-                          {prod.badge}
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map(prod => (
+                 <div key={prod.id} className="group bg-white rounded-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100">
+                    <div className="relative h-48 sm:h-52 w-full overflow-hidden shrink-0 bg-gray-50">
+                      <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
+                        <Image src={prod.image} alt={prod.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-black bg-[#FFC107] rounded-sm shadow-sm z-10">
+                          <Truck className="w-3 h-3" /> Free Delivery
                         </span>
-                      )}
-                    </Link>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleWishlist(prod.id);
-                      }}
-                      className="absolute top-3 right-3 p-2 rounded-full bg-black/65 border border-white/5 hover:text-red-500 transition-colors cursor-pointer z-20"
-                    >
-                      <Heart className={`w-4 h-4 ${wishlist.includes(prod.id) ? "fill-red-500 text-red-500" : "text-slate-400"}`} />
-                    </button>
-                  </div>
-
-                  <div className="p-5 flex flex-col grow justify-between space-y-4">
-                    <Link href={`/products/${prod.slug}`} className="space-y-2 block cursor-pointer group-hover:opacity-95">
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                        {prod.category}
-                      </span>
-                      <h3 className="font-serif-heading font-bold text-hero-text text-base line-clamp-2 group-hover:text-[#fbbf24] transition-colors">
-                        {prod.name}
-                      </h3>
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex items-center text-[#fbbf24]">
-                          <Star className="w-3.5 h-3.5 fill-current" />
-                        </div>
-                        <span className="text-xs font-bold text-hero-text">{prod.rating}</span>
-                        <span className="text-[10px] text-muted-foreground">({prod.reviews} reviews)</span>
-                      </div>
-                    </Link>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
-                      <div>
-                        {prod.sale_price ? (
-                          <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground line-through">৳{prod.price}</span>
-                            <span className="text-lg font-black text-hero-text">৳{prod.sale_price}</span>
-                          </div>
-                        ) : (
-                          <span className="text-lg font-black text-hero-text">৳{prod.price}</span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => {
-                          setCheckoutProduct(prod);
-                          setSelectedWeight(10);
-                          setOrderSuccessId(null);
-                          setIsCheckoutOpen(true);
-                        }}
-                        className="p-2.5 rounded-xl bg-muted-bg border border-border hover:border-emerald-500/30 hover:bg-emerald-500/5 text-foreground transition-all duration-300 shrink-0 cursor-pointer"
-                      >
-                        <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      </Link>
+                      <button onClick={(e) => { e.stopPropagation(); toggleWishlist(prod.id); }} className="absolute top-2 left-2 p-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-black/60 transition-colors z-20 cursor-pointer">
+                        <Heart className={`w-4 h-4 ${wishlist.includes(prod.id) ? "fill-red-500 text-red-500 border-none" : ""}`} />
                       </button>
                     </div>
-                  </div>
-                </div>
+                    <div className="p-4 flex flex-col grow justify-between space-y-3">
+                      <Link href={`/products/${prod.slug}`} className="space-y-1 block group-hover:opacity-95">
+                        <h3 className="font-sans font-bold text-gray-800 text-[15px] leading-tight line-clamp-2">{prod.name}</h3>
+                        <div className="text-[11px] text-gray-500 leading-relaxed pt-1">
+                          <p>5/10/20 Kg Package Available.</p>
+                          <p>Approximate Delivery Date Within 6-8 July</p>
+                        </div>
+                      </Link>
+                      <div className="flex flex-col gap-3 pt-1">
+                        <div className="text-[#4A7C59] font-bold text-[17px]">
+                          {prod.sale_price ? <span>৳ {prod.sale_price} - ৳ {prod.sale_price * 3}</span> : <span>৳ {prod.price} - ৳ {prod.price * 4}</span>}
+                        </div>
+                        <button onClick={() => { setCheckoutProduct(prod); setSelectedWeight(10); setIsCheckoutOpen(true); }} className="flex items-center justify-center gap-1.5 w-[110px] py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-xs font-semibold shadow-sm" title="Buy Now">
+                          <Zap className="w-3.5 h-3.5 fill-white" /> Buy Now
+                        </button>
+                      </div>
+                    </div>
+                 </div>
               ))}
-            </div>
-          </div>
+           </div>
+           
+           <div className="mt-10 text-center">
+              <Link href="/products" className="inline-flex items-center justify-center px-8 py-3 bg-white border border-gray-200 text-gray-800 font-bold rounded hover:bg-gray-50 transition-colors shadow-sm">
+                 View All Products
+              </Link>
+           </div>
         </section>
 
-        {/* ====== FARMER DASHBOARD SPOTLIGHT ====== */}
-        <section className="py-24 relative bg-section-alt overflow-hidden border-t border-b border-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid lg:grid-cols-12 gap-14 items-center">
-              {/* Left - Earnings Card */}
-              <div className="lg:col-span-5 relative flex justify-center order-last lg:order-first">
-                <div className="w-full max-w-90 p-6 rounded-3xl bg-card border border-border shadow-2xl space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                        <Coins className="w-5 h-5 text-accent-dark dark:text-accent-light" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-hero-text">Farmer Earnings</h4>
-                        <p className="text-[10px] text-muted-foreground font-medium">This Harvest Season</p>
-                      </div>
+        {/* 4. Why We Are Different */}
+        <section className="py-16 bg-white border-y border-gray-100">
+           <div className="max-w-7xl mx-auto w-full px-4">
+              <div className="text-center mb-12">
+                 <h2 className="text-3xl font-black text-gray-800">Why We Are Different</h2>
+                 <div className="w-16 h-1 bg-[#FFC107] mx-auto mt-4 rounded"></div>
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-8">
+                 {/* Left Feature image card */}
+                 <div className="relative rounded-2xl overflow-hidden h-[400px] flex items-end p-8 shadow-lg">
+                    <Image src="https://images.unsplash.com/photo-1552474030-b3a5b5f04e2e?w=800&auto=format&fit=crop&q=80" alt="Premium Mangoes" fill className="object-cover absolute inset-0 z-0" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+                    <div className="relative z-20 text-white">
+                       <h3 className="text-2xl font-bold mb-2">Registered Safe Garden</h3>
+                       <p className="text-gray-200 text-sm leading-relaxed max-w-sm">We source directly from gardens certified for safe farming practices, ensuring chemical-free, fresh produce for you and your family.</p>
                     </div>
-                    <span className="text-[10px] font-bold text-accent-dark dark:text-accent bg-accent/10 px-2.5 py-1 rounded-full">
-                      +32.4%
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium">Net Revenue</p>
-                    <h3 className="text-3xl font-black text-hero-text">৳1,82,400.00</h3>
-                  </div>
-
-                  <div className="flex items-end justify-between h-24 pt-4 gap-2">
-                    {[45, 55, 35, 75, 65, 90, 80].map((h, i) => (
-                      <div key={i} className="flex-1 bg-muted-bg rounded-md h-full relative overflow-hidden">
-                        <div
-                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-accent-dark to-accent rounded-md transition-all duration-1000"
-                          style={{ height: `${h}%` }}
-                        />
-                      </div>
+                 </div>
+                 
+                 {/* Right small cards */}
+                 <div className="grid gap-4">
+                    {[
+                      { title: "Premium Quality", icon: Award, desc: "Only the finest, export-quality handpicked mangoes." },
+                      { title: "Premium Packaging", icon: Package, desc: "Safe, beautiful, and sustainable packaging ensuring zero damage." },
+                      { title: "Garden Fresh Delivery", icon: Truck, desc: "Delivered straight from the orchards to your doorstep within 48 hours." }
+                    ].map((feature, idx) => (
+                       <div key={idx} className="flex items-center gap-6 p-6 rounded-2xl bg-[#f8f9fa] border border-gray-100 hover:shadow-md transition-shadow">
+                          <div className="w-14 h-14 rounded-full bg-[#e6f0eb] flex items-center justify-center shrink-0">
+                             <feature.icon className="w-7 h-7 text-[#527d62]" />
+                          </div>
+                          <div>
+                             <h4 className="text-lg font-bold text-gray-800 mb-1">{feature.title}</h4>
+                             <p className="text-sm text-gray-500 leading-relaxed">{feature.desc}</p>
+                          </div>
+                       </div>
                     ))}
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
-                    <span>Mon</span>
-                    <span>Wed</span>
-                    <span>Sun</span>
-                  </div>
-                </div>
+                 </div>
               </div>
-
-              {/* Right Column */}
-              <div className="lg:col-span-7 space-y-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-xs font-semibold text-accent-dark dark:text-accent-light tracking-wide uppercase">
-                  <Award className="w-4 h-4" />
-                  <span>Sell With MangoDB</span>
-                </div>
-                <h2 className="font-serif-heading text-3xl sm:text-5xl font-bold text-hero-text leading-tight">
-                  Turn Your Mango Orchard
-                  <br />
-                  Into a Profitable Business
-                </h2>
-                <p className="text-lg text-hero-text-secondary leading-relaxed">
-                  Whether you grow Himsagar in Rajshahi, Haribhanga in Rangpur, or organic varieties in Chapainawabganj, MangoDB gives you the digital platform to list, market, and sell your harvest directly to customers nationwide.
-                </p>
-                <div className="space-y-4">
-                  {[
-                    "Keep up to 95% of every sale with minimal commission fees.",
-                    "Get paid instantly into your bKash, Rocket, or Bank account upon delivery.",
-                    "Access real-time sales analytics and weather-demand forecasting tools.",
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-accent-dark dark:text-accent-light mt-0.5 shrink-0" />
-                      <span className="text-base text-foreground">{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="pt-4">
-                  <Link
-                    href="/signup?seller=true"
-                    className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-black font-bold bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 whitespace-nowrap shrink-0 active:scale-[0.97]"
-                  >
-                    Start Selling As Farmer
-                    <ArrowRight className="w-5 h-5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
+           </div>
         </section>
 
-        {/* ====== BRAND STORY & VIDEO SECTION ====== */}
-        <section className="py-24 relative bg-background border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-
-              {/* Left — Brand Story */}
-              <div className="space-y-6 text-center lg:text-left flex flex-col items-center lg:items-start lg:pl-[30px]">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-xs font-semibold text-accent-dark dark:text-accent-light tracking-wide uppercase">
-                  <Leaf className="w-4 h-4 text-primary" />
-                  <span>The MangoDB Standard</span>
-                </div>
-                <h2 className="font-serif-heading text-3xl sm:text-4xl md:text-5xl font-bold text-hero-text leading-tight">
-                  Harvested with Care,
-                  <br />
-                  Delivered with Integrity
-                </h2>
-                <p className="text-sm sm:text-base text-hero-text-secondary leading-relaxed max-w-md">
-                  From the historic orchards of Kansat, Chapainawabganj, and the fertile soils of Rajshahi, our mission is to bring you the finest mangoes in their purest state.
-                </p>
-                <div className="space-y-5 w-full max-w-md">
-                  <div className="flex items-center gap-3 px-5 py-3.5 rounded-xl bg-card border border-border">
-                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent-dark dark:text-accent-light shrink-0">
-                      <Shield className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-hero-text">GAP Certified</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Organic soil management & safe pest control.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 px-5 py-3.5 rounded-xl bg-card border border-border">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary-dark dark:text-primary shrink-0">
-                      <Sparkles className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-hero-text">Carbide-Free</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Naturally ripened on the branch, never chemically treated.</p>
-                    </div>
-                  </div>
-                </div>
+        {/* 5. Gift Premium Mangoes (Promo) */}
+        <section className="py-20 bg-[#e6f0eb]">
+           <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
+              <div className="md:w-1/2 space-y-6">
+                 <h2 className="text-4xl font-black text-[#0D2319] leading-tight">Gift Premium Mangoes!</h2>
+                 <p className="text-lg text-[#133824]/80 leading-relaxed">
+                   Send a box of happiness to your loved ones. Our premium mangoes come in beautiful gift boxes, perfect for corporate gifting or sending love to friends and family.
+                 </p>
+                 <Link href="/products?category=gifts" className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#527d62] hover:bg-[#436750] text-white font-bold rounded transition-all shadow-lg">
+                    Order Gift Box <ArrowRight className="w-4 h-4" />
+                 </Link>
               </div>
-
-              {/* Right — Video Player */}
-              <div>
-                <div className="relative aspect-video rounded-3xl overflow-hidden glass-card p-2 shadow-2xl">
-                  {!isPlayingVideo ? (
-                    <div className="relative w-full h-full rounded-2xl overflow-hidden group cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
-                      <img 
-                        src="https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=800&auto=format&fit=crop&q=80" 
-                        alt="Mango Orchard"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                        <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-2xl shadow-primary/40 group-hover:scale-110 active:scale-95 transition-all duration-300">
-                          <Play className="w-8 h-8 text-black fill-current ml-1" />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-4 left-4 right-4 px-4 py-3 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl flex items-center justify-between">
-                        <div>
-                          <p className="text-xs font-bold text-primary">Watch Our Story</p>
-                          <p className="text-[10px] text-slate-300">A journey through our Rajshahi orchards (2:45)</p>
-                        </div>
-                        <span className="text-[10px] bg-accent/20 text-accent-light font-bold px-2 py-1 rounded border border-accent/30">GAP Certified</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <iframe 
-                      className="w-full h-full rounded-2xl border-0"
-                      src="https://www.youtube.com/embed/Qh_S5h-aVjU?autoplay=1" 
-                      title="MangoDB Orchard Journey"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                      allowFullScreen
-                    ></iframe>
-                  )}
-                </div>
+              <div className="md:w-1/2">
+                 <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
+                    <Image src="https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=800&auto=format&fit=crop&q=80" alt="Gift Box" fill className="object-cover" />
+                 </div>
               </div>
-
-            </div>
-          </div>
+           </div>
         </section>
 
-        {/* ====== CORE BENEFITS ====== */}
-        <section className="py-24 bg-background relative">
-          <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-            <div className="text-center max-w-xl mb-14 space-y-3">
-              <span className="inline-block text-xs font-bold text-accent-dark dark:text-accent-light tracking-[0.15em] uppercase">Why MangoDB?</span>
-              <h2 className="font-serif-heading text-3xl sm:text-4xl font-bold text-hero-text tracking-tight">
-                Freshness, Quality & Trust
-              </h2>
-              <p className="text-sm sm:text-base text-hero-text-secondary leading-relaxed">
-                We connect mango lovers directly with verified orchard farmers for the freshest, safest experience.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6 lg:gap-8 w-full max-w-5xl">
-              {[
-                {
-                  icon: Shield,
-                  title: "100% Food Safety",
-                  description:
-                     "We strictly prohibit chemical ripening agents. Every single mango is naturally ripened and checked for quality before shipping.",
-                  color: "text-accent-dark dark:text-accent-light",
-                  bg: "bg-accent/10",
-                  border: "hover:border-accent/25",
-                },
-                {
-                  icon: Truck,
-                  title: "Express Crate Delivery",
-                  description:
-                    "Packed in ventilated paper-padded wooden crates to prevent bruising. Shipped through dedicated express logistics to arrive fresh.",
-                  color: "text-primary-dark dark:text-primary",
-                  bg: "bg-primary/10",
-                  border: "hover:border-primary/25",
-                },
-                {
-                  icon: Leaf,
-                  title: "Orchard Direct Pricing",
-                  description:
-                    "No middleman. Your money goes directly to the hardworking farmers in Rajshahi and Rangpur, supporting local agriculture.",
-                  color: "text-accent-dark dark:text-accent-light",
-                  bg: "bg-accent/10",
-                  border: "hover:border-accent/25",
-                },
-              ].map((benefit) => {
-                const Icon = benefit.icon;
-                return (
-                  <div
-                    key={benefit.title}
-                    className={`p-8 rounded-2xl bg-card border border-border ${benefit.border} transition-all duration-300 hover:-translate-y-0.5 flex flex-col items-center text-center`}
-                  >
-                    <div className={`w-12 h-12 rounded-xl ${benefit.bg} flex items-center justify-center mb-5`}>
-                      <Icon className={`w-6 h-6 ${benefit.color}`} />
+        {/* 6. Training & Farmer Collaboration */}
+        <section className="py-20 bg-white">
+           <div className="max-w-7xl mx-auto px-4">
+              <div className="text-center mb-12">
+                 <h2 className="text-3xl font-black text-gray-800">Training & Farmer Collaboration</h2>
+                 <p className="text-gray-500 mt-4 max-w-2xl mx-auto">Empowering local farmers with modern, safe agricultural practices.</p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-8">
+                 {[
+                   { title: "Soil Management", image: "https://images.unsplash.com/photo-1592982537447-6f2334816be5?w=600&auto=format&fit=crop&q=80" },
+                   { title: "Safe Pest Control", image: "https://images.unsplash.com/photo-1589923158776-cb4485d99fd6?w=600&auto=format&fit=crop&q=80" },
+                   { title: "Harvesting Techniques", image: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600&auto=format&fit=crop&q=80" }
+                 ].map((item, i) => (
+                    <div key={i} className="p-4 border-2 border-dashed border-[#527d62]/30 rounded-2xl flex flex-col items-center text-center hover:bg-[#f8f9fa] transition-colors cursor-pointer">
+                       <div className="relative w-full h-48 rounded-xl overflow-hidden mb-4">
+                          <Image src={item.image} alt={item.title} fill className="object-cover" />
+                       </div>
+                       <h4 className="font-bold text-gray-800">{item.title}</h4>
                     </div>
-                    <h3 className="font-serif-heading text-lg font-bold text-hero-text mb-2">{benefit.title}</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed max-w-[280px]">{benefit.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                 ))}
+              </div>
+           </div>
         </section>
 
-        {/* ====== CTA NEWSLETTER ====== */}
-        <section className="relative overflow-hidden border-t border-border" style={{ background: 'linear-gradient(135deg, #1a3c2a 0%, #2d4a3a 25%, #1e3528 50%, #2a4636 75%, #1a3c2a 100%)' }}>
-          {/* Dot texture overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.04] pointer-events-none"
-            style={{
-              backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-              backgroundSize: '24px 24px',
-            }}
-          />
-          {/* Diagonal line texture */}
-          <div
-            className="absolute inset-0 opacity-[0.03] pointer-events-none"
-            style={{
-              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 11px)',
-            }}
-          />
+        {/* 7. Customer Reviews Section */}
+        <section className="py-20 bg-[#f8f9fa] border-t border-gray-100 overflow-hidden">
+           <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center">
+              <div className="text-center flex flex-col items-center justify-center mb-16 max-w-2xl">
+                 <h2 className="text-3xl font-black text-gray-800">Customer review</h2>
+                 <div className="w-16 h-1 bg-[#527d62] mt-4 rounded"></div>
+              </div>
+           </div>
 
-          {/* Warm glow orbs */}
-          <div className="absolute w-[600px] h-[600px] rounded-full blur-[160px] -top-72 left-1/2 -translate-x-1/2 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.15), transparent 70%)' }} />
-          <div className="absolute w-[400px] h-[400px] rounded-full blur-[120px] -bottom-48 -left-32 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.1), transparent 70%)' }} />
-          <div className="absolute w-[400px] h-[400px] rounded-full blur-[120px] -bottom-48 -right-32 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.08), transparent 70%)' }} />
+           {/* Infinite Marquee Slider Container */}
+           <div className="relative w-full overflow-hidden select-none">
+              {/* Fade Overlay left */}
+              <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
+              {/* Fade Overlay right */}
+              <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
 
-          <div className="relative z-10 w-full py-20 sm:py-28 lg:py-32 flex flex-col items-center justify-center px-4 sm:px-6">
-
-            {/* Heading block */}
-            <div className="max-w-2xl w-full text-center mb-8">
-              <h2 className="font-serif-heading text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.15] mb-4">
-                Never Miss a Harvest
-              </h2>
-              <p className="text-sm sm:text-base text-white/60 leading-relaxed max-w-md mx-auto">
-                Subscribe to our harvest alerts and be the first to know when the fresh Himsagar, Lengra, or Haribhanga drops. Get exclusive early-bird prices.
-              </p>
-            </div>
-
-            {/* Form */}
-            <div className="w-full max-w-lg">
-              <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => e.preventDefault()}>
-                <input
-                  type="email"
-                  required
-                  placeholder="Enter your email address"
-                  className="grow px-5 py-3.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15 text-white placeholder-white/40 focus:outline-none focus:border-[#fbbf24]/50 focus:ring-2 focus:ring-[#fbbf24]/20 focus:bg-white/15 text-sm font-medium transition-all"
-                />
-                <button
-                  type="submit"
-                  className="px-8 py-3.5 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-black font-bold text-sm active:scale-95 transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-lg shadow-[#fbbf24]/25 hover:shadow-xl hover:shadow-[#fbbf24]/30"
-                >
-                  Get Harvest Alerts
-                </button>
-              </form>
-              <p className="text-xs text-white/40 text-center mt-3">
-                We respect your privacy. Unsubscribe at any time.
-              </p>
-            </div>
-          </div>
+              <div className="animate-marquee hover:[animation-play-state:paused] flex gap-6 px-4">
+                 {[
+                   {
+                     name: "Tahmid Hasan",
+                     location: "Gulshan, Dhaka",
+                     rating: 5,
+                     comment: "Absolutely unmatched sweet taste! The Rajshahi Himsagar was incredibly fresh, naturally ripe, and had zero fiber. Ordering again next season!",
+                     date: "July 2, 2026",
+                     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
+                   },
+                   {
+                     name: "Nusrat Jahan",
+                     location: "Dhanmondi, Dhaka",
+                     rating: 5,
+                     comment: "I was highly skeptical about buying mangoes online due to formalin scares, but MangoDB's safe, certified orchards promise was 100% true. Fresh and sweet!",
+                     date: "June 29, 2026",
+                     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
+                   },
+                   {
+                     name: "Sajid Rahman",
+                     location: "Chittagong",
+                     rating: 5,
+                     comment: "The packaging was outstanding. Sturdy ventilated wooden box, every single mango cushioned. Delivery arrived perfectly safe within 48 hours.",
+                     date: "June 28, 2026",
+                     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80"
+                   },
+                   {
+                     name: "Farhana Yasmin",
+                     location: "Uttara, Dhaka",
+                     rating: 5,
+                     comment: "Best Langra mangoes I've ever had! Perfectly sweet, juicy, and prompt delivery. Highly recommend MangoDB for anyone looking for authentic taste.",
+                     date: "June 25, 2026",
+                     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80"
+                   }
+                 ].concat([
+                   {
+                     name: "Tahmid Hasan",
+                     location: "Gulshan, Dhaka",
+                     rating: 5,
+                     comment: "Absolutely unmatched sweet taste! The Rajshahi Himsagar was incredibly fresh, naturally ripe, and had zero fiber. Ordering again next season!",
+                     date: "July 2, 2026",
+                     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
+                   },
+                   {
+                     name: "Nusrat Jahan",
+                     location: "Dhanmondi, Dhaka",
+                     rating: 5,
+                     comment: "I was highly skeptical about buying mangoes online due to formalin scares, but MangoDB's safe, certified orchards promise was 100% true. Fresh and sweet!",
+                     date: "June 29, 2026",
+                     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
+                   },
+                   {
+                     name: "Sajid Rahman",
+                     location: "Chittagong",
+                     rating: 5,
+                     comment: "The packaging was outstanding. Sturdy ventilated wooden box, every single mango cushioned. Delivery arrived perfectly safe within 48 hours.",
+                     date: "June 28, 2026",
+                     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80"
+                   },
+                   {
+                     name: "Farhana Yasmin",
+                     location: "Uttara, Dhaka",
+                     rating: 5,
+                     comment: "Best Langra mangoes I've ever had! Perfectly sweet, juicy, and prompt delivery. Highly recommend MangoDB for anyone looking for authentic taste.",
+                     date: "June 25, 2026",
+                     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80"
+                   }
+                 ]).map((review, i) => (
+                    <div key={i} className="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between w-[320px] sm:w-[380px] shrink-0">
+                       <div>
+                          <div className="flex items-center gap-1 text-[#fbbf24] mb-4">
+                             {[...Array(review.rating)].map((_, idx) => (
+                                <Star key={idx} className="w-4 h-4 fill-current" />
+                             ))}
+                          </div>
+                          <p className="text-gray-600 text-sm leading-relaxed italic mb-6">"{review.comment}"</p>
+                       </div>
+                       
+                       <div className="flex items-center gap-4 pt-4 border-t border-gray-50">
+                          <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
+                             <Image src={review.avatar} alt={review.name} fill className="object-cover" />
+                          </div>
+                          <div>
+                             <h4 className="font-bold text-gray-800 text-sm">{review.name}</h4>
+                             <p className="text-xs text-gray-400">{review.location} • <span className="text-[#527d62] font-semibold">Verified Buyer</span></p>
+                          </div>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
         </section>
 
       </div>
@@ -983,8 +700,8 @@ export default function HomePage() {
                 <form onSubmit={handleCheckoutSubmit} className="space-y-6">
                   {/* Product Card */}
                   <div className="p-4 rounded-2xl bg-section-alt border border-border flex gap-4">
-                    <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-border">
-                      <img src={checkoutProduct.image} alt={checkoutProduct.name} className="w-full h-full object-cover" />
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-border">
+                      <Image src={checkoutProduct.image} alt={checkoutProduct.name} fill sizes="80px" className="object-cover" />
                     </div>
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
@@ -1042,6 +759,17 @@ export default function HomePage() {
                           placeholder="Your Full Name"
                           value={checkoutForm.name}
                           onChange={(e) => setCheckoutForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-medium"
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <input
+                          type="email"
+                          required
+                          placeholder="Email Address (for receipt)"
+                          value={checkoutForm.email}
+                          onChange={(e) => setCheckoutForm(prev => ({ ...prev, email: e.target.value }))}
                           className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-medium"
                         />
                       </div>
