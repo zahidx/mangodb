@@ -31,6 +31,7 @@ export default function Navbar() {
   const supabase = createClient() as any;
   const { cartItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [unreadNotifs, setUnreadNotifs] = useState(0);
@@ -157,7 +158,7 @@ export default function Navbar() {
           </div>
 
           {/* Auth + Theme Toggle + Cart */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0 lg:translate-x-[180px]">
             {/* Global Search Bar */}
             <GlobalSearch />
 
@@ -171,7 +172,7 @@ export default function Navbar() {
                     router.push("/dashboard?tab=notifications");
                   }
                 }}
-                className="relative p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
+                className="hidden lg:block relative p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
                 aria-label="View Notifications"
               >
                 <Bell className="w-4 h-4" />
@@ -186,7 +187,7 @@ export default function Navbar() {
             {/* Shopping Cart Indicator */}
             <Link
               href="/cart"
-              className="relative p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm"
+              className="hidden lg:block relative p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm"
               aria-label="View Cart"
             >
               <ShoppingCart className="w-4 h-4" />
@@ -200,7 +201,7 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
+              className="hidden lg:block p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             >
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -211,9 +212,9 @@ export default function Navbar() {
               <div className="hidden sm:flex items-center gap-3 relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 pr-3 rounded-full bg-muted-bg border border-border hover:border-emerald-500/30 transition-all cursor-pointer"
+                  className="flex items-center gap-2 p-1.5 pr-3 rounded-md bg-muted-bg border border-border hover:border-emerald-500/30 transition-all cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#fbbf24] to-[#f59e0b] flex items-center justify-center text-black text-sm font-black shadow-sm uppercase">
+                  <div className="w-8 h-8 rounded-md bg-gradient-to-tr from-[#fbbf24] to-[#f59e0b] flex items-center justify-center text-black text-sm font-black shadow-sm uppercase">
                     {getDisplayName()[0]}
                   </div>
                   <span className="text-sm font-bold text-hero-text max-w-[100px] truncate">
@@ -226,7 +227,7 @@ export default function Navbar() {
                 {dropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)}></div>
-                    <div className="absolute top-[120%] right-0 w-60 bg-card border border-border rounded-2xl shadow-xl overflow-hidden py-1 z-50 animate-fade-in">
+                    <div className="absolute top-[120%] right-0 w-60 bg-card border border-border rounded-md shadow-xl overflow-hidden py-1 z-50 animate-fade-in">
                       <div className="px-4 py-3 border-b border-border bg-muted-bg/50">
                         <p className="text-sm font-bold text-hero-text truncate">{getDisplayName()}</p>
                         <p className="text-xs text-muted-foreground truncate">{profile.phone || profile.email}</p>
@@ -237,7 +238,7 @@ export default function Navbar() {
                           <Link
                             href="/admin"
                             onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors"
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-amber-500 hover:bg-amber-500/10 rounded-md transition-colors"
                           >
                             <ShieldCheck className="w-4 h-4" />
                             Admin Panel
@@ -246,7 +247,7 @@ export default function Navbar() {
                         <Link
                           href="/dashboard?tab=overview"
                           onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-hero-text hover:bg-emerald-500/10 hover:text-emerald-500 rounded-xl transition-colors"
+                          className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-hero-text hover:bg-emerald-500/10 hover:text-emerald-500 rounded-md transition-colors"
                         >
                           <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
                           My Dashboard
@@ -254,7 +255,7 @@ export default function Navbar() {
                         <Link
                           href="/dashboard?tab=orders"
                           onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-hero-text hover:bg-emerald-500/10 hover:text-emerald-500 rounded-xl transition-colors"
+                          className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-hero-text hover:bg-emerald-500/10 hover:text-emerald-500 rounded-md transition-colors"
                         >
                           <Package className="w-4 h-4 text-muted-foreground" />
                           My Orders
@@ -262,7 +263,7 @@ export default function Navbar() {
                         <Link
                           href="/dashboard?tab=account"
                           onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-hero-text hover:bg-emerald-500/10 hover:text-emerald-500 rounded-xl transition-colors"
+                          className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-hero-text hover:bg-emerald-500/10 hover:text-emerald-500 rounded-md transition-colors"
                         >
                           <Settings className="w-4 h-4 text-muted-foreground" />
                           Update Profile
@@ -275,7 +276,7 @@ export default function Navbar() {
                             setDropdownOpen(false);
                             handleLogout();
                           }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-bold text-red-500 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-bold text-red-500 hover:bg-red-500/10 rounded-md transition-colors cursor-pointer"
                         >
                           <LogOut className="w-4 h-4" />
                           Log Out
@@ -314,10 +315,33 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Mobile Menu Overlay */}
+      <div 
+        className={`lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100 z-[60]" : "opacity-0 -z-10 pointer-events-none"}`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
       {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-border bg-background shadow-lg animate-fade-in">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+      <div 
+        className={`lg:hidden fixed top-0 left-0 h-[100dvh] w-[280px] bg-background shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col z-[70] ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        {/* Drawer Header */}
+        <div className="h-20 px-6 flex items-center justify-between border-b border-border shrink-0">
+          <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[12px] bg-[#fbbf24] flex items-center justify-center">
+              <ShoppingBag className="w-5 h-5 text-black" strokeWidth={2.5} />
+            </div>
+            <span className="text-xl font-black tracking-tight text-red-600 whitespace-nowrap">
+              Mango<span className="text-[#20BA5A]">DB</span>
+            </span>
+          </Link>
+          <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-md bg-muted-bg border border-border text-foreground hover:border-[#fbbf24]/30 transition-all cursor-pointer shadow-sm">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Drawer Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar">
             <Link
               href="/products"
               onClick={() => setMobileMenuOpen(false)}
@@ -351,106 +375,144 @@ export default function Navbar() {
               Our Story
             </Link>
 
-            {/* Notifications Link in Mobile */}
-            {profile && (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (pathname === "/dashboard") {
-                    window.location.href = "/dashboard?tab=notifications";
-                  } else {
-                    router.push("/dashboard?tab=notifications");
-                  }
-                }}
-                className="w-full flex items-center justify-between text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2 cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
+            {/* Quick Actions (Icons Only) */}
+            <div className="flex items-center justify-center gap-6 py-2 border-t border-border/50 pt-4 mt-2">
+              {/* Notifications */}
+              {profile && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (pathname === "/dashboard") {
+                      window.location.href = "/dashboard?tab=notifications";
+                    } else {
+                      router.push("/dashboard?tab=notifications");
+                    }
+                  }}
+                  className="relative p-3 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 active:scale-[0.95] transition-all cursor-pointer shadow-sm"
+                  aria-label="View Notifications"
+                >
                   <Bell className="w-5 h-5" />
-                  Notifications
-                </div>
-                {unreadNotifs > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-xs font-bold">
-                    {unreadNotifs} new
+                  {unreadNotifs > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-rose-600 text-[10px] font-black text-white ring-2 ring-background animate-pulse-slow">
+                      {unreadNotifs}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* Cart */}
+              <Link
+                href="/cart"
+                onClick={() => setMobileMenuOpen(false)}
+                className="relative p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 active:scale-[0.95] transition-all cursor-pointer shadow-sm"
+                aria-label="View Cart"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-extrabold text-white ring-2 ring-background shadow-md">
+                    {cartCount}
                   </span>
                 )}
+              </Link>
+
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-3 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 active:scale-[0.95] transition-all cursor-pointer shadow-sm"
+                aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              >
+                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
-            )}
-
-            {/* Cart Link in Mobile */}
-            <Link
-              href="/cart"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              Cart ({cartCount})
-            </Link>
-
-            {/* Theme toggle in mobile */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-3 w-full text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2 cursor-pointer text-left"
-            >
-              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              {theme === "dark" ? "Light Mode" : "Dark Mode"}
-            </button>
+            </div>
 
             <div className="pt-4 border-t border-border flex flex-col gap-3">
               {profile ? (
-                <div className="space-y-3">
-                  <div className="p-3 bg-section-alt border border-border rounded-xl flex items-center justify-between text-xs font-sans">
-                    <div>
-                      <p className="font-bold text-hero-text">{getDisplayName()}</p>
-                      <p className="text-muted-foreground">{profile.phone || profile.email}</p>
+                <div className="flex flex-col">
+                  <button 
+                    onClick={() => setMobileProfileOpen(!mobileProfileOpen)}
+                    className="w-full p-3 bg-muted-bg border border-border rounded-md flex items-center justify-between shadow-sm cursor-pointer active:scale-[0.98] transition-all"
+                  >
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="w-9 h-9 rounded-md bg-gradient-to-tr from-emerald-100 to-emerald-200 dark:from-emerald-900/50 dark:to-emerald-800/50 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-black shadow-inner shrink-0">
+                        {getDisplayName()[0].toUpperCase()}
+                      </div>
+                      <div className="overflow-hidden text-left">
+                        <p className="font-bold text-hero-text text-sm tracking-tight truncate">{getDisplayName()}</p>
+                        <p className="text-muted-foreground text-[11px] font-medium truncate opacity-70">{profile.phone || profile.email}</p>
+                      </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-bold capitalize">
-                      {profile.role}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                        {profile.role}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${mobileProfileOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
                   
-                  {profile.role === "admin" && (
+                  <div className={`overflow-hidden transition-all duration-300 ${mobileProfileOpen ? "max-h-[500px] opacity-100 mt-4" : "max-h-0 opacity-0"}`}>
+                    <div className="space-y-1">
+                      {profile.role === "admin" && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full text-center text-sm font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 py-3 rounded-xl hover:bg-amber-500/20 transition-all mb-2"
+                      className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-amber-500/10 transition-all text-sm font-bold text-amber-600 dark:text-amber-500 group"
                     >
+                      <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform shrink-0">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
                       Admin Panel
                     </Link>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <Link
-                      href="/dashboard?tab=overview"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 py-3 rounded-xl hover:bg-emerald-500/20 transition-all"
-                    >
-                      My Dashboard
-                    </Link>
-                    <Link
-                      href="/dashboard?tab=orders"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block text-center text-xs font-bold text-hero-text bg-muted-bg border border-border py-3 rounded-xl hover:bg-section-alt transition-all"
-                    >
-                      My Orders
-                    </Link>
-                    <Link
-                      href="/dashboard?tab=account"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block text-center text-xs font-bold text-hero-text bg-muted-bg border border-border py-3 rounded-xl hover:bg-section-alt transition-all col-span-2"
-                    >
-                      Update Profile
-                    </Link>
-                  </div>
+                  <Link
+                    href="/dashboard?tab=overview"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted-bg transition-all text-sm font-semibold text-hero-text group"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform shrink-0">
+                      <LayoutDashboard className="w-4 h-4" />
+                    </div>
+                    My Dashboard
+                  </Link>
+
+                  <Link
+                    href="/dashboard?tab=orders"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted-bg transition-all text-sm font-semibold text-hero-text group"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform shrink-0">
+                      <Package className="w-4 h-4" />
+                    </div>
+                    My Orders
+                  </Link>
+
+                  <Link
+                    href="/dashboard?tab=account"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted-bg transition-all text-sm font-semibold text-hero-text group"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform shrink-0">
+                      <Settings className="w-4 h-4" />
+                    </div>
+                    Update Profile
+                  </Link>
+
+                  <div className="h-[1px] bg-border my-2 mx-2"></div>
 
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
                       handleLogout();
                     }}
-                    className="w-full text-center text-sm font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 py-3 rounded-xl border border-red-500/20 transition-all cursor-pointer"
+                    className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-red-500/10 transition-all text-sm font-semibold text-red-500 group cursor-pointer"
                   >
+                    <div className="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform shrink-0">
+                      <LogOut className="w-4 h-4" />
+                    </div>
                     Log Out
                   </button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -473,7 +535,6 @@ export default function Navbar() {
             </div>
           </div>
         </div>
-      )}
     </nav>
   );
 }
