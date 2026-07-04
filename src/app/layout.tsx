@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono, Playfair_Display, Outfit } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/AuthContext";
@@ -35,10 +35,24 @@ const fraunces = Fraunces({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#10b981",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: {
     default: "MangoDB — Premium Rajshahi Mangoes Delivered",
     template: "%s | MangoDB",
+  },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MangoDB",
   },
   description:
     "Buy fresh, premium carbide-free mangoes online. Handpicked Himsagar, Lengra, Haribhanga and more delivered directly from Rajshahi to your doorstep.",

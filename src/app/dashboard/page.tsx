@@ -607,7 +607,7 @@ function DashboardContent() {
         {/* Logo area */}
         <div className="h-[72px] flex items-center px-6 border-b border-[#EEF2F7] dark:border-border/50 shrink-0">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f59e0b] flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 rounded-md bg-gradient-to-br from-[#fbbf24] to-[#f59e0b] flex items-center justify-center shadow-sm">
               <ShoppingBag className="w-4 h-4 text-black" strokeWidth={2.5} />
             </div>
             <span className="text-xl font-black tracking-tight text-red-600">Mango<span className="text-[#20BA5A]">DB</span></span>
@@ -647,7 +647,7 @@ function DashboardContent() {
                   setActiveTab(item.id as any);
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer group ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm font-semibold transition-all cursor-pointer group ${
                   isActive
                     ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                     : "text-[#475569] dark:text-muted-foreground hover:bg-[#F8FAFC] dark:hover:bg-muted-bg hover:text-[#0F172A] dark:hover:text-hero-text"
@@ -668,7 +668,7 @@ function DashboardContent() {
               setIsSidebarOpen(false);
               toast.success("Logged out successfully");
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 group"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm font-semibold transition-all cursor-pointer text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 group"
           >
             <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Sign Out
@@ -685,7 +685,7 @@ function DashboardContent() {
             {/* Mobile Menu Toggle */}
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 bg-muted-bg rounded-lg cursor-pointer animate-pulse-glow-subtle"
+              className="lg:hidden p-2 bg-muted-bg rounded-md cursor-pointer animate-pulse-glow-subtle"
             >
               <Menu className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -721,7 +721,7 @@ function DashboardContent() {
                       
                       {/* Dashboard Stats */}
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
+                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
                           <div className="flex justify-between items-center text-[#475569] dark:text-muted-foreground">
                             <p className="text-xs font-bold uppercase tracking-wider">Total Orders</p>
                             <Package className="w-5 h-5" />
@@ -729,7 +729,7 @@ function DashboardContent() {
                           <h4 className="font-sans font-black text-3xl text-[#0F172A] dark:text-hero-text">{orders.length}</h4>
                         </div>
                         
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
+                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
                           <div className="flex justify-between items-center text-amber-500">
                             <p className="text-xs font-bold uppercase tracking-wider text-[#475569] dark:text-muted-foreground">Pending Orders</p>
                             <Clock className="w-5 h-5" />
@@ -739,7 +739,7 @@ function DashboardContent() {
                           </h4>
                         </div>
 
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
+                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
                           <div className="flex justify-between items-center text-emerald-500">
                             <p className="text-xs font-bold uppercase tracking-wider text-[#475569] dark:text-muted-foreground">Completed Orders</p>
                             <CheckCircle2 className="w-5 h-5" />
@@ -749,7 +749,7 @@ function DashboardContent() {
                           </h4>
                         </div>
 
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
+                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
                           <div className="flex justify-between items-center text-rose-500">
                             <p className="text-xs font-bold uppercase tracking-wider text-[#475569] dark:text-muted-foreground">Wishlist</p>
                             <Heart className="w-5 h-5" />
@@ -757,7 +757,7 @@ function DashboardContent() {
                           <h4 className="font-sans font-black text-3xl text-[#0F172A] dark:text-hero-text">{wishlistProducts.length}</h4>
                         </div>
 
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
+                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
                           <div className="flex justify-between items-center text-blue-500">
                             <p className="text-xs font-bold uppercase tracking-wider text-[#475569] dark:text-muted-foreground">Saved Addresses</p>
                             <MapPin className="w-5 h-5" />
@@ -767,11 +767,11 @@ function DashboardContent() {
                       </div>
 
                       {/* Welcome Card */}
-                      <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden relative">
+                      <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden relative">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none -mr-32 -mt-32"></div>
                         
                         <div className="flex items-start gap-5 relative z-10">
-                          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 shrink-0">
+                          <div className="w-14 h-14 rounded-md bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 shrink-0">
                             <User className="w-7 h-7" />
                           </div>
                           <div className="space-y-1">
@@ -783,7 +783,7 @@ function DashboardContent() {
                         </div>
 
                         <div className="shrink-0 w-full sm:w-auto relative z-10">
-                          <button onClick={() => setActiveTab('orders')} className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all text-sm flex items-center justify-center gap-2">
+                          <button onClick={() => setActiveTab('orders')} className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-md shadow-sm hover:shadow-md transition-all text-sm flex items-center justify-center gap-2">
                             View Recent Orders
                             <Package className="w-4 h-4" />
                           </button>
@@ -842,7 +842,7 @@ function DashboardContent() {
 
                       {displayOrders.length === 0 ? (
                         <div className="text-center py-20 bg-transparent space-y-4">
-                          <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+                          <div className="w-20 h-20 rounded-md bg-muted flex items-center justify-center mx-auto text-muted-foreground">
                             <Package className="w-10 h-10" />
                           </div>
                           <h3 className="text-xl font-bold text-hero-text">No {orderTab === 'active' ? 'Active' : 'Past'} Orders Found</h3>
@@ -853,7 +853,7 @@ function DashboardContent() {
                           </p>
                           {orderTab === 'active' && (
                             <div className="pt-6">
-                              <Link href="/products" className="inline-flex items-center justify-center px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-all shadow-md hover:shadow-lg">
+                              <Link href="/products" className="inline-flex items-center justify-center px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-md transition-all shadow-md hover:shadow-lg">
                                 Start Shopping
                               </Link>
                             </div>
@@ -900,7 +900,7 @@ function DashboardContent() {
                                     
                                     {/* 1. Product Summary (col-span-4) */}
                                     <div className="sm:col-span-2 lg:col-span-4 flex items-center gap-3">
-                                      <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted border border-border relative">
+                                      <div className="w-14 h-14 shrink-0 rounded-md overflow-hidden bg-muted border border-border relative">
                                         <img 
                                           src={order.order_items?.[0]?.product?.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=300&auto=format&fit=crop&q=80"} 
                                           alt="Order Item" 
@@ -963,14 +963,14 @@ function DashboardContent() {
                                       {orderTab === 'active' && order.status === 'pending' && (
                                         <button
                                           onClick={() => handleCancelOrder(order.id)}
-                                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg transition-all text-[11px] whitespace-nowrap"
+                                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-md transition-all text-[11px] whitespace-nowrap"
                                         >
                                           Cancel
                                         </button>
                                       )}
                                       <Link 
                                         href={`/track?id=${order.id}`}
-                                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-all shadow-sm flex items-center justify-center gap-1.5 text-[11px] whitespace-nowrap"
+                                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-md transition-all shadow-sm flex items-center justify-center gap-1.5 text-[11px] whitespace-nowrap"
                                       >
                                         {orderTab === 'past' ? 'View Details' : 'Track'} <ArrowRight className="w-3 h-3" />
                                       </Link>
@@ -1001,7 +1001,7 @@ function DashboardContent() {
                         <p className="text-xs text-muted-foreground">Your wishlist is empty.</p>
                         <Link
                           href="/products"
-                          className="inline-block px-5 py-2.5 bg-[#fbbf24] hover:bg-[#f59e0b] rounded-xl text-xs font-bold text-black shadow-sm"
+                          className="inline-block px-5 py-2.5 bg-[#fbbf24] hover:bg-[#f59e0b] rounded-md text-xs font-bold text-black shadow-sm"
                         >
                           Browse Varieties
                         </Link>
@@ -1011,7 +1011,7 @@ function DashboardContent() {
                         {wishlistProducts.map((prod) => (
                           <div 
                             key={prod.id}
-                            className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col justify-between hover:border-emerald-500/15 hover:shadow-md transition-all"
+                            className="bg-card border border-border rounded-md overflow-hidden flex flex-col justify-between hover:border-emerald-500/15 hover:shadow-md transition-all"
                           >
                             <div className="relative h-32 w-full shrink-0">
                               <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
@@ -1040,7 +1040,7 @@ function DashboardContent() {
 
                               <button
                                 onClick={() => addToCart(prod, 1, "10kg")}
-                                className="w-full py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-500/20 transition-all cursor-pointer"
+                                className="w-full py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-500/20 transition-all cursor-pointer"
                               >
                                 <ShoppingBag className="w-3.5 h-3.5" />
                                 Add to Cart
@@ -1068,7 +1068,7 @@ function DashboardContent() {
                             setEditingAddressId(null);
                             setShowAddressForm(true);
                           }}
-                          className="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                          className="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-md shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Add New Address
@@ -1079,8 +1079,7 @@ function DashboardContent() {
                     {!showAddressForm ? (
                       <div className="flex flex-col gap-4">
                         {addresses.length === 0 ? (
-                          <div className="text-center py-16 px-4 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl shadow-sm">
-                            <MapPin className="w-10 h-10 mx-auto text-[#CBD5E1] dark:text-muted-foreground mb-4" />
+                          <div className="text-center py-16 px-4 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md shadow-sm">
                             <h3 className="text-lg font-bold text-[#0F172A] dark:text-hero-text mb-2">No addresses saved</h3>
                             <p className="text-sm text-[#475569] dark:text-muted-foreground">Add a delivery address to ensure a seamless checkout experience.</p>
                           </div>
@@ -1088,7 +1087,7 @@ function DashboardContent() {
                           addresses.map((addr) => (
                             <div 
                               key={addr.id}
-                              className={`relative p-5 sm:p-6 bg-white dark:bg-card rounded-2xl transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-5 ${
+                              className={`relative p-5 sm:p-6 bg-white dark:bg-card rounded-md transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-5 ${
                                 addr.is_default 
                                   ? "border-2 border-emerald-500 shadow-[0_4px_20px_rgba(16,185,129,0.08)]" 
                                   : "border border-[#EEF2F7] dark:border-border/50 hover:border-[#CBD5E1] dark:hover:border-border hover:shadow-sm"
@@ -1144,14 +1143,14 @@ function DashboardContent() {
                                       setEditingAddressId(addr.id);
                                       setShowAddressForm(true);
                                     }}
-                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg transition-all"
+                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md transition-all"
                                     title="Edit"
                                   >
                                     <Settings className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteAddress(addr.id)}
-                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-all"
+                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 rounded-md transition-all"
                                     title="Delete"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -1163,9 +1162,9 @@ function DashboardContent() {
                         )}
                       </div>
                     ) : (
-                      <form onSubmit={handleSaveAddress} className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 sm:p-8 space-y-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)] dark:shadow-none">
-                        <div>
-                          <h3 className="font-bold text-lg text-[#0F172A] dark:text-hero-text">
+                      <form onSubmit={handleSaveAddress} className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 sm:p-8 space-y-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)] dark:shadow">
+                        <div className="mb-2.5">
+                          <h3 className="text-xl font-bold text-[#0F172A] dark:text-hero-text">
                             {editingAddressId ? "Edit Delivery Address" : "Add New Delivery Address"}
                           </h3>
                           <p className="text-xs text-[#475569] dark:text-muted-foreground mt-1">Please provide accurate details to ensure smooth delivery.</p>
@@ -1179,7 +1178,7 @@ function DashboardContent() {
                               required
                               value={addressForm.full_name}
                               onChange={(e) => setAddressForm(prev => ({ ...prev, full_name: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
                               placeholder="e.g. John Doe"
                             />
                           </div>
@@ -1191,7 +1190,7 @@ function DashboardContent() {
                               required
                               value={addressForm.phone}
                               onChange={(e) => setAddressForm(prev => ({ ...prev, phone: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
                               placeholder="+880 1712-345678"
                             />
                           </div>
@@ -1203,7 +1202,7 @@ function DashboardContent() {
                               required
                               value={addressForm.street_address}
                               onChange={(e) => setAddressForm(prev => ({ ...prev, street_address: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
                               placeholder="House No, Road No, Block/Sector"
                             />
                           </div>
@@ -1215,7 +1214,7 @@ function DashboardContent() {
                               required
                               value={addressForm.area}
                               onChange={(e) => setAddressForm(prev => ({ ...prev, area: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
                               placeholder="e.g. Dhanmondi, Gulshan"
                             />
                           </div>
@@ -1227,7 +1226,7 @@ function DashboardContent() {
                               required
                               value={addressForm.city}
                               onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
                               placeholder="e.g. Dhaka"
                             />
                           </div>
@@ -1239,7 +1238,7 @@ function DashboardContent() {
                                 required
                                 value={addressForm.state}
                                 onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
-                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
+                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
                               >
                                 <option value="" disabled>Select Division</option>
                                 <option value="Dhaka">Dhaka</option>
@@ -1263,7 +1262,7 @@ function DashboardContent() {
                               type="text"
                               value={addressForm.postal_code}
                               onChange={(e) => setAddressForm(prev => ({ ...prev, postal_code: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
                               placeholder="e.g. 1212"
                             />
                           </div>
@@ -1275,7 +1274,7 @@ function DashboardContent() {
                               required
                               value={addressForm.country}
                               onChange={(e) => setAddressForm(prev => ({ ...prev, country: e.target.value }))}
-                              className="w-full bg-[#F8FAFC] dark:bg-muted/30 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#475569] dark:text-muted-foreground cursor-not-allowed"
+                              className="w-full bg-[#F8FAFC] dark:bg-muted/30 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#475569] dark:text-muted-foreground cursor-not-allowed"
                               readOnly
                             />
                           </div>
@@ -1286,7 +1285,7 @@ function DashboardContent() {
                               <select
                                 value={addressForm.label}
                                 onChange={(e) => setAddressForm(prev => ({ ...prev, label: e.target.value as any }))}
-                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
+                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
                               >
                                 <option value="Home">Home</option>
                                 <option value="Office">Office</option>
@@ -1319,14 +1318,14 @@ function DashboardContent() {
                               setShowAddressForm(false);
                               setEditingAddressId(null);
                             }}
-                            className="py-3 px-6 bg-white dark:bg-card hover:bg-[#F8FAFC] dark:hover:bg-muted-bg text-[#0F172A] dark:text-foreground text-sm font-bold rounded-xl border border-[#EEF2F7] dark:border-border/50 transition-all cursor-pointer flex-1 sm:flex-none text-center"
+                            className="py-3 px-6 bg-white dark:bg-card hover:bg-[#F8FAFC] dark:hover:bg-muted-bg text-[#0F172A] dark:text-foreground text-sm font-bold rounded-md border border-[#EEF2F7] dark:border-border/50 transition-all cursor-pointer flex-1 sm:flex-none text-center"
                           >
                             Cancel
                           </button>
                           <button
                             type="submit"
                             disabled={addingAddress}
-                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98] flex-1 sm:flex-none"
+                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-md shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98] flex-1 sm:flex-none"
                           >
                             {addingAddress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                             {editingAddressId ? "Update Address" : "Save Address"}
@@ -1351,7 +1350,7 @@ function DashboardContent() {
                             setPaymentForm({ provider: "card", account_details: "", is_default: false });
                             setShowPaymentForm(true);
                           }}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-md shadow-sm transition-all flex items-center gap-2"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Add Payment Method
@@ -1362,8 +1361,7 @@ function DashboardContent() {
                     {!showPaymentForm ? (
                       <div className="flex flex-col gap-4">
                         {paymentMethods.length === 0 ? (
-                          <div className="text-center py-16 px-4 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl shadow-sm">
-                            <CreditCard className="w-10 h-10 mx-auto text-[#CBD5E1] dark:text-muted-foreground mb-4" />
+                          <div className="text-center py-16 px-4 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md shadow-sm">
                             <h3 className="text-lg font-bold text-[#0F172A] dark:text-hero-text mb-2">No payment methods saved</h3>
                             <p className="text-sm text-[#475569] dark:text-muted-foreground">Add a payment method for faster checkout.</p>
                           </div>
@@ -1371,7 +1369,7 @@ function DashboardContent() {
                           paymentMethods.map((method) => (
                             <div 
                               key={method.id}
-                              className={`relative p-5 sm:p-6 bg-white dark:bg-card rounded-2xl transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-5 ${
+                              className={`relative p-5 sm:p-6 bg-white dark:bg-card rounded-md transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-5 ${
                                 method.is_default 
                                   ? "border-2 border-emerald-500 shadow-[0_4px_20px_rgba(16,185,129,0.08)]" 
                                   : "border border-[#EEF2F7] dark:border-border/50 hover:border-[#CBD5E1] dark:hover:border-border hover:shadow-sm"
@@ -1405,7 +1403,7 @@ function DashboardContent() {
                                 <div className={`flex items-center gap-2 ${method.is_default ? 'ml-auto sm:ml-0' : ''}`}>
                                   <button
                                     onClick={() => handleDeletePaymentMethod(method.id)}
-                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-all"
+                                    className="p-2.5 text-[#475569] dark:text-muted-foreground bg-[#F8FAFC] dark:bg-muted-bg hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 rounded-md transition-all"
                                     title="Delete"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -1417,7 +1415,7 @@ function DashboardContent() {
                         )}
                       </div>
                     ) : (
-                      <form onSubmit={handleSavePaymentMethod} className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl p-6 sm:p-8 space-y-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)] dark:shadow-none">
+                      <form onSubmit={handleSavePaymentMethod} className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 sm:p-8 space-y-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)] dark:shadow-none">
                         <div>
                           <h3 className="font-bold text-lg text-[#0F172A] dark:text-hero-text">
                             Add New Payment Method
@@ -1433,7 +1431,7 @@ function DashboardContent() {
                                 required
                                 value={paymentForm.provider}
                                 onChange={(e) => setPaymentForm(prev => ({ ...prev, provider: e.target.value }))}
-                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
+                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
                               >
                                 <option value="card">Credit / Debit Card</option>
                                 <option value="bkash">bKash</option>
@@ -1453,7 +1451,7 @@ function DashboardContent() {
                               required
                               value={paymentForm.account_details}
                               onChange={(e) => setPaymentForm(prev => ({ ...prev, account_details: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-xl px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
                               placeholder={paymentForm.provider === 'card' ? "e.g. **** **** **** 4242" : "e.g. 01712345678"}
                             />
                           </div>
@@ -1484,14 +1482,14 @@ function DashboardContent() {
                             onClick={() => {
                               setShowPaymentForm(false);
                             }}
-                            className="py-3 px-6 bg-white dark:bg-card hover:bg-[#F8FAFC] dark:hover:bg-muted-bg text-[#0F172A] dark:text-foreground text-sm font-bold rounded-xl border border-[#EEF2F7] dark:border-border/50 transition-all cursor-pointer flex-1 sm:flex-none text-center"
+                            className="py-3 px-6 bg-white dark:bg-card hover:bg-[#F8FAFC] dark:hover:bg-muted-bg text-[#0F172A] dark:text-foreground text-sm font-bold rounded-md border border-[#EEF2F7] dark:border-border/50 transition-all cursor-pointer flex-1 sm:flex-none text-center"
                           >
                             Cancel
                           </button>
                           <button
                             type="submit"
                             disabled={addingPayment}
-                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98] flex-1 sm:flex-none"
+                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-md shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98] flex-1 sm:flex-none"
                           >
                             {addingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                             Save Payment Method
@@ -1510,11 +1508,11 @@ function DashboardContent() {
                       <p className="text-xs text-muted-foreground">Manage your profile picture, contact details, and personal data.</p>
                     </div>
 
-                    <form onSubmit={handleUpdateProfile} className="space-y-8 font-sans">
+                    <form onSubmit={handleUpdateProfile} className="flex flex-col gap-8 font-sans">
                       {/* Profile Picture Section */}
-                      <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-muted-bg/50 border border-border rounded-lg shadow-sm">
+                      <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-muted-bg/50 border border-border rounded-md shadow-sm">
                         <div className="relative">
-                          <div className="w-20 h-20 rounded-lg bg-gradient-to-tr from-[#fbbf24] to-[#f59e0b] flex items-center justify-center text-black text-3xl font-black shadow-md">
+                          <div className="w-20 h-20 rounded-md bg-gradient-to-tr from-[#fbbf24] to-[#f59e0b] flex items-center justify-center text-black text-3xl font-black shadow-md">
                             {profile.full_name ? profile.full_name[0].toUpperCase() : "U"}
                           </div>
                           <button type="button" className="absolute -bottom-2 -right-2 p-1.5 bg-card border border-border rounded-md text-muted-foreground hover:text-emerald-500 shadow-sm transition-colors cursor-pointer" title="Update Picture">
@@ -1648,12 +1646,17 @@ function DashboardContent() {
 
                 {/* 6. PREFERENCES / NOTIFICATIONS TAB */}
                 {activeTab === "notifications" && (
-                  <div className="space-y-8">
-                    <div className="space-y-6">
-                      <div className="border-b border-border pb-4 flex justify-between items-center">
+                  <div className="space-y-12 max-w-4xl">
+                    
+                    {/* Notifications Section */}
+                    <div className="flex flex-col gap-6">
+                      <div className="border-b border-border pb-4 flex justify-between items-end">
                         <div>
-                          <h2 className="font-serif-heading text-xl font-bold text-hero-text">Recent Notifications</h2>
-                          <p className="text-xs text-muted-foreground">Stay updated on your orders and account activity.</p>
+                          <h2 className="font-serif-heading text-2xl font-bold text-hero-text flex items-center gap-2">
+                            <Bell className="w-6 h-6 text-emerald-600" />
+                            Recent Notifications
+                          </h2>
+                          <p className="text-sm text-muted-foreground mt-1 mb-2.5">Stay updated on your orders and account activity.</p>
                         </div>
                         {notifications.length > 0 && (
                           <button
@@ -1665,7 +1668,7 @@ function DashboardContent() {
                               setNotifications(notifications.map(n => ({ ...n, is_read: true })));
                               localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(notifications.map(n => ({ ...n, is_read: true }))));
                             }}
-                            className="text-xs font-bold text-emerald-600 hover:text-emerald-500"
+                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-md transition-colors"
                           >
                             Mark all as read
                           </button>
@@ -1674,117 +1677,153 @@ function DashboardContent() {
                       
                       <div className="flex flex-col gap-3">
                         {notifications.length === 0 ? (
-                          <div className="text-center py-10 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-2xl shadow-sm">
-                            <Bell className="w-8 h-8 mx-auto text-[#CBD5E1] dark:text-muted-foreground mb-3" />
-                            <p className="text-sm font-semibold text-hero-text">No notifications yet</p>
+                          <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-card border-2 border-border border-dashed rounded-md text-center">
+                            <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-muted-bg flex items-center justify-center mb-4">
+                              <Bell className="w-8 h-8 text-slate-300 dark:text-muted-foreground" />
+                            </div>
+                            <h3 className="text-lg font-bold text-hero-text mb-2">No notifications yet</h3>
+                            <p className="text-sm text-muted-foreground max-w-sm">
+                              When you have updates about your orders, deliveries, or account activity, they will appear right here.
+                            </p>
                           </div>
                         ) : (
                           notifications.map((notif) => (
-                            <div key={notif.id} className={`p-4 rounded-xl border flex gap-4 transition-all ${notif.is_read ? 'bg-transparent border-border/50' : 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-500/20'}`}>
-                              <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${
+                            <div key={notif.id} className={`p-5 rounded-md border flex gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${notif.is_read ? 'bg-white dark:bg-card border-border shadow-sm' : 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.05)]'}`}>
+                              <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center ${
                                 notif.type === 'order_placed' ? 'bg-blue-100 text-blue-600' :
                                 notif.type === 'order_cancelled' ? 'bg-rose-100 text-rose-600' :
                                 'bg-emerald-100 text-emerald-600'
                               }`}>
-                                <Bell className="w-4 h-4" />
+                                <Bell className="w-5 h-5" />
                               </div>
-                              <div className="space-y-1">
-                                <h4 className="text-sm font-bold text-hero-text">{notif.title}</h4>
-                                <p className="text-xs text-muted-foreground">{notif.message}</p>
-                                <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider block pt-1">
-                                  {new Date(notif.created_at).toLocaleString()}
-                                </span>
+                              <div className="space-y-1 flex-grow">
+                                <div className="flex justify-between items-start gap-4">
+                                  <h4 className="text-sm font-bold text-hero-text">{notif.title}</h4>
+                                  <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider whitespace-nowrap bg-muted-bg px-2 py-1 rounded-md">
+                                    {new Date(notif.created_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-muted-foreground leading-relaxed">{notif.message}</p>
                               </div>
+                              {!notif.is_read && (
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 mt-2 shrink-0 animate-pulse" />
+                              )}
                             </div>
                           ))
                         )}
                       </div>
                     </div>
 
-                    <div className="border-b border-border pb-4 mt-12">
-                      <h2 className="font-serif-heading text-xl font-bold text-hero-text">Display Preferences</h2>
-                    </div>
+                    {/* Preferences Section */}
+                    <div className="space-y-6 pt-6 border-t border-border">
+                      <div className="border-b border-border pb-4">
+                        <h2 className="font-serif-heading text-2xl font-bold text-hero-text flex items-center gap-2">
+                          <Settings className="w-6 h-6 text-emerald-600" />
+                          Display & Notification Settings
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1 mb-2.5">Customize how MangoDB looks and communicates with you.</p>
+                      </div>
 
-                    <form onSubmit={handleUpdatePreferences} className="space-y-8 font-sans max-w-2xl">
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-bold text-hero-text pb-2 border-b border-border">Regional Settings</h3>
+                      <form onSubmit={handleUpdatePreferences} className="flex flex-col gap-6 font-sans">
                         
-                        <div className="grid sm:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">Language</label>
-                            <select
-                              value={preferences.language}
-                              onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))}
-                              className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 appearance-none cursor-pointer"
-                            >
-                              <option value="en">English (US)</option>
-                              <option value="bn">Bengali (বাংলা)</option>
-                            </select>
+                        {/* Regional Settings */}
+                        <div className="bg-white dark:bg-card border border-border rounded-md overflow-hidden shadow-sm">
+                          <div className="p-4 bg-muted-bg/50 border-b border-border">
+                            <h3 className="text-sm font-bold text-hero-text">Regional Preferences</h3>
                           </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">Currency</label>
-                            <select
-                              value={preferences.currency}
-                              onChange={(e) => setPreferences(prev => ({ ...prev, currency: e.target.value }))}
-                              className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 appearance-none cursor-pointer"
-                            >
-                              <option value="BDT">BDT (৳)</option>
-                              <option value="USD">USD ($)</option>
-                            </select>
+                          <div className="p-6 grid sm:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-xs font-black uppercase text-muted-foreground tracking-wider block">Language</label>
+                              <div className="relative">
+                                <select
+                                  value={preferences.language}
+                                  onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))}
+                                  className="w-full bg-white dark:bg-card border border-border rounded-md px-4 py-3 text-sm font-bold text-hero-text focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer transition-colors"
+                                >
+                                  <option value="en">English (US)</option>
+                                  <option value="bn">Bengali (বাংলা)</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-black uppercase text-muted-foreground tracking-wider block">Currency</label>
+                              <div className="relative">
+                                <select
+                                  value={preferences.currency}
+                                  onChange={(e) => setPreferences(prev => ({ ...prev, currency: e.target.value }))}
+                                  className="w-full bg-white dark:bg-card border border-border rounded-md px-4 py-3 text-sm font-bold text-hero-text focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer transition-colors"
+                                >
+                                  <option value="BDT">BDT (৳)</option>
+                                  <option value="USD">USD ($)</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-bold text-hero-text pb-2 border-b border-border">Display</h3>
-                        <label className="flex items-center justify-between p-4 border border-border rounded-xl cursor-pointer hover:border-emerald-500/30 transition-colors">
-                          <div className="space-y-1">
-                            <p className="text-sm font-bold text-hero-text">Dark Mode</p>
-                            <p className="text-xs text-muted-foreground">Switch between light and dark themes.</p>
+                        {/* Visual & Comm Toggles */}
+                        <div className="bg-white dark:bg-card border border-border rounded-md overflow-hidden shadow-sm">
+                          <div className="p-4 bg-muted-bg/50 border-b border-border">
+                            <h3 className="text-sm font-bold text-hero-text">Visuals & Communication</h3>
                           </div>
-                          <div className={`w-11 h-6 rounded-full transition-colors relative ${preferences.darkMode ? "bg-emerald-500" : "bg-muted-bg"}`}>
-                            <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${preferences.darkMode ? "translate-x-5" : ""}`} />
-                          </div>
-                          <input type="checkbox" className="hidden" checked={preferences.darkMode} onChange={(e) => setPreferences(prev => ({ ...prev, darkMode: e.target.checked }))} />
-                        </label>
-                      </div>
+                          
+                          <div className="divide-y divide-border">
+                            {/* Dark Mode Toggle */}
+                            <label className="flex items-center justify-between p-6 cursor-pointer hover:bg-muted-bg/30 transition-colors">
+                              <div className="space-y-1">
+                                <p className="text-sm font-bold text-hero-text">Dark Mode Interface</p>
+                                <p className="text-xs text-muted-foreground">Switch the platform theme to a darker, low-light aesthetic.</p>
+                              </div>
+                              <div className={`w-12 h-7 rounded-full transition-colors relative shrink-0 ${preferences.darkMode ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`}>
+                                <div className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${preferences.darkMode ? "translate-x-5" : ""}`} />
+                              </div>
+                              <input type="checkbox" className="hidden" checked={preferences.darkMode} onChange={(e) => setPreferences(prev => ({ ...prev, darkMode: e.target.checked }))} />
+                            </label>
 
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-bold text-hero-text pb-2 border-b border-border">Notifications</h3>
-                        <label className="flex items-center justify-between p-4 border border-border rounded-xl cursor-pointer hover:border-emerald-500/30 transition-colors">
-                          <div className="space-y-1">
-                            <p className="text-sm font-bold text-hero-text">Email Notifications</p>
-                            <p className="text-xs text-muted-foreground">Receive order updates and promotions via email.</p>
-                          </div>
-                          <div className={`w-11 h-6 rounded-full transition-colors relative ${preferences.emailNotif ? "bg-emerald-500" : "bg-muted-bg"}`}>
-                            <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${preferences.emailNotif ? "translate-x-5" : ""}`} />
-                          </div>
-                          <input type="checkbox" className="hidden" checked={preferences.emailNotif} onChange={(e) => setPreferences(prev => ({ ...prev, emailNotif: e.target.checked }))} />
-                        </label>
+                            {/* Email Alerts Toggle */}
+                            <label className="flex items-center justify-between p-6 cursor-pointer hover:bg-muted-bg/30 transition-colors">
+                              <div className="space-y-1">
+                                <p className="text-sm font-bold text-hero-text">Email Notifications</p>
+                                <p className="text-xs text-muted-foreground">Receive critical order updates and tracking links directly to your inbox.</p>
+                              </div>
+                              <div className={`w-12 h-7 rounded-full transition-colors relative shrink-0 ${preferences.emailNotif ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`}>
+                                <div className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${preferences.emailNotif ? "translate-x-5" : ""}`} />
+                              </div>
+                              <input type="checkbox" className="hidden" checked={preferences.emailNotif} onChange={(e) => setPreferences(prev => ({ ...prev, emailNotif: e.target.checked }))} />
+                            </label>
 
-                        <label className="flex items-center justify-between p-4 border border-border rounded-xl cursor-pointer hover:border-emerald-500/30 transition-colors">
-                          <div className="space-y-1">
-                            <p className="text-sm font-bold text-hero-text">SMS Notifications</p>
-                            <p className="text-xs text-muted-foreground">Receive delivery alerts via SMS.</p>
+                            {/* SMS Alerts Toggle */}
+                            <label className="flex items-center justify-between p-6 cursor-pointer hover:bg-muted-bg/30 transition-colors">
+                              <div className="space-y-1">
+                                <p className="text-sm font-bold text-hero-text">SMS Delivery Alerts</p>
+                                <p className="text-xs text-muted-foreground">Get real-time text messages when your mangoes are out for delivery.</p>
+                              </div>
+                              <div className={`w-12 h-7 rounded-full transition-colors relative shrink-0 ${preferences.smsNotif ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`}>
+                                <div className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${preferences.smsNotif ? "translate-x-5" : ""}`} />
+                              </div>
+                              <input type="checkbox" className="hidden" checked={preferences.smsNotif} onChange={(e) => setPreferences(prev => ({ ...prev, smsNotif: e.target.checked }))} />
+                            </label>
                           </div>
-                          <div className={`w-11 h-6 rounded-full transition-colors relative ${preferences.smsNotif ? "bg-emerald-500" : "bg-muted-bg"}`}>
-                            <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${preferences.smsNotif ? "translate-x-5" : ""}`} />
-                          </div>
-                          <input type="checkbox" className="hidden" checked={preferences.smsNotif} onChange={(e) => setPreferences(prev => ({ ...prev, smsNotif: e.target.checked }))} />
-                        </label>
-                      </div>
+                        </div>
 
-                      <div className="pt-2">
-                        <button
-                          type="submit"
-                          disabled={savingPrefs}
-                          className="py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-[0_0_15px_rgba(52,211,153,0.2)] hover:shadow-[0_0_20px_rgba(52,211,153,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                        >
-                          {savingPrefs ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                          Save Preferences
-                        </button>
-                      </div>
-                    </form>
+                        <div className="pt-2 flex justify-end">
+                          <button
+                            type="submit"
+                            disabled={savingPrefs}
+                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-md shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                          >
+                            {savingPrefs ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                            Save Preferences
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   </div>
                 )}
 
@@ -1804,7 +1843,7 @@ function DashboardContent() {
                           required
                           value={passwordForm.current}
                           onChange={(e) => setPasswordForm(prev => ({ ...prev, current: e.target.value }))}
-                          className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
+                          className="w-full bg-card border border-border rounded-md px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
                         />
                       </div>
 
@@ -1816,7 +1855,7 @@ function DashboardContent() {
                           minLength={8}
                           value={passwordForm.new}
                           onChange={(e) => setPasswordForm(prev => ({ ...prev, new: e.target.value }))}
-                          className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
+                          className="w-full bg-card border border-border rounded-md px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
                         />
                         {/* Strength Indicator */}
                         {passwordForm.new && (
@@ -1841,7 +1880,7 @@ function DashboardContent() {
                           required
                           value={passwordForm.confirm}
                           onChange={(e) => setPasswordForm(prev => ({ ...prev, confirm: e.target.value }))}
-                          className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
+                          className="w-full bg-card border border-border rounded-md px-4 py-3 text-sm font-semibold text-hero-text focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
                         />
                       </div>
 
@@ -1849,7 +1888,7 @@ function DashboardContent() {
                         <button
                           type="submit"
                           disabled={changingPassword}
-                          className="w-full py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                          className="w-full py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-md shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                           {changingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                           Update Password
@@ -1868,7 +1907,7 @@ function DashboardContent() {
                     </div>
 
                     <div className="grid gap-4 max-w-2xl">
-                      <div className="p-5 border border-border bg-card rounded-2xl flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                      <div className="p-5 border border-border bg-card rounded-md flex items-center justify-between hover:border-emerald-500/20 transition-all">
                         <div className="space-y-1">
                           <p className="font-bold text-sm text-hero-text">Email Address</p>
                           <p className="text-xs text-muted-foreground">{profile.email}</p>
@@ -1878,7 +1917,7 @@ function DashboardContent() {
                         </span>
                       </div>
 
-                      <div className="p-5 border border-border bg-card rounded-2xl flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                      <div className="p-5 border border-border bg-card rounded-md flex items-center justify-between hover:border-emerald-500/20 transition-all">
                         <div className="space-y-1">
                           <p className="font-bold text-sm text-hero-text">Phone Number</p>
                           <p className="text-xs text-muted-foreground">{profile.phone || "Not set"}</p>
@@ -1898,14 +1937,14 @@ function DashboardContent() {
                     <div className="max-w-2xl mt-8 pt-8 border-t border-border space-y-6">
                       <div className="space-y-4">
                         <h3 className="text-sm font-bold text-hero-text">Device Management</h3>
-                        <div className="flex items-center justify-between p-5 bg-card border border-border rounded-2xl">
+                        <div className="flex items-center justify-between p-5 bg-card border border-border rounded-md">
                           <div className="space-y-1">
                             <p className="font-bold text-sm text-hero-text">Log out everywhere</p>
                             <p className="text-xs text-muted-foreground">Sign out of all devices except this one.</p>
                           </div>
                           <button 
                             onClick={handleLogoutEverywhere}
-                            className="px-5 py-2.5 bg-muted-bg text-hero-text text-xs font-bold rounded-xl hover:bg-border transition-colors"
+                            className="px-5 py-2.5 bg-muted-bg text-hero-text text-xs font-bold rounded-md hover:bg-border transition-colors"
                           >
                             Log Out All
                           </button>
@@ -1914,14 +1953,14 @@ function DashboardContent() {
 
                       <div className="space-y-4 pt-4">
                         <h3 className="text-sm font-bold text-red-500">Danger Zone</h3>
-                        <div className="flex items-center justify-between p-5 bg-red-500/5 border border-red-500/20 rounded-2xl">
+                        <div className="flex items-center justify-between p-5 bg-red-500/5 border border-red-500/20 rounded-md">
                           <div className="space-y-1">
                             <p className="font-bold text-sm text-hero-text">Delete Account</p>
                             <p className="text-xs text-muted-foreground">Permanently remove your account and data.</p>
                           </div>
                           <button 
                             onClick={handleDeleteAccount}
-                            className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition-colors shadow-sm"
+                            className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-md transition-colors shadow-sm"
                           >
                             Delete Account
                           </button>

@@ -88,6 +88,19 @@ export default function Navbar() {
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
+  const getDisplayName = () => {
+    if (!profile) return "User";
+    if (profile.full_name && profile.full_name !== profile.email && !profile.full_name.includes('@')) {
+      return profile.full_name;
+    }
+    return profile.email ? profile.email.split('@')[0] : "User";
+  };
+
+  const getShortName = () => {
+    const name = getDisplayName();
+    return name.split(' ')[0];
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#f4f7f5] dark:bg-background border-b border-gray-200 dark:border-border/10">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
@@ -210,11 +223,11 @@ export default function Navbar() {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 p-1.5 pr-3 rounded-full bg-muted-bg border border-border hover:border-emerald-500/30 transition-all cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#fbbf24] to-[#f59e0b] flex items-center justify-center text-black text-sm font-black shadow-sm">
-                    {profile.full_name ? profile.full_name[0].toUpperCase() : "U"}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#fbbf24] to-[#f59e0b] flex items-center justify-center text-black text-sm font-black shadow-sm uppercase">
+                    {getDisplayName()[0]}
                   </div>
                   <span className="text-sm font-bold text-hero-text max-w-[100px] truncate">
-                    {profile.full_name?.split(' ')[0] || "User"}
+                    {getShortName()}
                   </span>
                   <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -225,7 +238,7 @@ export default function Navbar() {
                     <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)}></div>
                     <div className="absolute top-[120%] right-0 w-60 bg-card border border-border rounded-2xl shadow-xl overflow-hidden py-1 z-50 animate-fade-in">
                       <div className="px-4 py-3 border-b border-border bg-muted-bg/50">
-                        <p className="text-sm font-bold text-hero-text truncate">{profile.full_name}</p>
+                        <p className="text-sm font-bold text-hero-text truncate">{getDisplayName()}</p>
                         <p className="text-xs text-muted-foreground truncate">{profile.phone || profile.email}</p>
                       </div>
                       
@@ -404,7 +417,7 @@ export default function Navbar() {
                 <div className="space-y-3">
                   <div className="p-3 bg-section-alt border border-border rounded-xl flex items-center justify-between text-xs font-sans">
                     <div>
-                      <p className="font-bold text-hero-text">{profile.full_name}</p>
+                      <p className="font-bold text-hero-text">{getDisplayName()}</p>
                       <p className="text-muted-foreground">{profile.phone || profile.email}</p>
                     </div>
                     <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-bold capitalize">

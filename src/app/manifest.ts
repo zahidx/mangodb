@@ -1,21 +1,31 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'MangoDB Premium Harvest',
+    name: 'MangoDB E-Commerce',
     short_name: 'MangoDB',
-    description: 'Fresh, organic Rajshahi mangoes delivered directly from farm to doorstep.',
+    description: 'Premium quality mangoes delivered directly to your doorstep.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#05070f',
-    theme_color: '#fbbf24',
+    background_color: '#ffffff',
+    theme_color: '#10b981',
     icons: [
       {
-        src: '/favicon.ico',
-        sizes: 'any',
-        type: 'image/x-icon',
-      }
-      // Note: For a full PWA, you should add a 192x192 and 512x512 icon in the public folder
+        src: '/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        src: '/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+      {
+        src: '/icon-maskable-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
     ],
-  }
+  };
 }
