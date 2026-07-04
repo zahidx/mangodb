@@ -11,25 +11,24 @@ import {
     ArrowRight,
     Award,
     Check,
+    Citrus,
     Coins,
     CreditCard,
-    Droplets,
+    CupSoda,
+    Droplet,
     Heart,
+    Hexagon,
     Leaf,
     Loader2,
+    Nut,
     Package,
+    Palmtree,
     ShoppingBag,
     Sparkles,
     Star,
     Truck,
     X,
-    Zap,
-    Citrus,
-    Palmtree,
-    Droplet,
-    Hexagon,
-    Nut,
-    CupSoda
+    Zap
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

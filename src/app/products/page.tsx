@@ -6,18 +6,18 @@ import { useCart } from "@/context/CartContext";
 import { getCategories, getProducts } from "@/lib/supabase/queries";
 import type { Category, Product } from "@/types/database";
 import {
+    Citrus,
+    CupSoda,
+    Droplet,
     Heart,
+    Hexagon,
+    Leaf,
     Loader2,
+    Nut,
+    Palmtree,
     ShoppingBag,
     Truck,
-    Zap,
-    Citrus,
-    Palmtree,
-    Droplet,
-    Hexagon,
-    Nut,
-    CupSoda,
-    Leaf
+    Zap
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
