@@ -1,13 +1,12 @@
-import type { Metadata, Viewport } from "next";
-import { Fraunces, Geist, Geist_Mono, Playfair_Display, Outfit } from "next/font/google";
-import { Toaster } from "react-hot-toast";
-import { AuthProvider } from "@/context/AuthContext";
-import { CartProvider } from "@/context/CartContext";
-import WhatsAppWidget from "@/components/WhatsAppWidget";
-import MarketingScripts from "@/components/MarketingScripts";
 import BackToTop from "@/components/BackToTop";
 import CookieConsent from "@/components/CookieConsent";
+import MarketingScripts from "@/components/MarketingScripts";
+import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/context/CartContext";
+import type { Metadata, Viewport } from "next";
+import { Fraunces, Geist, Geist_Mono, Outfit, Playfair_Display } from "next/font/google";
 import Script from "next/script";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -138,7 +137,6 @@ export default function RootLayout({
             },
           }}
         />
-        <WhatsAppWidget />
         <BackToTop />
         <CookieConsent />
         <MarketingScripts />

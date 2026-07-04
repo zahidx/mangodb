@@ -2,26 +2,25 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { createClient } from "@/lib/supabase/client";
 import {
+    Bell,
+    ChevronDown,
     LayoutDashboard,
     LogOut,
     Menu,
     Moon,
+    Package,
+    Settings,
     ShieldCheck,
     ShoppingBag,
     ShoppingCart,
     Sun,
-    X,
-    ChevronDown,
-    Package,
-    Settings,
-    User,
-    Bell
+    X
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import GlobalSearch from "./GlobalSearch";
 
 export default function Navbar() {
@@ -120,6 +119,16 @@ export default function Navbar() {
           {/* Nav Links - Desktop */}
           <div className="hidden lg:flex items-center gap-8 mr-auto">
             <Link
+              href="/"
+              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
+                pathname === "/" 
+                  ? "text-[#1a2e24] after:w-full" 
+                  : "text-[#3b574a] dark:text-muted after:w-0"
+              }`}
+            >
+              Home
+            </Link>
+            <Link
               href="/products"
               className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
                 pathname === "/products" 
@@ -127,17 +136,9 @@ export default function Navbar() {
                   : "text-[#3b574a] dark:text-muted after:w-0"
               }`}
             >
-              Shop Mangoes
+              Products
             </Link>
             
-            <Link
-              href="/#varieties"
-              className="text-[15px] font-bold text-[#3b574a] dark:text-muted transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-[#20BA5A] hover:after:w-full after:transition-all after:duration-300"
-            >
-              Varieties
-            </Link>
-
-
             <Link
               href="/track"
               className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
@@ -146,7 +147,7 @@ export default function Navbar() {
                   : "text-[#3b574a] dark:text-muted after:w-0"
               }`}
             >
-              Track Crate
+              Track Order
             </Link>
 
             <Link
@@ -158,7 +159,7 @@ export default function Navbar() {
           </div>
 
           {/* Auth + Theme Toggle + Cart */}
-          <div className="flex items-center gap-3 shrink-0 lg:translate-x-[180px]">
+          <div className="flex items-center gap-3 shrink-0 lg:pr-[45px]">
             {/* Global Search Bar */}
             <GlobalSearch />
 
@@ -343,28 +344,26 @@ export default function Navbar() {
         {/* Drawer Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar">
             <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2"
+            >
+              Home
+            </Link>
+            <Link
               href="/products"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2"
             >
-              Shop Mangoes
+              Products
             </Link>
             
-            <Link
-              href="/#varieties"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2"
-            >
-              Varieties
-            </Link>
-
-
             <Link
               href="/track"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2"
             >
-              Track Crate
+              Track Order
             </Link>
 
             <Link

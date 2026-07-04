@@ -148,7 +148,6 @@
 
 *, *::before, *::after {
   box-sizing: border-box;
-  margin: 0;
 }
 
 html {
@@ -215,6 +214,20 @@ body {
     border-color: rgba(251, 191, 36, 0.3);
   }
 }
+
+/* Toast enter/leave animations */
+@keyframes enter {
+  0% { opacity: 0; transform: translateX(40px) scale(0.95); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes leave {
+  0% { opacity: 1; transform: translateX(0) scale(1); }
+  100% { opacity: 0; transform: translateX(40px) scale(0.95); }
+}
+
+.animate-enter { animation: enter 0.3s cubic-bezier(0.21, 1.02, 0.73, 1) forwards; }
+.animate-leave { animation: leave 0.25s cubic-bezier(0.06, 0.71, 0.55, 1) forwards; }
 
 .animate-float {
   animation: float 4s ease-in-out infinite;

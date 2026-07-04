@@ -1,10 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useAuth } from "./AuthContext";
+import { showAddToCartToast } from "@/components/AddToCartToast";
 import { createClient } from "@/lib/supabase/client";
-import type { CartItem, Product } from "@/types/database";
+import type { Product } from "@/types/database";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useAuth } from "./AuthContext";
 
 export interface ExtendedCartItem {
   id: string;
@@ -150,7 +151,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     saveLocalCart(updatedItems);
-    toast.success(`Added ${product.name} to cart`);
+    showAddToCartToast({
+      productName: product.name,
+      productImage: product.images?.[0],
+      quantity,
+      weight,
+    });
 
     // Sync with database if logged in and not in demo
     if (profile && !profile.id.startsWith("demo-")) {

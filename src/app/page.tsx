@@ -2,13 +2,15 @@
 
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { createClient } from "@/lib/supabase/client";
+import { getCategories, getProducts } from "@/lib/supabase/queries";
 import {
     ArrowRight,
     Award,
     Check,
-    CheckCircle2,
     Coins,
     CreditCard,
     Droplets,
@@ -16,23 +18,27 @@ import {
     Leaf,
     Loader2,
     Package,
-    Play,
-    Search,
-    Shield,
     ShoppingBag,
     Sparkles,
     Star,
     Truck,
     X,
-    Zap
+    Zap,
+    Citrus,
+    Palmtree,
+    Droplet,
+    Hexagon,
+    Nut,
+    CupSoda
 } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export default function HomePage() {
   const { profile: user } = useAuth();
+  const { addToCart } = useCart();
   const supabase = createClient() as any;
 
   // New States for competitor features (Express Checkout, Order Tracking, Video Player)
@@ -52,6 +58,41 @@ export default function HomePage() {
   });
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
+
+  // Fly-to-cart animation state
+  const [flyingItems, setFlyingItems] = useState<{ id: string, startX: number, startY: number, targetX: number, targetY: number, img: string }[]>([]);
+
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>, prod: any) => {
+    e.preventDefault();
+    addToCart(prod, 1, "10kg");
+    
+    const buttonRect = e.currentTarget.getBoundingClientRect();
+    const cartEl = document.querySelector('a[aria-label="View Cart"]');
+    let targetX = window.innerWidth - 60;
+    let targetY = 20;
+
+    if (cartEl) {
+      const cartRect = cartEl.getBoundingClientRect();
+      targetX = cartRect.left + cartRect.width / 2 - 20;
+      targetY = cartRect.top + cartRect.height / 2 - 20;
+    }
+
+    const id = Date.now().toString();
+    const newFly = {
+      id,
+      startX: buttonRect.left + buttonRect.width / 2 - 20,
+      startY: buttonRect.top,
+      targetX,
+      targetY,
+      img: prod.images?.[0] || "/products/mango.png"
+    };
+
+    setFlyingItems(prev => [...prev, newFly]);
+
+    setTimeout(() => {
+      setFlyingItems(prev => prev.filter(item => item.id !== id));
+    }, 800);
+  };
   
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
@@ -288,67 +329,45 @@ export default function HomePage() {
     setSearchedTrackingId(null);
   };
 
-  // Localized premium Bangladeshi mango varieties
-  const featuredProducts = [
-    {
-      id: "1",
-      name: "Rajshahi Himsagar",
-      slug: "himsagar-mangoes",
-      category: "Premium Grade",
-      price: 1200,
-      sale_price: 999,
-      rating: 4.9,
-      reviews: 412,
-      image: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80",
-      badge: "King of Bengal",
-    },
-    {
-      id: "2",
-      name: "Rangpur Haribhanga",
-      slug: "haribhanga-mangoes",
-      category: "Premium Grade",
-      price: 1400,
-      sale_price: null,
-      rating: 4.8,
-      reviews: 287,
-      image: "https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=600&auto=format&fit=crop&q=80",
-      badge: "Fleshy & Fiberless",
-    },
-    {
-      id: "3",
-      name: "Chapainawabganj Lengra",
-      slug: "lengra-mangoes",
-      category: "Classic Selection",
-      price: 1100,
-      sale_price: 950,
-      rating: 4.7,
-      reviews: 198,
-      image: "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&auto=format&fit=crop&q=80",
-      badge: "Aromatic Delight",
-    },
-    {
-      id: "4",
-      name: "Premium Amrapali",
-      slug: "amrapali-mangoes",
-      category: "Classic Selection",
-      price: 1300,
-      sale_price: 1150,
-      rating: 4.8,
-      reviews: 212,
-      image: "https://images.unsplash.com/photo-1552474030-b3a5b5f04e2e?w=600&auto=format&fit=crop&q=80",
-      badge: "Intensely Sweet",
-    },
-  ];
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [dynamicCategories, setDynamicCategories] = useState<any[]>([]);
+  const [isLoadingDynamic, setIsLoadingDynamic] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
-  // Mango categories
-  const categories = [
-    { name: "Organic Harvest", slug: "organic", count: "10+ orchards", icon: Leaf, color: "from-emerald-500/20 to-green-600/20", border: "hover:border-emerald-500/30" },
-    { name: "Premium Crates", slug: "premium", count: "6+ varieties", icon: Award, color: "from-amber-500/20 to-yellow-600/20", border: "hover:border-amber-500/30" },
-    { name: "Festival Gift Boxes", slug: "gifts", count: "4 options", icon: Package, color: "from-pink-500/20 to-rose-600/20", border: "hover:border-pink-500/30" },
-    { name: "Aamsotto & Dried", slug: "dried", count: "3 varieties", icon: Droplets, color: "from-orange-500/20 to-red-600/20", border: "hover:border-orange-500/30" },
-    { name: "Pure Mango Pulp", slug: "pulp", count: "Pure & Fresh", icon: ShoppingBag, color: "from-purple-500/20 to-indigo-600/20", border: "hover:border-purple-500/30" },
-    { name: "Seasonal Specials", slug: "seasonal", count: "Limited stock", icon: Sparkles, color: "from-violet-500/20 to-purple-600/20", border: "hover:border-violet-500/30" },
-  ];
+  // Fetch categories once on mount
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const catRes = await getCategories();
+        if (catRes.data) {
+          setDynamicCategories(catRes.data);
+        }
+      } catch (err) {}
+    }
+    loadCategories();
+  }, []);
+
+  // Fetch products based on active category
+  useEffect(() => {
+    async function loadProducts() {
+      setIsLoadingDynamic(true);
+      try {
+        const prodRes = await getProducts({ 
+          sortBy: "newest", 
+          limit: 12,
+          categorySlug: activeCategory === "all" ? undefined : activeCategory 
+        });
+        if (prodRes.data) {
+          setFeaturedProducts(prodRes.data);
+        }
+      } catch (err) {
+        console.error("Failed to load products", err);
+      } finally {
+        setIsLoadingDynamic(false);
+      }
+    }
+    loadProducts();
+  }, [activeCategory]);
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-[#fbbf24] selection:text-black relative flex flex-col transition-colors duration-200">
@@ -363,53 +382,105 @@ export default function HomePage() {
       <div className="grow flex flex-col relative z-10 pt-16">
         
         {/* 1. Hero Section (Rustic background, white text, green buttons) */}
-        <section className="relative w-full h-[550px] flex items-center justify-center overflow-hidden">
-          {/* Background Image */}
+        <section className="relative w-full min-h-[600px] flex items-center justify-center overflow-hidden bg-black">
+          {/* Background Image with Premium Gradients */}
           <div className="absolute inset-0 z-0">
-             <Image src="https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=1600&auto=format&fit=crop&q=80" alt="Gardeners" fill className="object-cover brightness-50" />
+             <Image 
+               src="https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=1600&auto=format&fit=crop&q=80" 
+               alt="Gardeners" 
+               fill 
+               className="object-cover opacity-85" 
+               priority
+             />
+             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#f4f7f5] dark:to-background z-10 pointer-events-none" />
+             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 z-10 pointer-events-none" />
           </div>
-          <div className="relative z-10 text-center max-w-4xl px-4 flex flex-col items-center">
-             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight mb-6 tracking-tight">
-               Fresh & Chemical-Free<br />Mangoes from Rajshahi
+
+          <div className="relative z-20 text-center max-w-5xl px-4 flex flex-col items-center pt-12 pb-20 animate-fade-in">
+             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-bold mb-8 shadow-2xl">
+               <Sparkles className="w-4 h-4 text-[#fbbf24]" />
+               <span>100% Formalin & Carbide Free</span>
+             </div>
+
+             <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[1.1] mb-6 tracking-tight drop-shadow-2xl">
+               Fresh & Chemical-Free<br />
+               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] filter drop-shadow-lg">
+                 Mangoes from Rajshahi
+               </span>
              </h1>
-             <p className="text-lg text-gray-200 mb-8 max-w-2xl">
-               Taste the sweetness of pure, carbide-free premium mangoes. Handpicked from our contracted orchards and delivered directly to your home.
+             
+             <p className="text-lg md:text-xl text-gray-200 mb-10 pb-[10px] max-w-2xl font-medium drop-shadow-md leading-relaxed">
+               Taste the true sweetness of premium, handpicked mangoes. Delivered directly from our safe-farming orchards to your home in 48 hours.
              </p>
-             <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Link href="/products" className="px-8 py-3.5 bg-transparent border-2 border-[#527d62] text-white hover:bg-[#527d62] hover:border-transparent font-bold rounded transition-all">
-                  Our Contracted Gardens
-                </Link>
-                <Link href="/products" className="px-8 py-3.5 bg-[#527d62] text-white font-bold rounded border-2 border-[#527d62] hover:bg-[#436750] hover:border-[#436750] transition-all">
+
+             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                <Link 
+                  href="/products" 
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-black font-black text-lg rounded-xl shadow-[0_0_40px_-10px_#fbbf24] hover:shadow-[0_0_60px_-15px_#fbbf24] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  <ShoppingBag className="w-5 h-5" />
                   Try our fruits
+                </Link>
+                <Link 
+                  href="/#farm" 
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white shadow-lg text-[#20BA5A] font-bold text-lg rounded-xl hover:bg-gray-50 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Leaf className="w-5 h-5" />
+                  Our Contracted Gardens
                 </Link>
              </div>
           </div>
         </section>
 
         {/* 2. Category Navigation Tabs */}
-        <section className="max-w-7xl mx-auto w-full px-4 -mt-8 relative z-20">
+        <section className="max-w-7xl mx-auto px-4 mt-8 relative z-20">
            <div className="flex flex-wrap items-center justify-center gap-3">
-              {['All Products', 'Combo Package', 'Mango', 'Dragon Fruit'].map((cat, i) => (
-                 <Link key={i} href="/products" className={`px-6 py-3 rounded-full text-sm font-bold shadow-md transition-all ${i === 0 ? 'bg-[#527d62] text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100'}`}>
-                    {cat}
-                 </Link>
-              ))}
+              <button 
+                onClick={() => setActiveCategory("all")}
+                className={`flex items-center gap-2 px-6 py-3 rounded-md text-sm font-bold shadow-md transition-all ${activeCategory === "all" ? "bg-[#527d62] text-white" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-100"}`}
+              >
+                 <ShoppingBag className="w-4 h-4" />
+                 All Products
+              </button>
+              {dynamicCategories.map((cat, i) => {
+                 const getCategoryIcon = (slug: string) => {
+                   switch (slug) {
+                     case 'mango': return <Citrus className="w-4 h-4" />;
+                     case 'dates': return <Palmtree className="w-4 h-4" />;
+                     case 'ghee': return <Droplet className="w-4 h-4" />;
+                     case 'honey': return <Hexagon className="w-4 h-4" />;
+                     case 'nuts': return <Nut className="w-4 h-4" />;
+                     case 'cold-drinks': return <CupSoda className="w-4 h-4" />;
+                     default: return <Leaf className="w-4 h-4" />;
+                   }
+                 };
+                 return (
+                   <button 
+                      key={cat.id || i} 
+                      onClick={() => setActiveCategory(cat.slug)}
+                      className={`flex items-center gap-2 px-6 py-3 rounded-md text-sm font-bold shadow-md transition-all ${activeCategory === cat.slug ? "bg-[#527d62] text-white" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-100"}`}
+                   >
+                      {getCategoryIcon(cat.slug)}
+                      {cat.name}
+                   </button>
+                 );
+              })}
            </div>
         </section>
 
         {/* 3. All Products Grid (Retail format like products page) */}
-        <section className="py-16 max-w-7xl mx-auto w-full px-4">
+        <section className="py-16 max-w-7xl mx-auto px-4">
            <div className="text-center mb-10">
               <h2 className="text-3xl font-black text-gray-800">Our Premium Products</h2>
               <div className="w-16 h-1 bg-[#527d62] mx-auto mt-4 rounded"></div>
            </div>
 
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+           <div className="flex flex-wrap justify-center gap-6">
               {featuredProducts.map(prod => (
-                 <div key={prod.id} className="group bg-white rounded-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100">
+                 <div key={prod.id} className="w-full sm:w-[280px] shrink-0 group bg-white rounded-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100">
                     <div className="relative h-48 sm:h-52 w-full overflow-hidden shrink-0 bg-gray-50">
                       <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
-                        <Image src={prod.image} alt={prod.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <Image src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"} alt={prod.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                         <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-black bg-[#FFC107] rounded-sm shadow-sm z-10">
                           <Truck className="w-3 h-3" /> Free Delivery
                         </span>
@@ -418,7 +489,7 @@ export default function HomePage() {
                         <Heart className={`w-4 h-4 ${wishlist.includes(prod.id) ? "fill-red-500 text-red-500 border-none" : ""}`} />
                       </button>
                     </div>
-                    <div className="p-4 flex flex-col grow justify-between space-y-3">
+                    <div className="p-4 flex flex-col grow justify-between space-y-3 text-center">
                       <Link href={`/products/${prod.slug}`} className="space-y-1 block group-hover:opacity-95">
                         <h3 className="font-sans font-bold text-gray-800 text-[15px] leading-tight line-clamp-2">{prod.name}</h3>
                         <div className="text-[11px] text-gray-500 leading-relaxed pt-1">
@@ -426,13 +497,26 @@ export default function HomePage() {
                           <p>Approximate Delivery Date Within 6-8 July</p>
                         </div>
                       </Link>
-                      <div className="flex flex-col gap-3 pt-1">
+                      <div className="flex flex-col items-center gap-3 pt-1">
                         <div className="text-[#4A7C59] font-bold text-[17px]">
                           {prod.sale_price ? <span>৳ {prod.sale_price} - ৳ {prod.sale_price * 3}</span> : <span>৳ {prod.price} - ৳ {prod.price * 4}</span>}
                         </div>
-                        <button onClick={() => { setCheckoutProduct(prod); setSelectedWeight(10); setIsCheckoutOpen(true); }} className="flex items-center justify-center gap-1.5 w-[110px] py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-xs font-semibold shadow-sm" title="Buy Now">
-                          <Zap className="w-3.5 h-3.5 fill-white" /> Buy Now
-                        </button>
+                        <div className="flex items-center gap-2 w-full px-2">
+                          <button 
+                            onClick={(e) => { e.preventDefault(); setCheckoutProduct(prod); setSelectedWeight(10); setIsCheckoutOpen(true); }} 
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] font-semibold shadow-sm" 
+                            title="Buy Now"
+                          >
+                            <Zap className="w-3.5 h-3.5 fill-white" /> Buy Now
+                          </button>
+                          <button
+                            onClick={(e) => handleAddToCart(e, prod)}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 border-2 border-[#527d62] text-[#527d62] hover:bg-[#527d62]/10 rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] font-bold shadow-sm relative overflow-hidden group"
+                            title="Add to Cart"
+                          >
+                            <ShoppingBag className="w-3.5 h-3.5" /> Cart
+                          </button>
+                        </div>
                       </div>
                     </div>
                  </div>
@@ -448,13 +532,13 @@ export default function HomePage() {
 
         {/* 4. Why We Are Different */}
         <section className="py-16 bg-white border-y border-gray-100">
-           <div className="max-w-7xl mx-auto w-full px-4">
+           <div className="max-w-7xl mx-auto px-4">
               <div className="text-center mb-12">
                  <h2 className="text-3xl font-black text-gray-800">Why We Are Different</h2>
                  <div className="w-16 h-1 bg-[#FFC107] mx-auto mt-4 rounded"></div>
               </div>
 
-              <div className="grid lg:grid-cols-2 gap-8">
+              <div className="grid lg:grid-cols-2 gap-8 items-center">
                  {/* Left Feature image card */}
                  <div className="relative rounded-2xl overflow-hidden h-[400px] flex items-end p-8 shadow-lg">
                     <Image src="https://images.unsplash.com/photo-1552474030-b3a5b5f04e2e?w=800&auto=format&fit=crop&q=80" alt="Premium Mangoes" fill className="object-cover absolute inset-0 z-0" />
@@ -489,7 +573,7 @@ export default function HomePage() {
 
         {/* 5. Gift Premium Mangoes (Promo) */}
         <section className="py-20 bg-[#e6f0eb]">
-           <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
+           <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-12 text-center md:text-left">
               <div className="md:w-1/2 space-y-6">
                  <h2 className="text-4xl font-black text-[#0D2319] leading-tight">Gift Premium Mangoes!</h2>
                  <p className="text-lg text-[#133824]/80 leading-relaxed">
@@ -499,45 +583,133 @@ export default function HomePage() {
                     Order Gift Box <ArrowRight className="w-4 h-4" />
                  </Link>
               </div>
-              <div className="md:w-1/2">
-                 <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
+              <div className="md:w-1/2 flex justify-center">
+                 <div className="relative w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
                     <Image src="https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=800&auto=format&fit=crop&q=80" alt="Gift Box" fill className="object-cover" />
                  </div>
               </div>
            </div>
         </section>
 
-        {/* 6. Training & Farmer Collaboration */}
-        <section className="py-20 bg-white">
-           <div className="max-w-7xl mx-auto px-4">
-              <div className="text-center mb-12">
-                 <h2 className="text-3xl font-black text-gray-800">Training & Farmer Collaboration</h2>
-                 <p className="text-gray-500 mt-4 max-w-2xl mx-auto">Empowering local farmers with modern, safe agricultural practices.</p>
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-8">
-                 {[
-                   { title: "Soil Management", image: "https://images.unsplash.com/photo-1592982537447-6f2334816be5?w=600&auto=format&fit=crop&q=80" },
-                   { title: "Safe Pest Control", image: "https://images.unsplash.com/photo-1589923158776-cb4485d99fd6?w=600&auto=format&fit=crop&q=80" },
-                   { title: "Harvesting Techniques", image: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600&auto=format&fit=crop&q=80" }
-                 ].map((item, i) => (
-                    <div key={i} className="p-4 border-2 border-dashed border-[#527d62]/30 rounded-2xl flex flex-col items-center text-center hover:bg-[#f8f9fa] transition-colors cursor-pointer">
-                       <div className="relative w-full h-48 rounded-xl overflow-hidden mb-4">
-                          <Image src={item.image} alt={item.title} fill className="object-cover" />
-                       </div>
-                       <h4 className="font-bold text-gray-800">{item.title}</h4>
+        {/* 6. Our Story — Farms & Orchards (#farm) */}
+        <section id="farm" className="relative py-28 overflow-hidden bg-gradient-to-b from-[#0D2319] via-[#0F2A1E] to-[#0D2319]">
+          {/* Background Pattern Overlay */}
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
+            <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, #fbbf24 1px, transparent 1px), radial-gradient(circle at 75% 75%, #fbbf24 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+          </div>
+          
+          {/* Glow orbs */}
+          <div className="absolute top-[-200px] left-[-200px] w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-[-200px] right-[-200px] w-[500px] h-[500px] rounded-full bg-amber-500/8 blur-[120px] pointer-events-none" />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4">
+            {/* Section Label */}
+            <div className="text-center mb-6">
+              <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest">
+                Our Contracted Gardens
+              </span>
+            </div>
+
+            {/* Section Title */}
+            <div className="text-center mb-6">
+              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
+                Where Every Mango Tells a Story
+              </h2>
+              <p className="text-emerald-200/70 text-lg mt-4 max-w-2xl mx-auto leading-relaxed">
+                We partner directly with certified safe-farming orchards across Rajshahi &amp; Chapainawabganj — bringing you mangoes that are 100% formalin-free, naturally ripened, and handpicked with care.
+              </p>
+            </div>
+
+            {/* Stats Strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20 max-w-4xl mx-auto">
+              {[
+                { number: "50+", label: "Partner Orchards", icon: Leaf },
+                { number: "12+", label: "Mango Varieties", icon: Award },
+                { number: "10K+", label: "Happy Customers", icon: Sparkles },
+                { number: "48hr", label: "Farm-to-Door", icon: Truck },
+              ].map((stat, i) => (
+                <div key={i} className="text-center p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors">
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                    <stat.icon className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div className="text-2xl md:text-3xl font-black text-white">{stat.number}</div>
+                  <div className="text-xs text-emerald-200/60 font-medium mt-1">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Story Cards */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  title: "Certified Safe Orchards",
+                  desc: "Every orchard in our network is certified for chemical-free farming. No formalin, no carbide — just pure, sun-ripened mangoes.",
+                  image: "https://images.unsplash.com/photo-1592982537447-6f2334816be5?w=600&auto=format&fit=crop&q=80",
+                  tags: ["Formalin Free", "Certified"],
+                  color: "from-emerald-600/30 to-emerald-800/10"
+                },
+                {
+                  title: "Direct Farmer Partnerships",
+                  desc: "We work hand-in-hand with 50+ family-run orchards, ensuring fair prices and sustainable farming practices that have been passed down for generations.",
+                  image: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600&auto=format&fit=crop&q=80",
+                  tags: ["Fair Trade", "Sustainable"],
+                  color: "from-amber-600/30 to-amber-800/10"
+                },
+                {
+                  title: "Premium Quality Control",
+                  desc: "Each mango is hand-inspected for ripeness, size, and sweetness before being carefully packed in ventilated eco-crates for delivery.",
+                  image: "https://images.unsplash.com/photo-1589923158776-cb4485d99fd6?w=600&auto=format&fit=crop&q=80",
+                  tags: ["Handpicked", "Premium Grade"],
+                  color: "from-emerald-600/30 to-emerald-800/10",
+                  lgOnly: true
+                }
+              ].map((card, i) => (
+                <div key={i} className={`group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all duration-500 ${card.lgOnly ? 'hidden lg:block' : ''}`}>
+                  {/* Image */}
+                  <div className="relative h-52 overflow-hidden">
+                    <div className={`absolute inset-0 bg-gradient-to-t ${card.color} z-10 mix-blend-overlay`} />
+                    <Image src={card.image} alt={card.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D2319] via-transparent to-transparent z-20" />
+                    
+                    {/* Tags */}
+                    <div className="absolute top-3 left-3 z-30 flex gap-2">
+                      {card.tags.map((tag, t) => (
+                        <span key={t} className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-sm border border-white/15 text-white text-[10px] font-bold uppercase tracking-wider">
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                 ))}
-              </div>
-           </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">{card.title}</h3>
+                    <p className="text-sm text-emerald-200/60 leading-relaxed">{card.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom CTA */}
+            <div className="mt-14 text-center">
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2.5 px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold rounded-xl hover:shadow-[0_0_40px_-10px_#fbbf24] hover:scale-[1.02] active:scale-[0.98] transition-all text-[15px]"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                Explore Our Mangoes
+              </Link>
+              <p className="text-emerald-200/40 text-xs mt-3">Every purchase supports local farming communities</p>
+            </div>
+          </div>
         </section>
 
         {/* 7. Customer Reviews Section */}
         <section className="py-20 bg-[#f8f9fa] border-t border-gray-100 overflow-hidden">
            <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center">
-              <div className="text-center flex flex-col items-center justify-center mb-16 max-w-2xl">
+              <div className="text-center mb-16 max-w-2xl">
                  <h2 className="text-3xl font-black text-gray-800">Customer review</h2>
-                 <div className="w-16 h-1 bg-[#527d62] mt-4 rounded"></div>
+                 <div className="w-16 h-1 bg-[#527d62] mx-auto mt-4 rounded"></div>
               </div>
            </div>
 
@@ -687,7 +859,7 @@ export default function HomePage() {
                     <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-wider mt-1">{orderSuccessId}</p>
                   </div>
                   <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                    Copy this ID and click <strong className="text-hero-text cursor-pointer hover:underline" onClick={() => { setIsCheckoutOpen(false); setTrackingIdInput(orderSuccessId); setSearchedTrackingId(orderSuccessId); setIsTrackingOpen(true); }}>Track Crate</strong> in the menu to watch your harvest timeline live!
+                    Copy this ID and click <strong className="text-hero-text cursor-pointer hover:underline" onClick={() => { setIsCheckoutOpen(false); setTrackingIdInput(orderSuccessId); setSearchedTrackingId(orderSuccessId); setIsTrackingOpen(true); }}>Track Order</strong> in the menu to watch your harvest timeline live!
                   </p>
                   <button
                     onClick={() => setIsCheckoutOpen(false)}
@@ -701,11 +873,11 @@ export default function HomePage() {
                   {/* Product Card */}
                   <div className="p-4 rounded-2xl bg-section-alt border border-border flex gap-4">
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-border">
-                      <Image src={checkoutProduct.image} alt={checkoutProduct.name} fill sizes="80px" className="object-cover" />
+                      <Image src={checkoutProduct.images?.[0] || "/products/mango.png"} alt={checkoutProduct.name || "Product"} fill sizes="80px" className="object-cover" />
                     </div>
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                        {checkoutProduct.badge || "Premium"}
+                        {(checkoutProduct.metadata as any)?.badge || "Premium"}
                       </span>
                       <h4 className="font-serif-heading font-bold text-hero-text text-sm leading-tight">{checkoutProduct.name}</h4>
                       <p className="text-xs text-muted-foreground">Orchard Sourced · Carbide-Free</p>
@@ -900,7 +1072,7 @@ export default function HomePage() {
             {/* Header */}
             <div className="p-6 border-b border-border flex items-center justify-between bg-section-alt">
               <div>
-                <h3 className="font-serif-heading text-xl font-bold text-hero-text">Track Your Crate</h3>
+                <h3 className="font-serif-heading text-xl font-bold text-hero-text">Track Your Order</h3>
                 <p className="text-xs text-muted-foreground font-sans">Check your handpicked harvest and shipping timeline</p>
               </div>
               <button 
@@ -1025,6 +1197,46 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      <WhatsAppWidget />
+      
+      {/* Magical Fly-To-Cart Animation Overlay */}
+      {flyingItems.map(item => (
+        <div
+          key={item.id}
+          className="fixed z-[9999] pointer-events-none rounded-full overflow-hidden shadow-2xl border-2 border-emerald-500 bg-white"
+          style={{
+            '--start-x': `${item.startX}px`,
+            '--start-y': `${item.startY}px`,
+            '--target-x': `${item.targetX}px`,
+            '--target-y': `${item.targetY}px`,
+            left: 0,
+            top: 0,
+            width: '40px',
+            height: '40px',
+            animation: 'fly-to-cart 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards'
+          } as React.CSSProperties}
+        >
+          <Image src={item.img} alt="" fill className="object-cover" />
+        </div>
+      ))}
+      <style jsx global>{`
+        @keyframes fly-to-cart {
+          0% {
+            transform: translate(var(--start-x), var(--start-y)) scale(1);
+            opacity: 1;
+          }
+          40% {
+            transform: translate(calc(var(--start-x) + (var(--target-x) - var(--start-x)) * 0.1), calc(var(--start-y) - 60px)) scale(1.1) rotate(10deg);
+            opacity: 1;
+            box-shadow: 0 10px 25px rgba(32, 186, 90, 0.4);
+          }
+          100% {
+            transform: translate(var(--target-x), var(--target-y)) scale(0.1) rotate(90deg);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }

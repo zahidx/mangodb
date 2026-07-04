@@ -6,24 +6,21 @@ import { useCart } from "@/context/CartContext";
 import { getCategories, getProducts } from "@/lib/supabase/queries";
 import type { Category, Product } from "@/types/database";
 import {
-    ArrowRight,
-    CheckCircle2,
     Heart,
     Loader2,
-    MapPin,
-    RefreshCw,
-    Search,
-    ShieldCheck,
     ShoppingBag,
-    SlidersHorizontal,
-    Sparkles,
-    TreeDeciduous,
     Truck,
     Zap,
-    X
+    Citrus,
+    Palmtree,
+    Droplet,
+    Hexagon,
+    Nut,
+    CupSoda,
+    Leaf
 } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -36,6 +33,14 @@ export default function ProductsPage() {
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get("category");
+      if (cat) setSelectedCategory(cat);
+    }
+  }, []);
   const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
   const [priceRange, setPriceRange] = useState<number>(3000);
   const [sortBy, setSortBy] = useState<"newest" | "price_asc" | "price_desc" | "name">("newest");
@@ -72,6 +77,7 @@ export default function ProductsPage() {
           categorySlug: selectedCategory === "all" ? undefined : selectedCategory,
           search: searchTerm ? searchTerm : undefined,
           sortBy,
+          limit: 100
         }),
         getCategories(),
       ]);
@@ -122,90 +128,52 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col relative selection:bg-[#fbbf24] selection:text-black overflow-x-hidden">
       <Navbar />
 
-      {/* Luxury White/Mint Background */}
-      <div className="absolute top-0 left-0 w-full h-[950px] bg-[radial-gradient(ellipse_at_top,#f8fcfb_0%,#f0f7ea_40%,#fdf5df_100%)] pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-[#9ecfc5] opacity-20 blur-[120px] rounded-full mix-blend-multiply" />
-        <div className="absolute top-[30%] -right-[10%] w-[700px] h-[700px] bg-[#dcb65b] opacity-15 blur-[150px] rounded-full mix-blend-multiply" />
-      </div>
-
       {/* Main Container */}
       <div className="w-full relative z-10">
-        <main className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-12 pt-32 pb-24">
+        <main className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-12 pt-28 pb-24">
         
-        {/* Advanced Luxury Hero Section */}
-        <div className="w-full flex flex-col items-center justify-center pt-6 pb-20">
-          <div className="flex flex-col items-center text-center max-w-4xl w-full mx-auto space-y-5">
-            
-            {/* Ornate Premium Badge */}
-            <div className="relative group cursor-pointer animate-fade-in-up mt-4">
-              <div className="p-[1.5px] rounded-full bg-gradient-to-r from-[#C6A258]/0 via-[#C6A258]/80 to-[#C6A258]/0 shadow-[0_2px_15px_rgba(198,162,88,0.3)]">
-                <div className="relative inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-[#133824] border border-[#C6A258]/30 text-[10px] sm:text-xs font-black text-[#E8D099] tracking-[0.2em] uppercase">
-                  <TreeDeciduous className="w-3.5 h-3.5 text-[#C6A258]" />
-                  Rajshahi Orchard Fresh
-                </div>
-              </div>
-            </div>
-            
-            {/* Luxury Heading */}
-            <h1 className="font-serif-heading text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-black tracking-tight leading-[1.0] text-center w-full animate-fade-in-up pb-[20px]" style={{ animationDelay: "100ms" }}>
-              <span className="text-[#0D2319]">Explore the Finest</span> <br />
-              <span className="text-[#2B936C]">Mango Selection</span>
-            </h1>
-
-            {/* Glassmorphic Search Bar */}
-            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-2xl mx-auto mt-10 group z-20 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-              <div className="absolute -inset-1.5 bg-gradient-to-r from-[#C6A258]/40 via-[#F3E1B6]/60 to-[#C6A258]/40 rounded-[2.5rem] blur-md opacity-60 transition duration-500" />
-              <div className="relative flex items-center bg-white/95 backdrop-blur-xl border-2 border-[#C6A258]/60 rounded-[2rem] p-1 shadow-[0_15px_30px_rgba(13,35,25,0.15)] transition-all duration-300">
-                <div className="pl-5 pr-2 flex items-center justify-center">
-                  <Search className="w-5 h-5 text-[#A08855]" strokeWidth={2.5} />
-                </div>
-                <input
-                  type="text"
-                  placeholder="e.g., Himsagar, Lengra, Amrapali..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full py-3.5 bg-transparent border-0 focus:ring-0 focus:outline-none text-base sm:text-lg font-bold text-[#0D2319] placeholder:text-[#133824]/50"
-                />
-                <button
-                  type="submit"
-                  className="px-8 py-3.5 flex items-center justify-center rounded-[1.6rem] bg-gradient-to-b from-[#C6A258] to-[#997328] hover:from-[#dcb65b] hover:to-[#B3852C] text-[#0A2214] font-black text-base transition-transform active:scale-95 shadow-inner shrink-0 cursor-pointer"
-                >
-                  Explore
-                </button>
-              </div>
-            </form>
-
-            {/* Premium Trust Badges Row */}
-            <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 pt-10 text-xs sm:text-sm font-extrabold text-[#0D2319] animate-fade-in-up" style={{ animationDelay: "400ms" }}>
-              <span className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#F3E1B6] via-[#C6A258] to-[#997328] shadow-[0_3px_10px_rgba(198,162,88,0.4)]">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#0A2214]" />
-                </div>
-                100% Formalin Free
-              </span>
-              <span className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#F3E1B6] via-[#C6A258] to-[#997328] shadow-[0_3px_10px_rgba(198,162,88,0.4)]">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#0A2214]" />
-                </div>
-                Garden Fresh Delivery
-              </span>
-              <span className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#F3E1B6] via-[#C6A258] to-[#997328] shadow-[0_3px_10px_rgba(198,162,88,0.4)]">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#0A2214]" />
-                </div>
-                Premium Quality
-              </span>
-            </div>
-
+        {/* Catalog Heading */}
+        <div className="w-full mb-8">
+          <h1 className="text-3xl sm:text-4xl font-black text-emerald-600">All Products</h1>
+          <p className="text-[#3b574a] mt-2 text-sm">Browse our complete catalog of farm-fresh products</p>
+          
+          {/* Category Tabs */}
+          <div className="flex flex-wrap items-center gap-3 mt-6">
+            <button 
+              onClick={() => setSelectedCategory("all")}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all ${selectedCategory === "all" ? "bg-emerald-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"}`}
+            >
+               <ShoppingBag className="w-4 h-4" />
+               All Products
+            </button>
+            {categories.map((cat, i) => {
+               const getCategoryIcon = (slug: string) => {
+                 switch (slug) {
+                   case 'mango': return <Citrus className="w-4 h-4" />;
+                   case 'dates': return <Palmtree className="w-4 h-4" />;
+                   case 'ghee': return <Droplet className="w-4 h-4" />;
+                   case 'honey': return <Hexagon className="w-4 h-4" />;
+                   case 'nuts': return <Nut className="w-4 h-4" />;
+                   case 'cold-drinks': return <CupSoda className="w-4 h-4" />;
+                   default: return <Leaf className="w-4 h-4" />;
+                 }
+               };
+               return (
+                 <button 
+                    key={cat.id || i} 
+                    onClick={() => setSelectedCategory(cat.slug)}
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all ${selectedCategory === cat.slug ? "bg-emerald-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"}`}
+                 >
+                    {getCategoryIcon(cat.slug)}
+                    {cat.name}
+                 </button>
+               );
+            })}
           </div>
         </div>
 
-        {/* Toolbar & Grid */}
-        <div className="w-full">
-          
-          {/* Catalog Listing */}
-          <section className="w-full space-y-6">
-
+        {/* Products Grid */}
+        <section className="w-full">
 
             {/* Loading / Empty States */}
             {loading ? (
@@ -242,7 +210,7 @@ export default function ProductsPage() {
                       <div className="relative h-48 sm:h-52 w-full overflow-hidden shrink-0 bg-gray-50">
                         <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
                           <Image
-                            src={prod.images?.[0] && !prod.images[0].includes("1552474030-b3a5b5f04e2e") ? prod.images[0] : "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
+                            src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
                             alt={prod.name}
                             fill
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -311,7 +279,6 @@ export default function ProductsPage() {
               </div>
             )}
           </section>
-        </div>
       </main>
       </div>
 
