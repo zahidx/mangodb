@@ -1,31 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { 
-  Search, 
-  MapPin, 
-  Phone, 
-  Loader2, 
-  ClipboardList,
-  Truck,
-  Home,
-  User,
-  CreditCard,
-  Package,
-  MessageCircle,
-  Map,
-  Clock,
-  Calendar,
-  Check,
-  XCircle,
-  Bike
-} from "lucide-react";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 import { getOrderById } from "@/lib/supabase/queries";
+import {
+    Bike,
+    Check,
+    ClipboardList,
+    Clock,
+    Home,
+    Loader2,
+    MapPin,
+    Package,
+    Phone,
+    Search,
+    Truck,
+    User,
+    XCircle
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import Link from "next/link";
 
 function TrackContent() {
   const searchParams = useSearchParams();
@@ -228,172 +223,230 @@ function TrackContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f7f5] dark:bg-background text-foreground flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
 
-      <div className="grow w-full px-4 sm:px-8 xl:px-12 2xl:px-24 py-28 relative z-0 flex flex-col gap-8">
-        
-        {/* 1. Header Search Card */}
-        <div className="bg-card rounded-md p-8 sm:p-12 shadow-sm border border-border flex flex-col items-center text-center space-y-6 relative overflow-hidden">
-          {/* Subtle background decoration */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50 -z-10 translate-x-1/2 -translate-y-1/2"></div>
-          
-          <div className="w-24 h-24 rounded-3xl bg-emerald-500/10 flex items-center justify-center mb-2 shadow-sm border border-emerald-500/20 relative z-10">
-            <Map className="w-12 h-12 text-emerald-600" />
+      {/* ===== HERO SEARCH SECTION ===== */}
+      <section className="relative bg-white border-b border-gray-100">
+        <div className="absolute inset-0 bg-linear-to-br from-emerald-50/50 via-white to-emerald-50/30 pointer-events-none" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 pt-36 pb-16 sm:pt-40 sm:pb-20 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
+            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
           </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">Track Your Order</h1>
+          <p className="text-gray-500 mt-2 text-sm sm:text-base max-w-md mx-auto">Enter your Order ID to see real-time delivery status and tracking timeline.</p>
 
-          <div className="space-y-2 relative z-10">
-            <h1 className="text-3xl font-bold text-slate-700 tracking-tight">Track Your Order</h1>
-            <p className="text-muted-foreground text-sm font-medium">Enter your order ID below to get real-time delivery updates</p>
-          </div>
-          
-          <form onSubmit={handleSearchSubmit} className="w-full max-w-2xl flex flex-col sm:flex-row items-center gap-3 relative z-10 pt-2">
-            <div className="flex-1 w-full relative">
-              <Package className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input 
-                type="text"
-                required
-                placeholder="152305"
-                value={searchId}
-                onChange={(e) => setSearchId(e.target.value)}
-                className="w-full pl-12 pr-10 py-3.5 bg-background border border-border rounded-md focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm font-medium"
-              />
-              {searchId && (
-                <button 
-                  type="button" 
-                  onClick={() => setSearchId('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2"
-                >
-                  <XCircle className="w-4 h-4 text-muted-foreground/60 hover:text-muted-foreground transition-colors" />
-                </button>
-              )}
+          <form onSubmit={handleSearchSubmit} className="mt-8 max-w-xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter Order ID (e.g. 152305)"
+                  value={searchId}
+                  onChange={(e) => setSearchId(e.target.value)}
+                  className="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                />
+                {searchId && (
+                  <button type="button" onClick={() => setSearchId('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                Track Order
+              </button>
             </div>
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-md font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} 
-              Track Order
-            </button>
+            <p className="text-[11px] text-gray-400 mt-3 flex items-center justify-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Try: <button type="button" onClick={() => { setSearchId("152305"); performSearch("MNG-152305"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">152305</button>,{" "}
+              <button type="button" onClick={() => { setSearchId("8842"); performSearch("MNG-8842"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">8842</button>,{" "}
+              <button type="button" onClick={() => { setSearchId("7731"); performSearch("MNG-7731"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">7731</button>
+            </p>
           </form>
         </div>
+      </section>
 
-        {/* 2. Results */}
+      {/* ===== RESULTS ===== */}
+      <div className="grow max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-10">
         {!loading && hasSearched && order && (() => {
           const steps = getTimelineSteps(order.status, order.created_at, order.updated_at);
           const activeIndex = steps.filter(s => s.isCompleted).length - 1;
           const history = getHistory(order);
 
+          const statusColors: Record<string, string> = {
+            pending: "bg-amber-100 text-amber-800 border-amber-200",
+            processing: "bg-blue-100 text-blue-800 border-blue-200",
+            confirmed: "bg-blue-100 text-blue-800 border-blue-200",
+            shipped: "bg-purple-100 text-purple-800 border-purple-200",
+            in_transit: "bg-purple-100 text-purple-800 border-purple-200",
+            out_for_delivery: "bg-indigo-100 text-indigo-800 border-indigo-200",
+            delivered: "bg-emerald-100 text-emerald-800 border-emerald-200",
+            cancelled: "bg-red-100 text-red-800 border-red-200",
+          };
+          const statusLabel = order.status?.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+
           return (
-            <div className="flex flex-col gap-8 animate-fade-in w-full">
-              
-              {/* Shipping Info Card */}
-              <div className="bg-card rounded-md p-6 sm:p-8 shadow-sm border border-border flex flex-col sm:flex-row justify-between gap-6">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-600 rounded-full text-xs font-bold">
-                    <User className="w-3.5 h-3.5" /> Shipping Info
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-hero-text">{order.shipping_address?.full_name}</h2>
-                    <p className="text-muted-foreground flex items-center gap-1.5 mt-1.5 text-sm font-medium">
-                      <MapPin className="w-4 h-4" /> {order.shipping_address?.address_line_1}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold uppercase tracking-wider">
-                      <CreditCard className="w-3.5 h-3.5" /> {order.payment_status === 'paid' ? 'Paid' : 'Partial / COD'}
+            <div className="space-y-6 animate-fade-in">
+
+              {/* ===== SHIPPING INFO CARD ===== */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                <div className="flex flex-col sm:flex-row justify-between gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <User className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Shipping Information</span>
                     </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-xs font-bold uppercase tracking-wider">
-                      <Package className="w-3.5 h-3.5" /> {order.status}
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{order.shipping_address?.full_name}</h2>
+                      <div className="flex items-start gap-1.5 mt-1.5">
+                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+                        <p className="text-sm text-gray-600">{order.shipping_address?.address_line_1}</p>
+                      </div>
+                      {order.shipping_address?.phone && (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <span className="text-sm text-gray-500">{order.shipping_address.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border ${statusColors[order.status] || "bg-gray-100 text-gray-800 border-gray-200"}`}>
+                        <Package className="w-3.5 h-3.5" />
+                        {statusLabel}
+                      </span>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border ${
+                        order.payment_status === 'paid' || order.payment_status === 'completed'
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                          : 'bg-amber-100 text-amber-800 border-amber-200'
+                      }`}>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        {order.payment_status === 'paid' || order.payment_status === 'completed' ? 'Paid' : 'Pending'}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-gray-200 bg-gray-50 text-gray-700">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex flex-col items-start sm:items-end justify-start space-y-3 pt-2 sm:pt-0">
-                  <p className="text-[10px] font-black text-muted-foreground tracking-widest uppercase mb-1">Need Help?</p>
-                  <a href="tel:+8809677654321" className="flex items-center gap-2.5 text-emerald-600 font-bold text-sm hover:opacity-80 transition-opacity">
-                    <Phone className="w-6 h-6 bg-emerald-500/10 p-1.5 rounded-full" /> +88 09677654321
-                  </a>
-                  <a href="#" className="flex items-center gap-2.5 text-emerald-500 font-bold text-sm hover:opacity-80 transition-opacity">
-                    <MessageCircle className="w-6 h-6 bg-emerald-50 p-1.5 rounded-full" /> +88 01742-805845
-                  </a>
+
+                  {/* Support */}
+                  <div className="sm:text-right space-y-2.5 pt-2 sm:pt-0 sm:border-l sm:border-gray-100 sm:pl-6">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Need Assistance?</p>
+                    <a href="tel:+8809677654321" className="flex items-center sm:justify-end gap-2.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+                      <Phone className="w-4 h-4" />
+                      +88 09677654321
+                    </a>
+                    <a href="#" className="flex items-center sm:justify-end gap-2.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                      Live Chat
+                    </a>
+                  </div>
                 </div>
               </div>
 
-              {/* Delivery Progress Card */}
-              <div className="bg-card rounded-md p-6 sm:p-8 shadow-sm border border-border space-y-8 overflow-hidden">
-                <div className="flex items-center gap-2 font-bold text-slate-700 text-lg tracking-tight">
-                  <Map className="w-5 h-5 text-emerald-700" /> Delivery Progress
+              {/* ===== DELIVERY PROGRESS ===== */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                <div className="flex items-center gap-2.5 mb-8">
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">Delivery Progress</h3>
                 </div>
-                
-                {/* Horizontal Timeline (Desktop) */}
-                <div className="hidden md:block relative pt-6 pb-4">
-                  <div className="relative px-4">
-                    {/* Progress Bar Background */}
-                    <div className="absolute top-[28px] left-[10%] right-[10%] h-1.5 bg-[#e2e8f0] rounded-full"></div>
-                    {/* Progress Bar Active */}
-                    <div 
-                      className="absolute top-[28px] left-[10%] h-1.5 bg-emerald-600 rounded-full transition-all duration-1000" 
-                      style={{ width: `${activeIndex >= 0 ? (activeIndex / (steps.length - 1)) * 80 : 0}%` }}
-                    ></div>
-                    
+
+                {/* Desktop Timeline */}
+                <div className="hidden md:block">
+                  <div className="relative px-2 pb-2">
+                    {/* Background bar */}
+                    <div className="absolute top-[34px] left-[4%] right-[4%] h-[3px] bg-gray-100 rounded-full" />
+                    {/* Active bar */}
+                    <div
+                      className="absolute top-[34px] left-[4%] h-[3px] bg-emerald-500 rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${activeIndex >= 0 ? (activeIndex / (steps.length - 1)) * 92 : 0}%` }}
+                    />
                     <div className="flex justify-between relative z-10">
                       {steps.map((step, idx) => (
-                        <div key={idx} className="flex flex-col items-center w-1/5 relative">
-                          <div className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 ${step.isActive ? 'bg-emerald-500/10' : ''}`}>
-                            <div className={`w-14 h-14 rounded-full flex items-center justify-center relative z-10 transition-colors duration-500 ${step.isCompleted ? 'bg-white border-[1.5px] border-emerald-700' : 'bg-muted-bg border-[1.5px] border-transparent'}`}>
-                                <step.icon className={`w-5 h-5 ${step.isCompleted ? 'text-emerald-700' : step.color}`} />
-                                {step.isCompleted && (
-                                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-                                    <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
-                                  </div>
-                                )}
-                            </div>
-                            <p className={`mt-3 text-[11px] sm:text-xs font-bold text-center whitespace-nowrap transition-colors ${step.isCompleted ? 'text-[#1a2e24]' : 'text-slate-500'}`}>
-                              {step.title}
-                            </p>
-                            <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium text-center mt-0.5 whitespace-nowrap">
-                              {step.date}
-                            </p>
+                        <div key={idx} className="flex flex-col items-center w-1/5">
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ${
+                            step.isCompleted
+                              ? 'bg-emerald-500 shadow-md shadow-emerald-200'
+                              : step.isActive
+                                ? 'bg-emerald-100 border-2 border-emerald-500'
+                                : 'bg-gray-50 border-2 border-gray-200'
+                          }`}>
+                            <step.icon className={`w-5 h-5 ${
+                              step.isCompleted ? 'text-white' : step.isActive ? 'text-emerald-600' : 'text-gray-300'
+                            }`} />
+                            {step.isCompleted && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full border-2 border-emerald-500 flex items-center justify-center shadow-sm">
+                                <Check className="w-2.5 h-2.5 text-emerald-500 stroke-3" />
+                              </div>
+                            )}
                           </div>
+                          <p className={`mt-3 text-xs font-semibold text-center ${
+                            step.isCompleted || step.isActive ? 'text-gray-900' : 'text-gray-400'
+                          }`}>
+                            {step.title}
+                          </p>
+                          <p className="text-[10px] text-gray-400 text-center mt-0.5 font-medium">
+                            {step.date}
+                          </p>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Vertical Timeline (Mobile) */}
-                <div className="md:hidden relative py-4 px-2">
-                  {/* Vertical line background */}
-                  <div className="absolute top-10 bottom-10 left-[35px] w-1 bg-[#e2e8f0] rounded-full"></div>
-                  
-                  {/* Vertical line active */}
-                  <div 
-                    className="absolute top-10 left-[35px] w-1 bg-emerald-600 rounded-full transition-all duration-1000"
+                {/* Mobile Timeline */}
+                <div className="md:hidden relative">
+                  <div className="absolute left-[23px] top-3 bottom-3 w-[2px] bg-gray-100 rounded-full" />
+                  <div
+                    className="absolute left-[23px] top-3 w-[2px] bg-emerald-500 rounded-full transition-all duration-1000"
                     style={{ height: `${activeIndex >= 0 ? (activeIndex / (steps.length - 1)) * 100 : 0}%` }}
-                  ></div>
-
-                  <div className="flex flex-col gap-6 relative z-10">
+                  />
+                  <div className="space-y-6 relative z-10">
                     {steps.map((step, idx) => (
-                      <div key={idx} className={`flex items-center gap-4 p-3 rounded-2xl transition-all duration-300 ${step.isActive ? 'bg-emerald-500/10' : ''}`}>
-                        {/* Icon circle */}
-                        <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center relative z-10 transition-colors duration-500 ${step.isCompleted ? 'bg-white border-[1.5px] border-emerald-700' : 'bg-muted-bg border-[1.5px] border-transparent'}`}>
-                            <step.icon className={`w-4 h-4 ${step.isCompleted ? 'text-emerald-700' : step.color}`} />
-                            {step.isCompleted && (
-                              <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-                                <Check className="w-2 h-2 text-white stroke-[3]" />
-                              </div>
-                            )}
+                      <div key={idx} className="flex items-start gap-4">
+                        <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 ${
+                          step.isCompleted
+                            ? 'bg-emerald-500 shadow-md shadow-emerald-200'
+                            : step.isActive
+                              ? 'bg-emerald-100 border-2 border-emerald-500'
+                              : 'bg-gray-50 border-2 border-gray-200'
+                        }`}>
+                          <step.icon className={`w-4 h-4 ${
+                            step.isCompleted ? 'text-white' : step.isActive ? 'text-emerald-600' : 'text-gray-300'
+                          }`} />
+                          {step.isCompleted && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full border-2 border-emerald-500 flex items-center justify-center shadow-sm">
+                              <Check className="w-2 h-2 text-emerald-500 stroke-3" />
+                            </div>
+                          )}
                         </div>
-                        {/* Text details */}
-                        <div className="flex-1">
-                          <p className={`text-sm font-bold transition-colors ${step.isCompleted ? 'text-[#1a2e24]' : 'text-slate-500'}`}>
+                        <div className="pt-1.5">
+                          <p className={`text-sm font-semibold ${
+                            step.isCompleted || step.isActive ? 'text-gray-900' : 'text-gray-400'
+                          }`}>
                             {step.title}
                           </p>
-                          <p className="text-xs text-slate-400 font-medium mt-0.5">
-                            {step.date}
-                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5 font-medium">{step.date}</p>
                         </div>
                       </div>
                     ))}
@@ -401,30 +454,68 @@ function TrackContent() {
                 </div>
               </div>
 
-              {/* Tracking History Card */}
-              <div className="bg-card rounded-md p-6 sm:p-8 shadow-sm border border-border space-y-8">
-                <div className="flex items-center gap-2 font-bold text-slate-700 text-lg tracking-tight">
-                  <Clock className="w-5 h-5 text-emerald-700" /> Tracking History
-                </div>
-                
-                <div className="space-y-0 pl-2">
-                  {history.map((item, idx) => (
-                    <div key={idx} className="relative pl-10 pb-8 last:pb-0">
-                      {/* Vertical line */}
-                      {idx !== history.length - 1 && (
-                        <div className="absolute left-[13px] top-7 bottom-[-8px] w-[2px] bg-[#e2e8f0]"></div>
-                      )}
-                      {/* Circle node */}
-                      <div className="absolute left-0 top-1.5 w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-600"></div>
+              {/* ===== ORDER SUMMARY ===== */}
+              {order.order_items && order.order_items.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                  <div className="flex items-center gap-2.5 mb-5">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <ClipboardList className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900">Order Items</h3>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {order.order_items.map((item: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg">🥭</div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{item.product?.name || `Item #${idx + 1}`}</p>
+                            <p className="text-xs text-gray-400">Qty: {item.quantity || 1}</p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900">৳ {(item.total_price || item.price || 0).toLocaleString()}</span>
                       </div>
-                      
-                      <div className="pt-0.5">
-                        <p className="text-sm font-semibold text-hero-text leading-relaxed">
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <span className="text-sm font-semibold text-gray-900">Order Total</span>
+                    <span className="text-lg font-bold text-emerald-600">৳ {order.total?.toLocaleString() || '0'}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== TRACKING HISTORY ===== */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                <div className="flex items-center gap-2.5 mb-6">
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <Clock className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">Tracking History</h3>
+                </div>
+
+                <div className="space-y-0">
+                  {history.map((item, idx) => (
+                    <div key={idx} className="relative pl-9 pb-7 last:pb-0">
+                      {/* Connector line */}
+                      {idx !== history.length - 1 && (
+                        <div className="absolute left-[13.5px] top-6 bottom-0 w-[2px] bg-emerald-100" />
+                      )}
+                      {/* Dot */}
+                      <div className={`absolute left-0 top-1.5 w-7 h-7 rounded-full flex items-center justify-center ${
+                        idx === 0 ? 'bg-emerald-500' : 'bg-emerald-50 border border-emerald-200'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full ${idx === 0 ? 'bg-white' : 'bg-emerald-400'}`} />
+                      </div>
+
+                      <div>
+                        <p className={`text-sm leading-relaxed ${idx === 0 ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
                           {item.message}
                         </p>
-                        <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5 mt-1.5">
-                          <Calendar className="w-3.5 h-3.5" /> {item.date}
+                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {item.date}
                         </p>
                       </div>
                     </div>
@@ -436,15 +527,27 @@ function TrackContent() {
           );
         })()}
 
+        {/* ===== NOT FOUND ===== */}
         {!loading && hasSearched && !order && (
-          <div className="text-center py-20 bg-card rounded-md border border-border max-w-md mx-auto space-y-4 shadow-sm w-full mt-8">
-            <h3 className="text-xl font-bold text-hero-text">Order Not Found</h3>
-            <p className="text-sm text-muted-foreground px-6">
-              We couldn't find a harvest batch with that tracking ID. Please check the number and try again.
+          <div className="text-center py-16 sm:py-20 bg-white rounded-2xl shadow-sm border border-gray-200 max-w-lg mx-auto mt-8">
+            <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Order Not Found</h3>
+            <p className="text-sm text-gray-500 mt-1.5 max-w-xs mx-auto">
+              We couldn't find an order with that ID. Please double-check the number and try again.
             </p>
+            <button
+              type="button"
+              onClick={() => { setSearchId(''); setHasSearched(false); setOrder(null); }}
+              className="mt-6 text-sm font-semibold text-emerald-600 hover:text-emerald-700 underline-offset-2 hover:underline transition-colors"
+            >
+              Try another ID
+            </button>
           </div>
         )}
-
       </div>
 
       <Footer />

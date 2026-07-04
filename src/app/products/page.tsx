@@ -21,10 +21,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export default function ProductsPage() {
+  const router = useRouter();
   const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -255,7 +257,7 @@ export default function ProductsPage() {
 
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => addToCart(prod, 1, "10kg")}
+                              onClick={() => { addToCart(prod, 1, "10kg", false); router.push("/checkout"); }}
                               className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] sm:text-xs font-semibold shadow-sm"
                               title="Buy Now"
                             >

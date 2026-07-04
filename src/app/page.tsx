@@ -32,10 +32,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export default function HomePage() {
+  const router = useRouter();
   const { profile: user } = useAuth();
   const { addToCart } = useCart();
   const supabase = createClient() as any;
@@ -502,7 +504,7 @@ export default function HomePage() {
                         </div>
                         <div className="flex items-center gap-2 w-full px-2">
                           <button 
-                            onClick={(e) => { e.preventDefault(); setCheckoutProduct(prod); setSelectedWeight(10); setIsCheckoutOpen(true); }} 
+                            onClick={(e) => { e.preventDefault(); addToCart(prod, 1, "10kg", false); router.push("/checkout"); }} 
                             className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] font-semibold shadow-sm" 
                             title="Buy Now"
                           >

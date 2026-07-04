@@ -18,7 +18,7 @@ export interface ExtendedCartItem {
 interface CartContextType {
   cartItems: ExtendedCartItem[];
   loading: boolean;
-  addToCart: (product: Product, quantity?: number, weight?: string) => Promise<void>;
+  addToCart: (product: Product, quantity?: number, weight?: string, showToast?: boolean) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   updateWeight: (cartItemId: string, weight: string) => Promise<void>;
@@ -129,7 +129,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("mangodb-cart", JSON.stringify(items));
   };
 
-  const addToCart = async (product: Product, quantity = 1, weight = "10kg") => {
+  const addToCart = async (product: Product, quantity = 1, weight = "10kg", showToast = true) => {
     const existingIndex = cartItems.findIndex(
       (item) => item.product_id === product.id && item.selected_weight === weight
     );
@@ -151,12 +151,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     saveLocalCart(updatedItems);
-    showAddToCartToast({
-      productName: product.name,
-      productImage: product.images?.[0],
-      quantity,
-      weight,
-    });
+    if (showToast) {
+      showAddToCartToast({
+        productName: product.name,
+        productImage: product.images?.[0],
+        quantity,
+        weight,
+      });
+    }
 
     // Sync with database if logged in and not in demo
     if (profile && !profile.id.startsWith("demo-")) {

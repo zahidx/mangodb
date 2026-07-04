@@ -123,8 +123,7 @@ export default function ProductDetailsPage() {
 
   const handleBuyNow = () => {
     if (!product) return;
-    addToCart(product, quantity, selectedWeight);
-    toast.success("Redirecting to checkout...");
+    addToCart(product, quantity, selectedWeight, false);
     router.push("/checkout");
   };
 
