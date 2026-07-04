@@ -327,8 +327,9 @@ function TrackContent() {
                   <Map className="w-5 h-5 text-emerald-700" /> Delivery Progress
                 </div>
                 
-                <div className="relative pt-6 pb-4 overflow-x-auto no-scrollbar">
-                  <div className="min-w-[600px] relative px-4">
+                {/* Horizontal Timeline (Desktop) */}
+                <div className="hidden md:block relative pt-6 pb-4">
+                  <div className="relative px-4">
                     {/* Progress Bar Background */}
                     <div className="absolute top-[28px] left-[10%] right-[10%] h-1.5 bg-[#e2e8f0] rounded-full"></div>
                     {/* Progress Bar Active */}
@@ -359,6 +360,43 @@ function TrackContent() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+
+                {/* Vertical Timeline (Mobile) */}
+                <div className="md:hidden relative py-4 px-2">
+                  {/* Vertical line background */}
+                  <div className="absolute top-10 bottom-10 left-[35px] w-1 bg-[#e2e8f0] rounded-full"></div>
+                  
+                  {/* Vertical line active */}
+                  <div 
+                    className="absolute top-10 left-[35px] w-1 bg-emerald-600 rounded-full transition-all duration-1000"
+                    style={{ height: `${activeIndex >= 0 ? (activeIndex / (steps.length - 1)) * 100 : 0}%` }}
+                  ></div>
+
+                  <div className="flex flex-col gap-6 relative z-10">
+                    {steps.map((step, idx) => (
+                      <div key={idx} className={`flex items-center gap-4 p-3 rounded-2xl transition-all duration-300 ${step.isActive ? 'bg-emerald-500/10' : ''}`}>
+                        {/* Icon circle */}
+                        <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center relative z-10 transition-colors duration-500 ${step.isCompleted ? 'bg-white border-[1.5px] border-emerald-700' : 'bg-muted-bg border-[1.5px] border-transparent'}`}>
+                            <step.icon className={`w-4 h-4 ${step.isCompleted ? 'text-emerald-700' : step.color}`} />
+                            {step.isCompleted && (
+                              <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
+                                <Check className="w-2 h-2 text-white stroke-[3]" />
+                              </div>
+                            )}
+                        </div>
+                        {/* Text details */}
+                        <div className="flex-1">
+                          <p className={`text-sm font-bold transition-colors ${step.isCompleted ? 'text-[#1a2e24]' : 'text-slate-500'}`}>
+                            {step.title}
+                          </p>
+                          <p className="text-xs text-slate-400 font-medium mt-0.5">
+                            {step.date}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

@@ -69,19 +69,19 @@ export default function AdminSidebar({
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white text-[#0F172A]">
       {/* Logo */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-4 border-b border-[#EEF2F7]">
         <Link href="/admin" className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shrink-0 shadow-md">
             <ShoppingBag className="w-5 h-5 text-black" />
           </div>
           {!collapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="font-serif-heading text-sm font-black text-white tracking-wide truncate">
+              <span className="font-serif-heading text-sm font-black text-[#0F172A] tracking-wide truncate">
                 MangoDB
               </span>
-              <span className="text-[9px] font-bold text-emerald-400/70 uppercase tracking-widest">
+              <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">
                 Admin Panel
               </span>
             </div>
@@ -91,7 +91,7 @@ export default function AdminSidebar({
         {/* Mobile close button */}
         <button
           onClick={onMobileClose}
-          className="lg:hidden p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className="lg:hidden p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -99,7 +99,7 @@ export default function AdminSidebar({
         {/* Desktop collapse toggle */}
         <button
           onClick={onToggle}
-          className="hidden lg:flex p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className="hidden lg:flex p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
         >
           <ChevronLeft
             className={`w-4 h-4 transition-transform duration-300 ${
@@ -123,15 +123,15 @@ export default function AdminSidebar({
               title={collapsed ? item.label : undefined}
               className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
                 active
-                  ? "bg-amber-500/15 text-amber-400 border border-amber-500/20 shadow-sm"
-                  : "text-white/55 hover:text-white hover:bg-white/[0.06] border border-transparent"
+                  ? "bg-amber-500/10 text-amber-700 border border-amber-500/20 shadow-sm"
+                  : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F8FAFC] border border-transparent"
               } ${collapsed ? "justify-center px-2" : ""}`}
             >
               <Icon
                 className={`w-[18px] h-[18px] shrink-0 transition-colors ${
                   active
-                    ? "text-amber-400"
-                    : "text-white/40 group-hover:text-white/80"
+                    ? "text-amber-600"
+                    : "text-[#94A3B8] group-hover:text-[#475569]"
                 }`}
               />
               {!collapsed && <span className="truncate">{item.label}</span>}
@@ -141,10 +141,10 @@ export default function AdminSidebar({
       </nav>
 
       {/* Logout */}
-      <div className="p-2.5 border-t border-white/10">
+      <div className="p-2.5 border-t border-[#EEF2F7]">
         <button
           onClick={handleLogout}
-          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[13px] font-semibold text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer ${
+          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[13px] font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 transition-all cursor-pointer ${
             collapsed ? "justify-center px-2" : ""
           }`}
         >
@@ -160,14 +160,14 @@ export default function AdminSidebar({
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
           onClick={onMobileClose}
         />
       )}
 
       {/* Mobile sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[260px] bg-[#071a10] border-r border-white/10 z-50 lg:hidden transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-[260px] bg-white border-r border-[#EEF2F7] z-50 lg:hidden transition-transform duration-300 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -176,7 +176,7 @@ export default function AdminSidebar({
 
       {/* Desktop sidebar */}
       <aside
-        className={`hidden lg:flex flex-col h-screen bg-[#071a10] border-r border-white/10 sticky top-0 transition-all duration-300 shrink-0 ${
+        className={`hidden lg:flex flex-col h-screen bg-white border-r border-[#EEF2F7] sticky top-0 transition-all duration-300 shrink-0 ${
           collapsed ? "w-[68px]" : "w-[240px]"
         }`}
       >

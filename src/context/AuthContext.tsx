@@ -28,36 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshSession = async () => {
     try {
-      // 1. Check local storage demo user
-      const stored = localStorage.getItem("mangodb-user");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setDemoUser(parsed);
-          setProfile({
-            id: "demo-id-123",
-            full_name: parsed.name || "Demo User",
-            phone: parsed.phone || "01754309016",
-            email: parsed.email || "demo@mangodb.com",
-            avatar_url: null,
-            dob: parsed.dob || null,
-            gender: parsed.gender || null,
-            country: parsed.country || null,
-            city: parsed.city || null,
-            role: parsed.role || "user",
-            is_blocked: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-          setUser(null);
-          setLoading(false);
-          return;
-        } catch (e) {
-          localStorage.removeItem("mangodb-user");
-        }
-      }
-
-      // 2. Check Supabase session
+      // 1. Check Supabase session first
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
@@ -110,6 +81,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       } else {
+        // 2. Check local storage demo user only if there is no Supabase session
+        const stored = localStorage.getItem("mangodb-user");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            setDemoUser(parsed);
+            setProfile({
+              id: parsed.id || "demo-id-123",
+              full_name: parsed.name || "Demo User",
+              phone: parsed.phone || "01754309016",
+              email: parsed.email || "demo@mangodb.com",
+              avatar_url: null,
+              dob: parsed.dob || null,
+              gender: parsed.gender || null,
+              country: parsed.country || null,
+              city: parsed.city || null,
+              role: parsed.role || "user",
+              is_blocked: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+            setUser(null);
+            setLoading(false);
+            return;
+          } catch (e) {
+            localStorage.removeItem("mangodb-user");
+          }
+        }
+        
         setUser(null);
         setProfile(null);
         setDemoUser(null);

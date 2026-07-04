@@ -759,7 +759,7 @@ export default function HomePage() {
                           placeholder="Your Full Name"
                           value={checkoutForm.name}
                           onChange={(e) => setCheckoutForm(prev => ({ ...prev, name: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-medium"
+                          className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-semibold placeholder:font-normal"
                         />
                       </div>
 
@@ -770,7 +770,7 @@ export default function HomePage() {
                           placeholder="Email Address (for receipt)"
                           value={checkoutForm.email}
                           onChange={(e) => setCheckoutForm(prev => ({ ...prev, email: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-medium"
+                          className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-semibold placeholder:font-normal"
                         />
                       </div>
 
@@ -785,7 +785,7 @@ export default function HomePage() {
                           placeholder="Phone Number (10 digits)"
                           value={checkoutForm.phone}
                           onChange={(e) => setCheckoutForm(prev => ({ ...prev, phone: e.target.value }))}
-                          className="w-full pl-16 pr-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-medium"
+                          className="w-full pl-16 pr-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-semibold placeholder:font-normal"
                         />
                       </div>
 
@@ -796,7 +796,7 @@ export default function HomePage() {
                           placeholder="Full Delivery Address"
                           value={checkoutForm.address}
                           onChange={(e) => setCheckoutForm(prev => ({ ...prev, address: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-medium resize-none"
+                          className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-semibold placeholder:font-normal resize-none"
                         />
                       </div>
                     </div>
@@ -920,7 +920,7 @@ export default function HomePage() {
                   placeholder="Enter Order ID (e.g. MNG-8842)"
                   value={trackingIdInput}
                   onChange={(e) => setTrackingIdInput(e.target.value)}
-                  className="grow px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-medium uppercase"
+                  className="grow px-4 py-3 rounded-xl bg-input-bg border border-input-border text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 text-sm font-semibold placeholder:font-normal uppercase"
                 />
                 <button
                   onClick={handleTrackingSearch}

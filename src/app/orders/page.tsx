@@ -225,7 +225,7 @@ export default function OrdersPage() {
                           {/* 5. Amount (col-span-1) */}
                           <div className="lg:col-span-1 flex flex-col justify-center text-left lg:text-right pt-4 sm:pt-0 border-t sm:border-t-0 border-border">
                             <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Amount</p>
-                            <span className="text-lg font-black text-hero-text">৳{order.total}</span>
+                            <span className="text-lg font-black text-hero-text">৳&nbsp;{order.total}</span>
                           </div>
 
                           {/* 6. Action (col-span-2) */}

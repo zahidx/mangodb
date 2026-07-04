@@ -33,19 +33,19 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
   const pageTitle = PAGE_TITLES[pathname] || "Admin";
 
   return (
-    <header className="sticky top-0 z-30 bg-[#0a1a12]/90 backdrop-blur-xl border-b border-white/10">
+    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-[#EEF2F7]">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6">
         {/* Left side */}
         <div className="flex items-center gap-3">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="lg:hidden p-2 rounded-xl text-[#475569] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
           >
             <Menu className="w-5 h-5" />
           </button>
 
           <div>
-            <h1 className="font-serif-heading text-lg font-black text-white tracking-tight">
+            <h1 className="font-serif-heading text-lg font-black text-[#0F172A] tracking-tight">
               {pageTitle}
             </h1>
           </div>
@@ -54,21 +54,21 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
         {/* Right side */}
         <div className="flex items-center gap-3">
           {/* Notifications bell */}
-          <button className="relative p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
+          <button className="relative p-2 rounded-xl text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors cursor-pointer">
             <Bell className="w-[18px] h-[18px]" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
           </button>
 
           {/* Admin avatar */}
-          <div className="flex items-center gap-2.5 pl-3 border-l border-white/10">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-xs font-black shadow-sm">
+          <div className="flex items-center gap-2.5 pl-3 border-l border-[#EEF2F7]">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-xs font-black shadow-sm">
               {(profile?.full_name || "A").charAt(0).toUpperCase()}
             </div>
             <div className="hidden sm:block">
-              <p className="text-xs font-bold text-white/90 leading-tight">
+              <p className="text-xs font-bold text-[#0F172A] leading-tight">
                 {profile?.full_name || "Administrator"}
               </p>
-              <p className="text-[10px] text-emerald-400/60 font-semibold uppercase tracking-wider">
+              <p className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wider">
                 Admin
               </p>
             </div>

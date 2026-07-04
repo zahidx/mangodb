@@ -318,7 +318,7 @@ export default function ProductDetailsPage() {
               <div>
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5">Calculated Price</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-[#fbbf24]">৳{scaledPrice}</span>
+                  <span className="text-3xl font-black text-[#fbbf24]">৳&nbsp;{scaledPrice}</span>
                   <span className="text-xs text-muted-foreground font-semibold">for {selectedWeight}</span>
                 </div>
               </div>
@@ -627,7 +627,7 @@ export default function ProductDetailsPage() {
                         </h3>
                       </Link>
                       <div className="flex items-center justify-between pt-2 border-t border-border">
-                        <span className="text-base font-black text-hero-text">৳{prod.sale_price || prod.price}</span>
+                        <span className="text-base font-black text-hero-text">৳&nbsp;{prod.sale_price || prod.price}</span>
                         <Link
                           href={`/products/${prod.slug}`}
                           className="px-3.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold transition-all"

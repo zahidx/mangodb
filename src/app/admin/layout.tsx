@@ -27,10 +27,10 @@ export default function AdminLayout({
   // Show loading state while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#060f0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-          <p className="text-sm font-semibold text-white/50">
+          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+          <p className="text-sm font-semibold text-[#475569]">
             Loading admin panel...
           </p>
         </div>
@@ -44,7 +44,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#060f0a] text-white flex">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex">
       {/* Sidebar */}
       <AdminSidebar
         collapsed={sidebarCollapsed}
@@ -62,8 +62,8 @@ export default function AdminLayout({
         </main>
 
         {/* Admin footer */}
-        <footer className="border-t border-white/5 px-6 py-3">
-          <p className="text-[10px] text-white/20 text-center font-medium">
+        <footer className="border-t border-[#EEF2F7] px-6 py-3">
+          <p className="text-[10px] text-[#94A3B8] text-center font-medium">
             MangoDB Admin Panel &copy; {new Date().getFullYear()} — Built with
             Next.js + Supabase
           </p>

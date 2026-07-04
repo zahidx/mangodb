@@ -1,58 +1,42 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { 
-  ArrowLeft, 
-  User, 
-  Check, 
-  Loader2, 
-  X, 
-  ShoppingBag, 
-  Sun, 
-  Moon,
-  ShieldCheck,
-  Sparkles
-} from "lucide-react";
-import toast from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Leaf,
+  Loader2,
+  Lock,
+  Mail,
+  Moon,
+  Phone,
+  ShoppingBag,
+  Sun,
+  Truck,
+  UserRound,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function SignupPage() {
   const router = useRouter();
   const supabase = createClient();
-  
+  const { refreshSession } = useAuth();
+
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // OTP Modal states
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [timer, setTimer] = useState(59);
-  const [isResendActive, setIsResendActive] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Demo / error feedback states
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  const [shouldShake, setShouldShake] = useState(false);
-  const [isOtpError, setIsOtpError] = useState(false);
-
-  // Theme state
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-  // Refs for OTP input focusing
-  const inputRefs = [
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null)
-  ];
-
-  // Sync theme with document class list
   useEffect(() => {
     const saved = localStorage.getItem("mangodb-theme") as "dark" | "light" | null;
     if (saved) {
@@ -80,82 +64,61 @@ export default function SignupPage() {
     }
   };
 
-  // Timer countdown for OTP resend
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (showOtpModal && timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    } else if (timer === 0) {
-      setIsResendActive(true);
-    }
-    return () => clearInterval(interval);
-  }, [showOtpModal, timer]);
-
-  // Format number to: 1XXX-XXXXXX and strip leading zero
-  const formatPhoneNumber = (value: string) => {
-    const clean = value.replace(/\D/g, "").replace(/^0/, "").substring(0, 10);
-    if (clean.length > 4) {
-      return `${clean.slice(0, 4)}-${clean.slice(4)}`;
-    }
-    return clean;
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value);
-    setPhoneNumber(formatted);
-  };
-
-  // Format number to international format: +8801XXXXXXXXX for Supabase
-  const getFormattedPhone = (rawPhone: string) => {
-    const cleanPhone = rawPhone.replace(/\D/g, "");
-    return `+880${cleanPhone}`;
-  };
-
-  // Handle signup form submit
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!fullName.trim()) {
       toast.error("Please enter your full name");
       return;
     }
-
-    const cleanPhone = phoneNumber.replace(/\D/g, "");
-    if (cleanPhone.length !== 10) {
-      toast.error("Please enter a valid 10-digit phone number");
+    if (!email.trim() || !email.includes("@")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
       return;
     }
 
     setIsLoading(true);
-
-    // AUTOMATIC DEMO INTERCEPTOR
-    if (cleanPhone === "1754309016") {
+    if (
+      email.toLowerCase() === "customer@mangodb.com" ||
+      email.toLowerCase() === "demo@mangodb.com"
+    ) {
       setTimeout(() => {
+        const storedProfiles = JSON.parse(localStorage.getItem("mangodb-all-profiles") || "[]");
+        const newProfile = {
+          id: `profile-${Date.now()}`,
+          full_name: fullName,
+          email: email.toLowerCase(),
+          phone: phoneNumber || "01754309016",
+          role: "user",
+          is_blocked: false,
+          created_at: new Date().toISOString()
+        };
+        localStorage.setItem("mangodb-all-profiles", JSON.stringify([newProfile, ...storedProfiles]));
+
         setIsLoading(false);
-        setIsDemoMode(true);
-        setShowOtpModal(true);
-        setTimer(59);
-        setIsResendActive(false);
-        setOtpValues(["", "", "", "", "", ""]);
-        toast.success(`Verification code sent to +880 1754-309016!`);
+        toast.success("Registration successful!");
         setTimeout(() => {
-          inputRefs[0].current?.focus();
-        }, 100);
+          router.push("/login");
+        }, 3000);
       }, 1000);
       return;
     }
 
     try {
-      const formattedPhone = getFormattedPhone(cleanPhone);
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
+      // Since "Confirm Email" is disabled in Supabase, this will succeed 
+      // and allow immediate login!
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
         options: {
           data: {
             name: fullName,
-          }
-        }
+            phone: phoneNumber,
+          },
+        },
       });
 
       setIsLoading(false);
@@ -163,178 +126,130 @@ export default function SignupPage() {
       if (error) {
         toast.error(error.message);
       } else {
-        setIsDemoMode(false);
-        setShowOtpModal(true);
-        setTimer(59);
-        setIsResendActive(false);
-        setOtpValues(["", "", "", "", "", ""]);
-        toast.success(`Verification code sent to ${formattedPhone}!`);
-        
-        // Auto-focus first input
+        const storedProfiles = JSON.parse(localStorage.getItem("mangodb-all-profiles") || "[]");
+        const newProfile = {
+          id: data?.user?.id || `profile-${Date.now()}`,
+          full_name: fullName,
+          email: email.toLowerCase(),
+          phone: phoneNumber || "",
+          role: "user",
+          is_blocked: false,
+          created_at: new Date().toISOString()
+        };
+        localStorage.setItem("mangodb-all-profiles", JSON.stringify([newProfile, ...storedProfiles]));
+
+        // Automatically sign in the user after successful registration
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        toast.success("Registration successful! Logging you in...");
         setTimeout(() => {
-          inputRefs[0].current?.focus();
-        }, 100);
-      }
-    } catch (err: any) {
-      setIsLoading(false);
-      toast.error("Failed to send code. Please try again.");
-    }
-  };
-
-  // Trigger verification
-  const triggerOtpVerification = async (codeArray: string[]) => {
-    const otpCode = codeArray.join("");
-    setIsVerifying(true);
-    setIsOtpError(false);
-
-    if (isDemoMode || phoneNumber.replace(/\D/g, "") === "1754309016") {
-      setTimeout(() => {
-        setIsVerifying(false);
-        if (otpCode === "112233") {
-          setIsSuccess(true);
-          toast.success("Registration successful!");
-          
-          localStorage.setItem("mangodb-user", JSON.stringify({
-            phone: `0${phoneNumber.replace(/\D/g, "")}`,
-            name: fullName || "Premium Customer",
-            role: "user"
-          }));
-
-          setTimeout(() => {
-            router.push("/");
-          }, 1500);
-        } else {
-          toast.error("Invalid verification code.");
-          setShouldShake(true);
-          setIsOtpError(true);
-          setOtpValues(["", "", "", "", "", ""]);
-          inputRefs[0].current?.focus();
-          setTimeout(() => setShouldShake(false), 400);
-        }
-      }, 1000);
-      return;
-    }
-
-    try {
-      const formattedPhone = getFormattedPhone(phoneNumber);
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: formattedPhone,
-        token: otpCode,
-        type: "sms",
-      });
-
-      setIsVerifying(false);
-
-      if (error) {
-        toast.error(error.message);
-        setShouldShake(true);
-        setIsOtpError(true);
-        setOtpValues(["", "", "", "", "", ""]);
-        inputRefs[0].current?.focus();
-        setTimeout(() => setShouldShake(false), 400);
-      } else {
-        setIsSuccess(true);
-        toast.success("Registration successful!");
-        
-        localStorage.setItem("mangodb-user", JSON.stringify({
-          phone: `0${phoneNumber.replace(/\D/g, "")}`,
-          name: fullName || data.user?.user_metadata?.name || "Premium Customer",
-          role: "user"
-        }));
-
-        setTimeout(() => {
-          router.push("/");
+          router.push("/dashboard");
         }, 1500);
       }
-    } catch (err: any) {
-      setIsVerifying(false);
-      toast.error("Verification failed. Please try again.");
-      setShouldShake(true);
-      setIsOtpError(true);
-      setOtpValues(["", "", "", "", "", ""]);
-      inputRefs[0].current?.focus();
-      setTimeout(() => setShouldShake(false), 400);
+    } catch {
+      setIsLoading(false);
+      toast.error("Failed to complete registration. Please try again.");
     }
   };
 
-  // Handle OTP value change
-  const handleOtpChange = (index: number, value: string) => {
-    if (isNaN(Number(value))) return; // Only allow numbers
-    setIsOtpError(false);
-    
-    const newOtpValues = [...otpValues];
-    newOtpValues[index] = value.substring(value.length - 1); // Only keep the last digit
-    setOtpValues(newOtpValues);
-
-    // Move to next input if digit entered
-    if (value !== "" && index < 5) {
-      inputRefs[index + 1].current?.focus();
-    }
-
-    // Auto-submit if all 6 digits are filled
-    const fullyFilled = newOtpValues.every(val => val !== "");
-    if (fullyFilled && value !== "") {
-      triggerOtpVerification(newOtpValues);
-    }
-  };
-
-  // Handle OTP key down (for backspace)
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && otpValues[index] === "" && index > 0) {
-      inputRefs[index - 1].current?.focus();
-    }
-  };
-
-  // Handle OTP pasting
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").trim();
-    if (pastedData.length === 6 && /^\d+$/.test(pastedData)) {
-      const digits = pastedData.split("");
-      setOtpValues(digits);
-      triggerOtpVerification(digits);
-    }
-  };
-
-  const handleResendCode = async () => {
-    if (isDemoMode) {
-      setTimer(59);
-      setIsResendActive(false);
-      setOtpValues(["", "", "", "", "", ""]);
-      toast.success("Verification code resent.");
-      inputRefs[0].current?.focus();
-      return;
-    }
-
+  const handleOAuthSignUp = async (provider: "google" | "facebook") => {
     try {
-      const formattedPhone = getFormattedPhone(phoneNumber);
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
         options: {
-          data: {
-            name: fullName,
-          }
-        }
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+        },
       });
-
       if (error) {
         toast.error(error.message);
-      } else {
-        setTimer(59);
-        setIsResendActive(false);
-        setOtpValues(["", "", "", "", "", ""]);
-        toast.success("A new verification code has been sent!");
-        inputRefs[0].current?.focus();
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      toast.error("Failed to resend code.");
+    } catch {
+      toast.error(`Failed to sign in with ${provider}`);
+      setIsLoading(false);
     }
   };
+
+  const isDark = theme === "dark";
+
+  const fieldWrapClass = isDark
+    ? "group flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3.5 py-3 backdrop-blur-sm transition-all duration-200 focus-within:border-blue-400 focus-within:bg-white/10 focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]"
+    : "group flex items-center gap-3 rounded-md border border-white/60 bg-white/50 px-3.5 py-3 backdrop-blur-sm transition-all duration-200 focus-within:border-blue-500 focus-within:bg-white/80 focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.15)]";
+
+  const inputClass = isDark
+    ? "w-full border-0 bg-transparent text-sm font-semibold text-neutral-100 placeholder:text-neutral-500 placeholder:font-normal outline-none"
+    : "w-full border-0 bg-transparent text-sm font-semibold text-neutral-900 placeholder:text-neutral-400 placeholder:font-normal outline-none";
+
+  const labelClass = isDark
+    ? "mb-2.5 block text-[13px] font-semibold text-neutral-300"
+    : "mb-2.5 block text-[13px] font-semibold text-neutral-700";
+
+  const primaryBtnClass = isDark
+    ? "group flex w-full items-center justify-center gap-2 rounded-md border border-blue-500 bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 transition-all duration-200 hover:bg-blue-400 hover:shadow-md hover:shadow-blue-600/30 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+    : "group flex w-full items-center justify-center gap-2 rounded-md border border-blue-600/80 bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 transition-all duration-200 hover:bg-blue-700 hover:shadow-md hover:shadow-blue-600/30 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+
+  const secondaryBtnClass = isDark
+    ? "flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-neutral-200 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-blue-400/40 hover:bg-white/10 hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
+    : "flex items-center justify-center gap-2 rounded-md border border-white/70 bg-white/40 px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-blue-200 hover:bg-white/70 hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50";
+
+  const iconFieldClass = isDark
+    ? "h-4 w-4 shrink-0 text-neutral-500 transition-colors group-focus-within:text-blue-400"
+    : "h-4 w-4 shrink-0 text-neutral-400 transition-colors group-focus-within:text-blue-500";
+
+  const iconToggleClass = isDark
+    ? "shrink-0 text-neutral-500 transition-colors hover:text-neutral-200 cursor-pointer"
+    : "shrink-0 text-neutral-400 transition-colors hover:text-neutral-700 cursor-pointer";
+
+  const cardClass = isDark
+    ? "relative z-10 w-full max-w-md overflow-hidden rounded-md border border-blue-500/40 bg-neutral-900/75 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+    : "relative z-10 w-full max-w-md overflow-hidden rounded-md border border-blue-400/70 bg-white/55 shadow-[0_8px_32px_rgba(37,99,235,0.12)] backdrop-blur-xl";
+
+  const cardBarClass = isDark
+    ? "h-1 w-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"
+    : "h-1 w-full bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400";
+
+  const titleClass = isDark
+    ? "text-2xl font-semibold tracking-tight text-white"
+    : "text-2xl font-semibold tracking-tight text-neutral-900";
+
+  const subtitleClass = isDark
+    ? "text-sm text-neutral-400"
+    : "text-sm text-neutral-500";
+
+  const optionalClass = isDark
+    ? "font-normal text-neutral-500"
+    : "font-normal text-neutral-400";
+
+  const dividerLineClass = isDark
+    ? "w-full border-t border-white/10"
+    : "w-full border-t border-neutral-200";
+
+  const dividerTextClass = isDark
+    ? "bg-neutral-900/80 px-2 text-xs font-medium uppercase tracking-wide text-neutral-500 backdrop-blur-sm"
+    : "bg-white/70 px-2 text-xs font-medium uppercase tracking-wide text-neutral-400 backdrop-blur-sm";
+
+  const footerWrapClass = isDark
+    ? "space-y-3 border-t border-white/10 pt-4"
+    : "space-y-3 border-t border-white/50 pt-4";
+
+  const footerTextClass = isDark
+    ? "text-center text-sm text-neutral-400"
+    : "text-center text-sm text-neutral-500";
+
+  const footerLinkClass = isDark
+    ? "font-semibold text-blue-400 transition-colors hover:text-blue-300 hover:underline"
+    : "font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline";
+
+  const legalClass = isDark
+    ? "text-center text-xs leading-relaxed text-neutral-500"
+    : "text-center text-xs leading-relaxed text-neutral-400";
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-background text-foreground overflow-hidden font-sans relative select-none">
-      
-      {/* CSS Styles for Animations & Grid */}
       <style jsx global>{`
         @keyframes float-leaf {
           0% {
@@ -358,54 +273,21 @@ export default function SignupPage() {
           animation: float-leaf 15s linear infinite;
           z-index: 1;
         }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          20%, 60% { transform: translateX(-8px); }
-          40%, 80% { transform: translateX(8px); }
-        }
-        .shake-element {
-          animation: shake 0.4s ease-in-out;
-        }
-        @keyframes shimmer {
-          100% {
-            transform: translateX(100%);
-          }
-        }
-        .shimmer-btn {
-          position: relative;
-          overflow: hidden;
-        }
-        .shimmer-btn::after {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          transform: translateX(-100%);
-          background-image: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.15) 30%,
-            rgba(255, 255, 255, 0.3) 60%,
-            rgba(255, 255, 255, 0) 100%
-          );
-          animation: shimmer 3.5s infinite;
-          content: '';
-        }
         .bg-grid-pattern {
-          background-image: 
+          background-image:
             linear-gradient(to right, rgba(0, 0, 0, 0.025) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(0, 0, 0, 0.025) 1px, transparent 1px);
           background-size: 24px 24px;
         }
         .dark .bg-grid-pattern {
-          background-image: 
+          background-image:
             linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
           background-size: 24px 24px;
         }
         @keyframes float-orb {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0) scale(1);
           }
           50% {
@@ -417,52 +299,109 @@ export default function SignupPage() {
         }
       `}</style>
 
-      {/* Global Background Grid & Flowing Orbs */}
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-0" />
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] pointer-events-none z-0 animate-orb" style={{ animationDelay: "0s" }} />
-      <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full bg-amber-500/10 dark:bg-amber-500/5 blur-[150px] pointer-events-none z-0 animate-orb" style={{ animationDelay: "-3s" }} />
-      <div className="absolute top-1/2 right-1/3 w-[400px] h-[400px] rounded-full bg-green-400/10 dark:bg-green-400/3 blur-[100px] pointer-events-none z-0 animate-orb" style={{ animationDelay: "-6s" }} />
+      <div
+        className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] pointer-events-none z-0 animate-orb"
+        style={{ animationDelay: "0s" }}
+      />
+      <div
+        className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full bg-amber-500/10 dark:bg-amber-500/5 blur-[150px] pointer-events-none z-0 animate-orb"
+        style={{ animationDelay: "-3s" }}
+      />
+      <div
+        className="absolute top-1/2 right-1/3 w-[400px] h-[400px] rounded-full bg-green-400/10 dark:bg-green-400/3 blur-[100px] pointer-events-none z-0 animate-orb"
+        style={{ animationDelay: "-6s" }}
+      />
 
-      {/* Floating Leaves (Across entire viewport) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
-        <span className="floating-leaf text-emerald-500/20 text-3xl" style={{ left: "10%", top: "-5%", animationDelay: "0s", animationDuration: "14s" }}>🍃</span>
-        <span className="floating-leaf text-emerald-600/15 text-2xl" style={{ left: "35%", top: "-5%", animationDelay: "3s", animationDuration: "18s" }}>🍂</span>
-        <span className="floating-leaf text-emerald-500/15 text-4xl" style={{ left: "70%", top: "-5%", animationDelay: "6s", animationDuration: "16s" }}>🍃</span>
-        <span className="floating-leaf text-emerald-600/20 text-xl" style={{ left: "25%", top: "-5%", animationDelay: "9s", animationDuration: "12s" }}>🍃</span>
-        <span className="floating-leaf text-emerald-500/15 text-3xl" style={{ left: "85%", top: "-5%", animationDelay: "12s", animationDuration: "20s" }}>🍂</span>
+        <span
+          className="floating-leaf text-emerald-500/20 text-3xl"
+          style={{ left: "10%", top: "-5%", animationDelay: "0s", animationDuration: "14s" }}
+        >
+          🍃
+        </span>
+        <span
+          className="floating-leaf text-emerald-600/15 text-2xl"
+          style={{ left: "35%", top: "-5%", animationDelay: "3s", animationDuration: "18s" }}
+        >
+          🍂
+        </span>
+        <span
+          className="floating-leaf text-emerald-500/15 text-4xl"
+          style={{ left: "70%", top: "-5%", animationDelay: "6s", animationDuration: "16s" }}
+        >
+          🍃
+        </span>
+        <span
+          className="floating-leaf text-emerald-600/20 text-xl"
+          style={{ left: "25%", top: "-5%", animationDelay: "9s", animationDuration: "12s" }}
+        >
+          🍃
+        </span>
+        <span
+          className="floating-leaf text-emerald-500/15 text-3xl"
+          style={{ left: "85%", top: "-5%", animationDelay: "12s", animationDuration: "20s" }}
+        >
+          🍂
+        </span>
       </div>
 
-      {/* Left Panel - Premium Brand Story (Hidden on mobile) */}
+      {/* Left Panel */}
       <div className="hidden lg:flex lg:col-span-5 relative bg-emerald-950 items-center justify-center p-12 overflow-hidden border-r border-border z-10">
-        {/* Orchard Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-[12s] hover:scale-105"
           style={{ backgroundImage: "url('/login_orchard_backdrop.png')" }}
         />
-        {/* Premium Dark Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/70 to-emerald-900/30" />
-        
-        {/* Brand Card */}
-        <div className="relative z-10 max-w-md bg-black/30 border border-white/10 p-8 rounded-3xl backdrop-blur-md space-y-6 text-white text-center shadow-2xl">
-          <Link href="/" className="inline-flex items-center gap-2 text-[#fbbf24] hover:text-amber-400 transition-colors">
-            <ShoppingBag className="w-8 h-8 stroke-[2.5]" />
-            <span className="font-serif-heading text-2xl font-black tracking-wide text-white">MangoDB</span>
+        <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/85 to-emerald-900/45" />
+
+        <div className="relative z-10 w-full max-w-[26rem] rounded-2xl border border-white/20 bg-gradient-to-b from-white/15 to-white/5 px-10 py-11 text-center text-white shadow-[0_24px_60px_rgba(0,0,0,0.4)] backdrop-blur-2xl">
+          <Link
+            href="/"
+            className="group inline-flex flex-col items-center gap-3 transition-opacity hover:opacity-90"
+          >
+            <span className="flex h-12 w-12 items-center justify-center rounded-full border border-amber-200/40 bg-amber-400/20 text-amber-200 shadow-[0_0_24px_rgba(251,191,36,0.2)] transition-transform group-hover:scale-105">
+              <ShoppingBag className="h-5 w-5 stroke-[2]" />
+            </span>
+            <span className="font-display text-[1.85rem] font-semibold tracking-[0.04em] text-white">
+              Mango<span className="italic font-medium text-amber-200">DB</span>
+            </span>
           </Link>
-          <h2 className="font-serif-heading text-3xl font-bold leading-tight">
-            Join Rajshahi's Finest
-          </h2>
-          <p className="text-sm text-emerald-100/80 leading-relaxed font-light">
-            Create an account to start ordering handpicked, chemical-free premium mangoes delivered straight from the orchards of Rajshahi.
+
+          <p className="mt-8 font-sans text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-200/90">
+            From orchard to doorstep
           </p>
+
+          <h2 className="font-display mt-3 text-[2.35rem] font-medium leading-[1.15] tracking-[-0.01em] text-white">
+            Join Rajshahi&apos;s
+            <span className="block italic font-normal text-amber-100/95">
+              Finest
+            </span>
+          </h2>
+
+          <div className="mx-auto mt-6 h-px w-16 bg-gradient-to-r from-transparent via-amber-200/80 to-transparent" />
+
+          <p className="mx-auto mt-6 max-w-[19rem] font-sans text-[15px] font-light leading-[1.7] tracking-[0.01em] text-emerald-50/80">
+            Create an account to start ordering handpicked, chemical-free premium
+            mangoes delivered straight from the orchards of Rajshahi.
+          </p>
+
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-2.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/20 px-3.5 py-1.5 font-sans text-[11px] font-medium tracking-wide text-emerald-50/95 backdrop-blur-sm">
+              <Leaf className="h-3.5 w-3.5 text-amber-200" />
+              Chemical-free
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/20 px-3.5 py-1.5 font-sans text-[11px] font-medium tracking-wide text-emerald-50/95 backdrop-blur-sm">
+              <Truck className="h-3.5 w-3.5 text-amber-200" />
+              Fresh delivery
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Right Panel - Form (Centered) */}
+      {/* Right Panel */}
       <div className="flex flex-col lg:col-span-7 items-center justify-center p-6 sm:p-12 relative min-h-screen z-10">
-        
-        {/* Header Buttons */}
         <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
-          <Link 
+          <Link
             href="/"
             className="flex items-center gap-2 text-sm font-semibold text-muted hover:text-[#fbbf24] transition-colors bg-card/80 border border-border px-4 py-2 rounded-xl backdrop-blur-md shadow-sm"
           >
@@ -475,222 +414,197 @@ export default function SignupPage() {
             className="p-2.5 rounded-xl bg-card/80 border border-border text-muted-foreground hover:text-[#fbbf24] transition-all cursor-pointer backdrop-blur-md shadow-sm"
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4" />
+            ) : (
+              <Moon className="w-4 h-4" />
+            )}
           </button>
         </div>
 
-        {/* Signup Card */}
-        <div className="w-full max-w-md bg-white/70 dark:bg-[#0a1a12]/80 border border-white/50 dark:border-emerald-400/15 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.03)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.5)] relative z-10 space-y-8 backdrop-blur-xl animate-fade-in">
-          
-          {/* Brand Logo & Header */}
-          <div className="text-center space-y-4">
-            <div className="relative inline-flex items-center justify-center">
-              {/* Outer glowing ring */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-400 to-emerald-500 blur-md opacity-40 animate-pulse" />
-              {/* Inner glass badge */}
-              <div className="relative w-14 h-14 rounded-2xl bg-white/80 dark:bg-[#0d2418]/80 border border-white/60 dark:border-amber-400/25 flex items-center justify-center shadow-md">
-                <Sparkles className="w-5 h-5 text-emerald-600 dark:text-amber-400" />
+        {/* Form card only */}
+        <div className={cardClass}>
+          <div className={cardBarClass} />
+
+          <div className="space-y-6 p-6 sm:p-8">
+            <div className="space-y-1 text-center">
+              <h2 className={titleClass}>Create Account</h2>
+              <p className={subtitleClass}>Register to get started.</p>
+            </div>
+
+            <form onSubmit={handleSignupSubmit} className="space-y-5">
+              <div>
+                <label htmlFor="full-name" className={labelClass}>
+                  Full Name
+                </label>
+                <div className={fieldWrapClass}>
+                  <UserRound className={iconFieldClass} />
+                  <input
+                    id="full-name"
+                    type="text"
+                    required
+                    placeholder="Your full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="email" className={labelClass}>
+                  Email Address
+                </label>
+                <div className={fieldWrapClass}>
+                  <Mail className={iconFieldClass} />
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="phone" className={labelClass}>
+                  Phone Number{" "}
+                  <span className={optionalClass}>(optional)</span>
+                </label>
+                <div className={fieldWrapClass}>
+                  <Phone className={iconFieldClass} />
+                  <input
+                    id="phone"
+                    type="tel"
+                    placeholder="Phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="password" className={labelClass}>
+                  Password
+                </label>
+                <div className={fieldWrapClass}>
+                  <Lock className={iconFieldClass} />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="At least 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={inputClass}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className={iconToggleClass}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={primaryBtnClass}
+                style={{ marginTop: "10px" }}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    Create Account
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="relative py-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className={dividerLineClass} />
+              </div>
+              <div className="relative flex justify-center">
+                <span className={dividerTextClass}>or continue with</span>
               </div>
             </div>
-            
-            <div className="space-y-1.5">
-              <h2 className="font-serif-heading text-3xl font-black tracking-tight bg-gradient-to-r from-emerald-800 to-green-600 dark:from-amber-300 dark:to-amber-500 bg-clip-text text-transparent">
-                Create Account
-              </h2>
-              <p className="text-xs text-muted-foreground max-w-[280px] mx-auto leading-relaxed font-sans font-medium">
-                Register to explore fresh harvests.
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleOAuthSignUp("google")}
+                disabled={isLoading}
+                className={secondaryBtnClass}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="#EA4335"
+                    d="M12.24 10.285V14.4h6.887c-.275 1.41-1.023 2.605-2.186 3.415v2.834h3.545c2.07-1.907 3.265-4.712 3.265-8.05 0-.78-.07-1.532-.2-2.25H12.24z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12.24 23c2.97 0 5.46-.98 7.28-2.66l-3.545-2.834c-.98.66-2.23 1.06-3.735 1.06-2.87 0-5.3-1.94-6.16-4.55H2.41v2.92C4.22 20.53 7.94 23 12.24 23z"
+                  />
+                  <path
+                    fill="#4A90E2"
+                    d="M6.08 14.016c-.22-.66-.35-1.36-.35-2.086s.13-1.426.35-2.086V6.924H2.41C1.47 8.79 1 10.84 1 11.93c0 1.09.47 3.14 1.41 5.006l3.67-2.92z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M12.24 4.75c1.615 0 3.06.555 4.2 1.645l3.15-3.15C17.695 1.49 15.205.5 12.24.5 7.94.5 4.22 2.97 2.41 6.924l3.67 2.92c.86-2.61 3.29-4.55 6.16-4.55z"
+                  />
+                </svg>
+                Google
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOAuthSignUp("facebook")}
+                disabled={isLoading}
+                className={secondaryBtnClass}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="#1877F2"
+                    d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.513c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"
+                  />
+                </svg>
+                Facebook
+              </button>
+            </div>
+
+            <div className={footerWrapClass}>
+              <p className={footerTextClass}>
+                Already have an account?{" "}
+                <Link href="/login" className={footerLinkClass}>
+                  Sign In
+                </Link>
+              </p>
+
+              <p className={legalClass}>
+                By continuing, you agree to MangoDB&apos;s Terms of Service and
+                Privacy Policy.
               </p>
             </div>
           </div>
-
-          {/* Input Form */}
-          <form onSubmit={handleSignupSubmit} className="space-y-5">
-            {/* Full Name Input */}
-            <div className="space-y-2">
-              <label className="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-400 tracking-widest uppercase block font-sans">
-                Full Name
-              </label>
-              <div className="flex items-center gap-3 bg-white/60 dark:bg-[#0d2418]/60 border border-black/10 dark:border-emerald-400/15 rounded-2xl p-2.5 focus-within:border-emerald-500/40 dark:focus-within:border-amber-400/50 focus-within:ring-4 focus-within:ring-emerald-500/5 dark:focus-within:ring-amber-400/10 transition-all shadow-sm">
-                <div className="flex items-center justify-center bg-black/[0.03] dark:bg-white/[0.06] border border-black/5 dark:border-white/10 w-9 h-9 rounded-xl select-none shrink-0 shadow-sm text-muted-foreground">
-                  <User className="w-4 h-4" />
-                </div>
-                <input
-                  type="text"
-                  required
-                  placeholder="Mofizur Rahman"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-transparent border-0 text-hero-text placeholder-muted-foreground/60 focus:ring-0 focus:outline-none text-base font-bold"
-                />
-              </div>
-            </div>
-
-            {/* Phone Number Input */}
-            <div className="space-y-2">
-              <label className="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-400 tracking-widest uppercase block font-sans">
-                Phone Number
-              </label>
-              
-              {/* Premium Input Container */}
-              <div className="flex items-center gap-3 bg-white/60 dark:bg-[#0d2418]/60 border border-black/10 dark:border-emerald-400/15 rounded-2xl p-2.5 focus-within:border-emerald-500/40 dark:focus-within:border-amber-400/50 focus-within:ring-4 focus-within:ring-emerald-500/5 dark:focus-within:ring-amber-400/10 transition-all shadow-sm">
-                {/* Pill Flag Badge with Dropdown Arrow */}
-                <div className="flex items-center gap-2 bg-black/[0.03] dark:bg-white/[0.06] border border-black/5 dark:border-white/10 py-1.5 px-3 rounded-xl select-none shrink-0 shadow-sm">
-                  <span className="text-lg leading-none">🇧🇩</span>
-                  <span className="text-sm font-black text-hero-text">+880</span>
-                  <span className="text-[9px] text-muted-foreground/55 font-bold">▼</span>
-                </div>
-                
-                <input
-                  type="tel"
-                  required
-                  placeholder="1754-309016"
-                  value={phoneNumber}
-                  onChange={handlePhoneChange}
-                  className="w-full bg-transparent border-0 text-hero-text placeholder-muted-foreground/60 focus:ring-0 focus:outline-none text-base font-extrabold tracking-widest"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="shimmer-btn w-full py-4 mt-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs tracking-widest uppercase font-sans border border-emerald-500/20"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Sending OTP...
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </button>
-          </form>
-
-          {/* Login Redirection Link */}
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground font-medium">
-              Already have an account?{" "}
-              <Link href="/login" className="text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline">
-                Sign In
-              </Link>
-            </p>
-          </div>
-
-          {/* Fine Print */}
-          <p className="text-[10px] text-muted-foreground/70 text-center font-sans leading-relaxed px-4">
-            By continuing, you agree to MangoDB's Terms of Service and Privacy Policy. We'll send a 6-digit OTP via SMS. Standard rates apply.
-          </p>
         </div>
       </div>
-
-      {/* OTP Verification Modal */}
-      {showOtpModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
-            onClick={() => !isSuccess && setShowOtpModal(false)}
-          />
-
-          {/* Modal Panel */}
-          <div className="relative w-full max-w-sm bg-white/90 dark:bg-[#0a1a12]/90 border border-white/40 dark:border-emerald-400/15 rounded-[2.5rem] shadow-2xl dark:shadow-[0_30px_60px_rgba(0,0,0,0.5)] p-8 text-center z-10 animate-fade-in space-y-6 backdrop-blur-xl">
-            
-            {/* Close Button */}
-            {!isSuccess && (
-              <button 
-                onClick={() => setShowOtpModal(false)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.06] border border-black/5 dark:border-white/10 text-muted-foreground hover:text-hero-text transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Icon / Status badge */}
-            <div className="flex justify-center">
-              {isSuccess ? (
-                <div className="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center animate-bounce">
-                  <Check className="w-8 h-8 stroke-[3]" />
-                </div>
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-[#fbbf24]/10 dark:bg-[#fbbf24]/5 border border-[#fbbf24]/20 text-[#fbbf24] flex items-center justify-center relative">
-                  <ShieldCheck className="w-8 h-8" />
-                  <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Header Text */}
-            <div className="space-y-1">
-              <h3 className="font-serif-heading text-2xl font-bold text-hero-text">
-                {isSuccess ? "Success" : "Verification Code"}
-              </h3>
-              <p className="text-xs text-muted-foreground font-sans max-w-[250px] mx-auto leading-relaxed">
-                {isSuccess 
-                  ? "Taking you to your fresh mango dashboard..." 
-                  : `Enter the 6-digit code sent to +880 ${phoneNumber}`
-                }
-              </p>
-            </div>
-
-            {/* OTP Form */}
-            {!isSuccess && (
-              <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-                {/* 6 Inputs */}
-                <div 
-                  className={`flex justify-center gap-2 ${shouldShake ? "shake-element" : ""}`}
-                  onPaste={handlePaste}
-                >
-                  {otpValues.map((val, idx) => (
-                    <input
-                      key={idx}
-                      ref={inputRefs[idx]}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={val}
-                      onChange={(e) => handleOtpChange(idx, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(idx, e)}
-                      className={`w-11 h-12 sm:w-12 sm:h-14 bg-white/40 dark:bg-[#0d2418]/60 border rounded-2xl text-center font-black text-xl text-hero-text transition-all focus:ring-0 focus:outline-none ${
-                        isOtpError 
-                          ? "border-red-500/60 focus:border-red-500" 
-                          : "border-black/10 dark:border-emerald-400/15 focus:border-emerald-500/50 dark:focus:border-amber-400/50 focus:ring-4 focus:ring-emerald-500/5 dark:focus:ring-amber-400/10"
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                {/* Resend timer */}
-                <div className="text-xs font-sans">
-                  {isResendActive ? (
-                    <button
-                      type="button"
-                      onClick={handleResendCode}
-                      className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
-                    >
-                      Resend Code
-                    </button>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      Resend code in <strong className="text-hero-text">{timer}s</strong>
-                    </span>
-                  )}
-                </div>
-
-                {/* Loader showing if verifying */}
-                {isVerifying && (
-                  <div className="flex items-center justify-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold font-sans">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Verifying code...
-                  </div>
-                )}
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

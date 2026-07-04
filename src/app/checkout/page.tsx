@@ -215,9 +215,13 @@ export default function CheckoutPage() {
             message: `Your order #${data.id} has been placed and is being processed.`,
             type: "order_placed"
           });
+        } else if (error) {
+          console.error("Supabase order insert error:", error);
+          toast.error(`Database error: ${error.message}`);
         }
-      } catch (dbErr) {
-        console.warn("Error saving order to Supabase database:", dbErr);
+      } catch (dbErr: any) {
+        console.error("Error saving order to Supabase database:", dbErr);
+        toast.error(`Database connection error: ${dbErr.message || "Failed to save to database"}`);
       }
     }
 
@@ -352,7 +356,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground font-medium">Billing Total</span>
-              <strong className="text-[#fbbf24] font-black text-sm">৳{finalTotal}</strong>
+              <strong className="text-[#fbbf24] font-black text-sm">৳&nbsp;{finalTotal}</strong>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground font-medium">Payment Mode</span>
@@ -684,7 +688,7 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                     <span className="font-bold text-hero-text text-right">
-                      ৳{unitPrice * item.quantity}
+                      ৳&nbsp;{unitPrice * item.quantity}
                     </span>
                   </div>
                 );
@@ -733,21 +737,21 @@ export default function CheckoutPage() {
             <div className="space-y-3 border-t border-border pt-4 text-xs font-sans font-medium text-muted-foreground">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span className="text-hero-text">৳{subtotal}</span>
+                <span className="text-hero-text">৳&nbsp;{subtotal}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-emerald-600 dark:text-[#34d399]">
                   <span>Coupon Discount</span>
-                  <span>-৳{discount}</span>
+                  <span>-৳&nbsp;{discount}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span>Delivery Charge ({deliveryDistrict})</span>
-                <span className="text-hero-text">৳{deliveryCharge}</span>
+                <span className="text-hero-text">৳&nbsp;{deliveryCharge}</span>
               </div>
               <div className="flex justify-between text-sm font-black text-hero-text border-t border-border pt-3.5">
                 <span>Billing Total</span>
-                <span className="text-xl font-black text-[#fbbf24]">৳{total}</span>
+                <span className="text-xl font-black text-[#fbbf24]">৳&nbsp;{total}</span>
               </div>
             </div>
           </div>

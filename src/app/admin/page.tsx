@@ -121,49 +121,47 @@ export default function AdminDashboardPage() {
   };
 
   const formatCurrency = (amount: number) =>
-    `৳${amount.toLocaleString("en-BD")}`;
-
-  const getStatusColor = (status: string) => {
+    `৳\u00A0${amount.toLocaleString("en-BD")}`;  const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      pending: "text-yellow-400 bg-yellow-400/10",
-      confirmed: "text-blue-400 bg-blue-400/10",
-      processing: "text-purple-400 bg-purple-400/10",
-      shipped: "text-cyan-400 bg-cyan-400/10",
-      delivered: "text-emerald-400 bg-emerald-400/10",
-      cancelled: "text-red-400 bg-red-400/10",
+      pending: "text-amber-700 bg-amber-50 border border-amber-200/50",
+      confirmed: "text-blue-700 bg-blue-50 border border-blue-200/50",
+      processing: "text-purple-700 bg-purple-50 border border-purple-200/50",
+      shipped: "text-cyan-700 bg-cyan-50 border border-cyan-200/50",
+      delivered: "text-emerald-700 bg-emerald-50 border border-emerald-200/50",
+      cancelled: "text-red-700 bg-red-50 border border-red-200/50",
     };
-    return colors[status] || "text-white/50 bg-white/5";
+    return colors[status] || "text-[#475569] bg-[#F8FAFC] border border-[#EEF2F7]";
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+        <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-[1400px]">
+    <div className="flex flex-col gap-8 max-w-[1400px] text-[#0F172A]">
       {/* Welcome header */}
       <div>
-        <h2 className="font-serif-heading text-2xl font-black text-white">
+        <h2 className="font-serif-heading text-2xl font-black text-[#0F172A]">
           Welcome back, {profile?.full_name || "Admin"} 👋
         </h2>
-        <p className="text-sm text-white/40 mt-1">
+        <p className="text-sm text-[#475569] mt-1">
           Here's what's happening with your mango marketplace today.
         </p>
       </div>
 
       {/* Seed prompt for empty database */}
       {productCount === 0 && categoryCount === 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
-            <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
+            <h3 className="text-base font-black text-amber-700 flex items-center gap-2">
               <Sparkles className="w-4 h-4 animate-pulse" />
               Fresh Database Detected
             </h3>
-            <p className="text-xs text-white/50">
+            <p className="text-xs text-[#475569]">
               Your tables are empty. Seed with premium mango varieties, categories, and sample data?
             </p>
           </div>
@@ -181,17 +179,17 @@ export default function AdminDashboardPage() {
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Revenue", value: formatCurrency(stats.totalRevenue), icon: Coins, color: "text-amber-400", bg: "bg-amber-400/10" },
-          { label: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-          { label: "Customers", value: stats.totalCustomers, icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
-          { label: "Products", value: stats.totalProducts, icon: Package, color: "text-purple-400", bg: "bg-purple-400/10" },
+          { label: "Total Revenue", value: formatCurrency(stats.totalRevenue), icon: Coins, color: "text-amber-600", bg: "bg-amber-500/10" },
+          { label: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-500/10" },
+          { label: "Customers", value: stats.totalCustomers, icon: Users, color: "text-blue-600", bg: "bg-blue-500/10" },
+          { label: "Products", value: stats.totalProducts, icon: Package, color: "text-purple-600", bg: "bg-purple-500/10" },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 space-y-3 hover:bg-white/[0.05] transition-colors"
+            className="bg-white border border-[#EEF2F7] rounded-2xl p-5 space-y-3 hover:shadow-md transition-all shadow-sm"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">
                 {stat.label}
               </span>
               <div className={`w-8 h-8 rounded-xl ${stat.bg} flex items-center justify-center`}>
@@ -201,7 +199,7 @@ export default function AdminDashboardPage() {
             <p className={`text-2xl font-black ${stat.color}`}>
               {stat.value}
             </p>
-            <div className="flex items-center gap-1 text-[10px] text-emerald-400/70 font-semibold">
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
               <ArrowUpRight className="w-3 h-3" />
               <span>Live from Supabase</span>
             </div>
@@ -212,37 +210,37 @@ export default function AdminDashboardPage() {
       {/* Two column layout */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white/[0.03] border border-white/[0.06] rounded-2xl">
-          <div className="flex items-center justify-between p-5 border-b border-white/[0.06]">
+        <div className="lg:col-span-2 bg-white border border-[#EEF2F7] rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between p-5 border-b border-[#EEF2F7]">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-white/30" />
-              <h3 className="text-sm font-bold text-white/80">Recent Orders</h3>
+              <Clock className="w-4 h-4 text-[#94A3B8]" />
+              <h3 className="text-sm font-bold text-[#0F172A]">Recent Orders</h3>
             </div>
-            <span className="text-[10px] font-bold text-white/30 uppercase">
+            <span className="text-[10px] font-bold text-[#94A3B8] uppercase">
               Last 8
             </span>
           </div>
 
           {recentOrders.length === 0 ? (
-            <div className="p-10 text-center text-white/30 text-sm">
+            <div className="p-10 text-center text-[#94A3B8] text-sm">
               No orders yet. They'll appear here when customers start ordering.
             </div>
           ) : (
-            <div className="divide-y divide-white/[0.04]">
+            <div className="divide-y divide-[#EEF2F7]">
               {recentOrders.map((order: any) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors"
+                  className="flex items-center justify-between px-5 py-3.5 hover:bg-[#F8FAFC] transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/40 text-xs font-bold shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] flex items-center justify-center text-[#94A3B8] text-xs font-bold shrink-0 border border-[#EEF2F7]">
                       #
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-white/80 truncate">
+                      <p className="text-xs font-bold text-[#0F172A] truncate">
                         {order.profile?.full_name || "Customer"}
                       </p>
-                      <p className="text-[10px] text-white/30">
+                      <p className="text-[10px] text-[#94A3B8]">
                         {new Date(order.created_at).toLocaleDateString("en-US", {
                           month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
                         })}
@@ -255,7 +253,7 @@ export default function AdminDashboardPage() {
                     >
                       {order.status}
                     </span>
-                    <span className="text-xs font-black text-amber-400 w-20 text-right">
+                    <span className="text-xs font-black text-amber-600 w-20 text-right">
                       {formatCurrency(order.total)}
                     </span>
                   </div>
@@ -266,20 +264,20 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Low Stock Alert */}
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl">
-          <div className="flex items-center justify-between p-5 border-b border-white/[0.06]">
+        <div className="bg-white border border-[#EEF2F7] rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between p-5 border-b border-[#EEF2F7]">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400/60" />
-              <h3 className="text-sm font-bold text-white/80">Low Stock</h3>
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <h3 className="text-sm font-bold text-[#0F172A]">Low Stock</h3>
             </div>
           </div>
 
           {lowStock.length === 0 ? (
-            <div className="p-10 text-center text-white/30 text-sm">
+            <div className="p-10 text-center text-[#94A3B8] text-sm">
               All products are well-stocked! ✅
             </div>
           ) : (
-            <div className="divide-y divide-white/[0.04]">
+            <div className="divide-y divide-[#EEF2F7]">
               {lowStock.map((product: any) => (
                 <div
                   key={product.id}
@@ -290,20 +288,20 @@ export default function AdminDashboardPage() {
                       <img
                         src={product.images[0]}
                         alt={product.name}
-                        className="w-8 h-8 rounded-lg object-cover shrink-0"
+                        className="w-8 h-8 rounded-lg object-cover shrink-0 border border-[#EEF2F7]"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-lg bg-white/[0.06] shrink-0" />
+                      <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] shrink-0 border border-[#EEF2F7]" />
                     )}
-                    <p className="text-xs font-bold text-white/70 truncate">
+                    <p className="text-xs font-bold text-[#475569] truncate">
                       {product.name}
                     </p>
                   </div>
                   <span
                     className={`text-xs font-black px-2 py-1 rounded-lg ${
                       product.stock === 0
-                        ? "text-red-400 bg-red-400/10"
-                        : "text-yellow-400 bg-yellow-400/10"
+                        ? "text-red-700 bg-red-50 border border-red-200/50"
+                        : "text-amber-700 bg-amber-50 border border-amber-200/50"
                     }`}
                   >
                     {product.stock === 0 ? "Out" : `${product.stock} left`}
@@ -316,14 +314,14 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
-        <h3 className="text-sm font-bold text-white/80 mb-4">Quick Actions</h3>
+      <div className="bg-white border border-[#EEF2F7] rounded-2xl p-5 shadow-sm">
+        <h3 className="text-sm font-bold text-[#0F172A] mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Add Product", href: "/admin/products", icon: Package, color: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/20 text-emerald-400" },
-            { label: "View Orders", href: "/admin/orders", icon: ShoppingCart, color: "from-amber-500/20 to-amber-600/10 border-amber-500/20 text-amber-400" },
-            { label: "Manage Coupons", href: "/admin/coupons", icon: TrendingUp, color: "from-blue-500/20 to-blue-600/10 border-blue-500/20 text-blue-400" },
-            { label: "View Reports", href: "/admin/reports", icon: TrendingUp, color: "from-purple-500/20 to-purple-600/10 border-purple-500/20 text-purple-400" },
+            { label: "Add Product", href: "/admin/products", icon: Package, color: "from-emerald-50 to-emerald-100/50 border-emerald-200/60 text-emerald-700" },
+            { label: "View Orders", href: "/admin/orders", icon: ShoppingCart, color: "from-amber-50 to-amber-100/50 border-amber-200/60 text-amber-700" },
+            { label: "Manage Coupons", href: "/admin/coupons", icon: TrendingUp, color: "from-blue-50 to-blue-100/50 border-blue-200/60 text-blue-700" },
+            { label: "View Reports", href: "/admin/reports", icon: TrendingUp, color: "from-purple-50 to-purple-100/50 border-purple-200/60 text-purple-700" },
           ].map((action) => (
             <a
               key={action.label}
