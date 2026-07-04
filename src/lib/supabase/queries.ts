@@ -563,13 +563,25 @@ export async function getProfile(userId: string) {
 }
 
 export async function updateProfile(userId: string, data: Partial<Profile>) {
-  const supabase = (await createClient()) as any;
-  return supabase
-    .from("profiles")
-    .update({ ...data, updated_at: new Date().toISOString() })
-    .eq("id", userId)
-    .select()
-    .single();
+  try {
+    const res = await fetch("/api/user/profile", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.details || "Failed to update profile");
+    }
+
+    const json = await res.json();
+    return { data: json.profile, error: null };
+  } catch (error: any) {
+    return { data: null, error: { message: error.message } };
+  }
 }
 
 // ---- Review Queries ----

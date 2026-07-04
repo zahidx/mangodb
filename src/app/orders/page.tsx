@@ -59,14 +59,8 @@ export default function OrdersPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <Navbar />
 
-      <div className="bg-card border-b border-border min-h-[280px] pt-20 px-4 sm:px-8 xl:px-12 2xl:px-24 shadow-sm relative z-10 flex flex-col justify-center items-center">
-        <div className="w-full max-w-3xl mx-auto text-center space-y-3">
-          <h1 className="text-3xl sm:text-4xl font-black text-hero-text font-serif-heading tracking-tight">Your Orders</h1>
-          <p className="text-sm text-muted-foreground font-medium">Review your past mango crates, track current deliveries, and manage your history.</p>
-        </div>
-      </div>
 
-      <div className="grow w-full px-4 sm:px-6 lg:px-8 py-12 relative z-0">
+      <div className="grow w-full px-4 sm:px-6 lg:px-8 pt-32 pb-12 relative z-0">
         {loading || authLoading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />

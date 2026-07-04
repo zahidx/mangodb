@@ -72,7 +72,7 @@ export default function GlobalSearch() {
             if (query.trim().length >= 2) setIsOpen(true);
           }}
           placeholder="Search mangoes..."
-          className="w-64 pl-9 pr-8 py-2 rounded-xl bg-card border border-border text-sm font-semibold text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-sm"
+          className="w-64 pl-9 pr-8 py-2 rounded-md bg-card border border-border text-sm font-semibold text-hero-text placeholder-muted-foreground focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-sm"
         />
         {query && (
           <button

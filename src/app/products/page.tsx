@@ -285,14 +285,24 @@ export default function ProductsPage() {
                             )}
                           </div>
 
-                          <button
-                            onClick={() => addToCart(prod, 1, "10kg")}
-                            className="flex items-center justify-center gap-1.5 w-[110px] py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-xs font-semibold shadow-sm"
-                            title="Buy Now"
-                          >
-                            <Zap className="w-3.5 h-3.5 fill-white" />
-                            Buy Now
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => addToCart(prod, 1, "10kg")}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] sm:text-xs font-semibold shadow-sm"
+                              title="Buy Now"
+                            >
+                              <Zap className="w-3.5 h-3.5 fill-white" />
+                              Buy Now
+                            </button>
+                            <button
+                              onClick={() => addToCart(prod, 1, "10kg")}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 border-2 border-[#527d62] text-[#527d62] hover:bg-[#527d62]/10 rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] sm:text-xs font-bold shadow-sm"
+                              title="Add to Cart"
+                            >
+                              <ShoppingBag className="w-3.5 h-3.5" />
+                              Add to Cart
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -32,6 +32,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from "recharts";
 
 function DashboardContent() {
   const router = useRouter();
@@ -205,12 +206,13 @@ function DashboardContent() {
 
       // 3. Load Saved Addresses
       if (!profile.id.startsWith("demo-")) {
-        const { data: addrs } = await supabase
-          .from("user_addresses")
-          .select("*")
-          .eq("user_id", profile.id)
-          .order("is_default", { ascending: false });
-        if (addrs) setAddresses(addrs);
+        try {
+          const res = await fetch("/api/user/addresses");
+          const json = await res.json();
+          if (json.data) setAddresses(json.data);
+        } catch (e) {
+          console.error("Failed to fetch addresses from API");
+        }
       } else {
         const storedAddresses = localStorage.getItem(`mangodb-addresses-${profile.id}`);
         if (storedAddresses) setAddresses(JSON.parse(storedAddresses));
@@ -218,12 +220,13 @@ function DashboardContent() {
 
       // 4. Load Notifications
       if (!profile.id.startsWith("demo-")) {
-        const { data: notifs } = await supabase
-          .from("notifications")
-          .select("*")
-          .eq("user_id", profile.id)
-          .order("created_at", { ascending: false });
-        if (notifs) setNotifications(notifs);
+        try {
+          const res = await fetch("/api/user/notifications");
+          const json = await res.json();
+          if (json.data) setNotifications(json.data);
+        } catch (e) {
+          console.error("Failed to fetch notifications from API");
+        }
       } else {
         const storedNotifs = localStorage.getItem(`mangodb-notifications-${profile.id}`);
         if (storedNotifs) setNotifications(JSON.parse(storedNotifs));
@@ -231,12 +234,13 @@ function DashboardContent() {
 
       // 5. Load Saved Payment Methods
       if (!profile.id.startsWith("demo-")) {
-        const { data: payments } = await supabase
-          .from("user_payment_methods")
-          .select("*")
-          .eq("user_id", profile.id)
-          .order("is_default", { ascending: false });
-        if (payments) setPaymentMethods(payments);
+        try {
+          const res = await fetch("/api/user/payment-methods");
+          const json = await res.json();
+          if (json.data) setPaymentMethods(json.data);
+        } catch (e) {
+          console.error("Failed to fetch payment methods from API");
+        }
       } else {
         const storedPayments = localStorage.getItem(`mangodb-payments-${profile.id}`);
         if (storedPayments) setPaymentMethods(JSON.parse(storedPayments));
@@ -298,18 +302,24 @@ function DashboardContent() {
 
     try {
       if (!profile.id.startsWith("demo-")) {
-        await supabase
-          .from("profiles")
-          .update({
-            full_name: accountForm.fullName,
-            phone: accountForm.phone,
-            dob: accountForm.dob || null,
-            gender: accountForm.gender || null,
-            country: accountForm.country || null,
-            city: accountForm.city || null,
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", profile.id);
+        const payload = {
+          full_name: accountForm.fullName,
+          phone: accountForm.phone,
+          dob: accountForm.dob || null,
+          gender: accountForm.gender || null,
+          country: accountForm.country || null,
+          city: accountForm.city || null,
+        };
+
+        const res = await fetch("/api/user/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+           throw new Error("Failed to update via API");
+        }
       } else {
         // Mock update
         const stored = localStorage.getItem("mangodb-user");
@@ -343,18 +353,26 @@ function DashboardContent() {
         const payload = { ...addressForm, user_id: profile.id };
 
         if (editingAddressId) {
-          await supabase.from("user_addresses").update(payload).eq("id", editingAddressId);
+          await fetch("/api/user/addresses", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, id: editingAddressId })
+          });
         } else {
-          await supabase.from("user_addresses").insert([payload]);
+          await fetch("/api/user/addresses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
         }
 
-        const { data: addrs } = await supabase
-          .from("user_addresses")
-          .select("*")
-          .eq("user_id", profile.id)
-          .order("is_default", { ascending: false });
-        
-        if (addrs) setAddresses(addrs);
+        try {
+          const res = await fetch("/api/user/addresses");
+          const json = await res.json();
+          if (json.data) setAddresses(json.data);
+        } catch (e) {
+          console.error("Failed to fetch updated addresses");
+        }
       } else {
         let updated = [...addresses];
         
@@ -588,6 +606,60 @@ function DashboardContent() {
     );
   }
 
+  // Prepare Spend Data for Chart
+  const spendData = React.useMemo(() => {
+    if (!orders || orders.length === 0) return [];
+    const monthlySpend: Record<string, number> = {};
+    
+    // Initialize last 6 months to 0
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+      monthlySpend[monthName] = 0;
+    }
+
+    orders.forEach(order => {
+      if (order.status !== 'cancelled') {
+        const d = new Date(order.created_at);
+        const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+        if (monthlySpend[monthName] !== undefined) {
+          monthlySpend[monthName] += (order.total || 0);
+        }
+      }
+    });
+
+    return Object.keys(monthlySpend).map(month => ({
+      name: month,
+      spend: monthlySpend[month],
+    }));
+  }, [orders]);
+
+  // Prepare Order Status Data for Pie Chart
+  const statusData = React.useMemo(() => {
+    if (!orders || orders.length === 0) return [];
+    let pending = 0;
+    let delivered = 0;
+    let cancelled = 0;
+    
+    orders.forEach(order => {
+      if (["pending", "processing", "shipped"].includes(order.status)) {
+        pending++;
+      } else if (order.status === 'delivered') {
+        delivered++;
+      } else if (order.status === 'cancelled') {
+        cancelled++;
+      }
+    });
+    
+    return [
+      { name: 'Active', value: pending, color: '#F59E0B' }, // amber-500
+      { name: 'Delivered', value: delivered, color: '#10B981' }, // emerald-500
+      { name: 'Cancelled', value: cancelled, color: '#F43F5E' }, // rose-500
+    ].filter(item => item.value > 0);
+  }, [orders]);
+
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-background text-[#0F172A] dark:text-foreground selection:bg-[#fbbf24] selection:text-black">
       
@@ -706,7 +778,7 @@ function DashboardContent() {
 
         {/* Scrollable Content */}
         <div className="flex-grow p-6 sm:p-10 lg:p-12 overflow-x-hidden">
-          <div className="max-w-5xl mx-auto w-full">
+          <div className="max-w-7xl mx-auto w-full">
             
             {loadingData ? (
               <div className="h-96 flex flex-col items-center justify-center gap-3">
@@ -720,50 +792,82 @@ function DashboardContent() {
                     <div className="flex flex-col gap-12 h-full">
                       
                       {/* Dashboard Stats */}
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
-                          <div className="flex justify-between items-center text-[#475569] dark:text-muted-foreground">
-                            <p className="text-xs font-bold uppercase tracking-wider">Total Orders</p>
-                            <Package className="w-5 h-5" />
+                      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+                        
+                        {/* Total Orders */}
+                        <div className="group bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-none hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                          <div className="absolute -right-6 -top-6 w-24 h-24 bg-slate-500/10 rounded-full blur-[24px] group-hover:bg-slate-500/20 transition-all duration-500"></div>
+                          <div className="flex flex-col gap-3 relative z-10">
+                            <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-500 group-hover:scale-110 transition-transform duration-300">
+                              <Package className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-sans font-black text-2xl text-[#0F172A] dark:text-hero-text leading-none mb-1">{orders.length}</h4>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B] dark:text-muted-foreground">Total Orders</p>
+                            </div>
                           </div>
-                          <h4 className="font-sans font-black text-3xl text-[#0F172A] dark:text-hero-text">{orders.length}</h4>
                         </div>
                         
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
-                          <div className="flex justify-between items-center text-amber-500">
-                            <p className="text-xs font-bold uppercase tracking-wider text-[#475569] dark:text-muted-foreground">Pending Orders</p>
-                            <Clock className="w-5 h-5" />
+                        {/* Pending Orders */}
+                        <div className="group bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-none hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                          <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-[24px] group-hover:bg-amber-500/20 transition-all duration-500"></div>
+                          <div className="flex flex-col gap-3 relative z-10">
+                            <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform duration-300">
+                              <Clock className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-sans font-black text-2xl text-[#0F172A] dark:text-hero-text leading-none mb-1">
+                                {orders.filter(o => ["pending", "processing", "shipped"].includes(o.status)).length}
+                              </h4>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B] dark:text-muted-foreground">Pending Orders</p>
+                            </div>
                           </div>
-                          <h4 className="font-sans font-black text-3xl text-[#0F172A] dark:text-hero-text">
-                            {orders.filter(o => ["pending", "processing", "shipped"].includes(o.status)).length}
-                          </h4>
                         </div>
 
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
-                          <div className="flex justify-between items-center text-emerald-500">
-                            <p className="text-xs font-bold uppercase tracking-wider text-[#475569] dark:text-muted-foreground">Completed Orders</p>
-                            <CheckCircle2 className="w-5 h-5" />
+                        {/* Completed Orders */}
+                        <div className="group bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-none hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                          <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-[24px] group-hover:bg-emerald-500/20 transition-all duration-500"></div>
+                          <div className="flex flex-col gap-3 relative z-10">
+                            <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform duration-300">
+                              <CheckCircle2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-sans font-black text-2xl text-[#0F172A] dark:text-hero-text leading-none mb-1">
+                                {orders.filter(o => o.status === "delivered").length}
+                              </h4>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B] dark:text-muted-foreground">Completed</p>
+                            </div>
                           </div>
-                          <h4 className="font-sans font-black text-3xl text-[#0F172A] dark:text-hero-text">
-                            {orders.filter(o => o.status === "delivered").length}
-                          </h4>
                         </div>
 
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
-                          <div className="flex justify-between items-center text-rose-500">
-                            <p className="text-xs font-bold uppercase tracking-wider text-[#475569] dark:text-muted-foreground">Wishlist</p>
-                            <Heart className="w-5 h-5" />
+                        {/* Wishlist */}
+                        <div className="group bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-none hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                          <div className="absolute -right-6 -top-6 w-24 h-24 bg-rose-500/10 rounded-full blur-[24px] group-hover:bg-rose-500/20 transition-all duration-500"></div>
+                          <div className="flex flex-col gap-3 relative z-10">
+                            <div className="w-10 h-10 rounded-lg bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform duration-300">
+                              <Heart className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-sans font-black text-2xl text-[#0F172A] dark:text-hero-text leading-none mb-1">{wishlistProducts.length}</h4>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B] dark:text-muted-foreground">Wishlist</p>
+                            </div>
                           </div>
-                          <h4 className="font-sans font-black text-3xl text-[#0F172A] dark:text-hero-text">{wishlistProducts.length}</h4>
                         </div>
 
-                        <div className="bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300 space-y-4 flex flex-col justify-between">
-                          <div className="flex justify-between items-center text-blue-500">
-                            <p className="text-xs font-bold uppercase tracking-wider text-[#475569] dark:text-muted-foreground">Saved Addresses</p>
-                            <MapPin className="w-5 h-5" />
+                        {/* Saved Addresses */}
+                        <div className="group bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-none hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                          <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-[24px] group-hover:bg-blue-500/20 transition-all duration-500"></div>
+                          <div className="flex flex-col gap-3 relative z-10">
+                            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform duration-300">
+                              <MapPin className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-sans font-black text-2xl text-[#0F172A] dark:text-hero-text leading-none mb-1">{addresses.length}</h4>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B] dark:text-muted-foreground">Addresses</p>
+                            </div>
                           </div>
-                          <h4 className="font-sans font-black text-3xl text-[#0F172A] dark:text-hero-text">{addresses.length}</h4>
                         </div>
+
                       </div>
 
                       {/* Welcome Card */}
@@ -788,6 +892,89 @@ function DashboardContent() {
                             <Package className="w-4 h-4" />
                           </button>
                         </div>
+                      </div>
+
+                      {/* Charts Section */}
+                      <div className="grid lg:grid-cols-3 gap-6">
+                        
+                        {/* Spending Chart */}
+                        <div className="lg:col-span-2 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none">
+                          <h3 className="font-bold text-[#0F172A] dark:text-hero-text mb-6">Spending Overview</h3>
+                          <div className="h-[300px] w-full">
+                            {spendData.length > 0 && spendData.some(d => d.spend > 0) ? (
+                              <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={spendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                  <defs>
+                                    <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                                    </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEF2F7" className="dark:opacity-10" />
+                                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} dy={10} />
+                                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} tickFormatter={(value) => `৳${value}`} />
+                                  <RechartsTooltip 
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                                    formatter={(value: any) => [`৳${value}`, "Spent"]}
+                                  />
+                                  <Area type="monotone" dataKey="spend" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorSpend)" />
+                                </AreaChart>
+                              </ResponsiveContainer>
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center flex-col gap-3 text-muted-foreground">
+                                <Package className="w-8 h-8 opacity-20" />
+                                <p className="text-sm font-semibold">No spending data available yet.</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status Breakdown Chart */}
+                        <div className="lg:col-span-1 bg-white dark:bg-card border border-[#EEF2F7] dark:border-border/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none">
+                          <h3 className="font-bold text-[#0F172A] dark:text-hero-text mb-6">Order Status</h3>
+                          <div className="h-[300px] w-full relative">
+                            {statusData.length > 0 ? (
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={statusData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={70}
+                                    outerRadius={100}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                    stroke="none"
+                                  >
+                                    {statusData.map((entry, index) => (
+                                      <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                  </Pie>
+                                  <RechartsTooltip 
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                                  />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center flex-col gap-3 text-muted-foreground">
+                                <Package className="w-8 h-8 opacity-20" />
+                                <p className="text-sm font-semibold">No orders found.</p>
+                              </div>
+                            )}
+                            {/* Custom Legend */}
+                            {statusData.length > 0 && (
+                              <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 flex-wrap">
+                                {statusData.map((entry, index) => (
+                                  <div key={`legend-${index}`} className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                                    <span className="text-xs font-bold text-[#475569] dark:text-muted-foreground">{entry.name} ({entry.value})</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                       </div>
                     </div>
                 )}
@@ -865,11 +1052,11 @@ function DashboardContent() {
                           <div className="hidden lg:flex items-center w-full border-b-2 border-border/80 px-2 py-3">
                             <div className="w-12 shrink-0 text-center text-[10px] font-black uppercase text-muted-foreground tracking-wider">No.</div>
                             <div className="flex-1 min-w-0 grid grid-cols-12 gap-4">
-                              <div className="col-span-4 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Product Information</div>
+                              <div className="col-span-3 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Product Information</div>
                               <div className="col-span-2 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Order ID & Date</div>
-                              <div className="col-span-2 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Delivery Details</div>
+                              <div className="col-span-3 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Delivery Details</div>
                               <div className="col-span-1 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Payment</div>
-                              <div className="col-span-1 text-[10px] font-black uppercase text-muted-foreground tracking-wider text-right">Amount</div>
+                              <div className="col-span-1 text-[10px] font-black uppercase text-muted-foreground tracking-wider">Amount</div>
                               <div className="col-span-2 text-[10px] font-black uppercase text-muted-foreground tracking-wider text-right pr-4">Action</div>
                             </div>
                           </div>
@@ -898,8 +1085,8 @@ function DashboardContent() {
 
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 w-full items-center">
                                     
-                                    {/* 1. Product Summary (col-span-4) */}
-                                    <div className="sm:col-span-2 lg:col-span-4 flex items-center gap-3">
+                                    {/* 1. Product Summary */}
+                                    <div className="sm:col-span-2 lg:col-span-3 flex items-center gap-3">
                                       <div className="w-14 h-14 shrink-0 rounded-md overflow-hidden bg-muted border border-border relative">
                                         <img 
                                           src={order.order_items?.[0]?.product?.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=300&auto=format&fit=crop&q=80"} 
@@ -926,7 +1113,7 @@ function DashboardContent() {
                                       </div>
                                     </div>
 
-                                    {/* 2. Order Details (col-span-2) */}
+                                    {/* 2. Order Details */}
                                     <div className="lg:col-span-2 space-y-0.5">
                                       <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Order</p>
                                       <p className="font-bold text-hero-text text-sm uppercase">#{order.id}</p>
@@ -936,14 +1123,14 @@ function DashboardContent() {
                                       </p>
                                     </div>
 
-                                    {/* 3. Delivery Info (col-span-2) */}
-                                    <div className="lg:col-span-2 space-y-0.5">
+                                    {/* 3. Delivery Info */}
+                                    <div className="lg:col-span-3 space-y-0.5 min-w-0">
                                       <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Delivery To</p>
                                       <p className="font-bold text-hero-text text-sm capitalize truncate">{order.shipping_address?.full_name}</p>
                                       <p className="text-[11px] font-medium text-muted-foreground truncate">{order.shipping_address?.address_line_1}</p>
                                     </div>
 
-                                    {/* 4. Payment Info (col-span-1) */}
+                                    {/* 4. Payment Info */}
                                     <div className="lg:col-span-1 space-y-0.5">
                                       <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Payment</p>
                                       <p className="font-bold text-hero-text text-sm uppercase">{order.payment_method || "COD"}</p>
@@ -952,13 +1139,13 @@ function DashboardContent() {
                                       </p>
                                     </div>
 
-                                    {/* 5. Amount (col-span-1) */}
-                                    <div className="lg:col-span-1 flex flex-col justify-center text-left lg:text-right pt-4 sm:pt-0 border-t sm:border-t-0 border-border">
+                                    {/* 5. Amount */}
+                                    <div className="lg:col-span-1 flex flex-col justify-center text-left pt-4 sm:pt-0 border-t sm:border-t-0 border-border">
                                       <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-0.5 lg:hidden">Amount</p>
                                       <span className="text-lg font-black text-hero-text">৳{order.total}</span>
                                     </div>
 
-                                    {/* 6. Action (col-span-2) */}
+                                    {/* 6. Action */}
                                     <div className="lg:col-span-2 flex items-center justify-start lg:justify-end pr-0 lg:pr-4 gap-2">
                                       {orderTab === 'active' && order.status === 'pending' && (
                                         <button
@@ -996,54 +1183,71 @@ function DashboardContent() {
                     </div>
 
                     {wishlistProducts.length === 0 ? (
-                      <div className="text-center py-12 space-y-4">
-                        <span className="text-4xl">❤️</span>
-                        <p className="text-xs text-muted-foreground">Your wishlist is empty.</p>
-                        <Link
-                          href="/products"
-                          className="inline-block px-5 py-2.5 bg-[#fbbf24] hover:bg-[#f59e0b] rounded-md text-xs font-bold text-black shadow-sm"
-                        >
-                          Browse Varieties
-                        </Link>
+                      <div className="text-center py-20 bg-white dark:bg-card border border-border rounded-md shadow-sm space-y-4">
+                        <div className="w-20 h-20 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center mx-auto text-rose-500">
+                          <span className="text-4xl">❤️</span>
+                        </div>
+                        <h3 className="text-xl font-bold text-hero-text">Your Wishlist is Empty</h3>
+                        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                          Keep track of your favorite mango varieties by adding them to your wishlist.
+                        </p>
+                        <div className="pt-4">
+                          <Link
+                            href="/products"
+                            className="inline-flex px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-md shadow-sm transition-all"
+                          >
+                            Explore Mangoes
+                          </Link>
+                        </div>
                       </div>
                     ) : (
-                      <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {wishlistProducts.map((prod) => (
                           <div 
                             key={prod.id}
-                            className="bg-card border border-border rounded-md overflow-hidden flex flex-col justify-between hover:border-emerald-500/15 hover:shadow-md transition-all"
+                            className="group bg-white dark:bg-card border border-border rounded-md overflow-hidden flex flex-col hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-300"
                           >
-                            <div className="relative h-32 w-full shrink-0">
+                            <div className="relative aspect-[4/3] w-full shrink-0 bg-muted overflow-hidden">
                               <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
                                 <img
-                                  src={prod.images?.[0]}
+                                  src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=500&auto=format&fit=crop&q=80"}
                                   alt={prod.name}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1553279768-865429fa0078?w=500&auto=format&fit=crop&q=80" }}
                                 />
                               </Link>
                               <button
                                 onClick={() => handleRemoveWishlist(prod.id)}
-                                className="absolute top-2.5 right-2.5 p-2 bg-black/60 rounded-full text-slate-400 hover:text-red-500 border border-white/5 cursor-pointer z-10"
-                                title="Remove Wishlist"
+                                className="absolute top-3 right-3 p-2.5 bg-white/95 dark:bg-black/80 backdrop-blur-md rounded-md text-slate-400 hover:text-rose-600 shadow-sm transition-all opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0"
+                                title="Remove from Wishlist"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
 
-                            <div className="p-4 space-y-3 grow flex flex-col justify-between">
-                              <Link href={`/products/${prod.slug}`} className="space-y-0.5 block cursor-pointer group-hover:opacity-95">
-                                <h4 className="font-serif-heading font-extrabold text-sm text-hero-text truncate">
+                            <div className="p-5 flex flex-col flex-grow justify-between gap-5">
+                              <Link href={`/products/${prod.slug}`} className="block cursor-pointer">
+                                <h4 className="font-serif-heading font-extrabold text-base text-hero-text line-clamp-1 mb-1.5 group-hover:text-emerald-600 transition-colors">
                                   {prod.name}
                                 </h4>
-                                <p className="text-xs font-black text-[#fbbf24]">৳{prod.sale_price || prod.price}</p>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[15px] font-black text-emerald-600 dark:text-emerald-400">
+                                    ৳{prod.sale_price || prod.price}
+                                  </span>
+                                  {prod.sale_price && prod.sale_price < prod.price && (
+                                    <span className="text-xs font-semibold text-muted-foreground line-through">
+                                      ৳{prod.price}
+                                    </span>
+                                  )}
+                                </div>
                               </Link>
 
                               <button
                                 onClick={() => addToCart(prod, 1, "10kg")}
-                                className="w-full py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-500/20 transition-all cursor-pointer"
+                                className="w-full py-2.5 bg-[#0F172A] hover:bg-emerald-600 text-white dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white rounded-md text-xs font-extrabold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                               >
-                                <ShoppingBag className="w-3.5 h-3.5" />
-                                Add to Cart
+                                <ShoppingBag className="w-4 h-4" />
+                                Move to Cart
                               </button>
                             </div>
                           </div>

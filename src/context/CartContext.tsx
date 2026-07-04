@@ -20,6 +20,7 @@ interface CartContextType {
   addToCart: (product: Product, quantity?: number, weight?: string) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
+  updateWeight: (cartItemId: string, weight: string) => Promise<void>;
   clearCart: () => Promise<void>;
   subtotal: number;
   deliveryCharge: number;
@@ -30,6 +31,9 @@ interface CartContextType {
   total: number;
   deliveryDistrict: string;
   setDeliveryDistrict: (district: string) => void;
+  selectedItemIds: string[];
+  toggleItemSelection: (cartItemId: string) => void;
+  toggleAllSelection: (selected: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -38,6 +42,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient() as any;
   const { profile } = useAuth();
   const [cartItems, setCartItems] = useState<ExtendedCartItem[]>([]);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Coupon state
@@ -57,7 +62,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const stored = localStorage.getItem("mangodb-cart");
         if (stored) {
           try {
-            setCartItems(JSON.parse(stored));
+            const parsed = JSON.parse(stored);
+            setCartItems(parsed);
+            setSelectedItemIds(parsed.map((i: any) => i.id));
           } catch (e) {
             localStorage.removeItem("mangodb-cart");
           }
@@ -88,16 +95,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             };
           });
           setCartItems(formatted);
+          setSelectedItemIds(formatted.map(i => i.id));
           localStorage.setItem("mangodb-cart", JSON.stringify(formatted));
         } else {
           // Fallback if table doesn't exist
           const stored = localStorage.getItem("mangodb-cart");
-          if (stored) setCartItems(JSON.parse(stored));
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            setCartItems(parsed);
+            setSelectedItemIds(parsed.map((i: any) => i.id));
+          }
         }
       } catch (err) {
         // Fallback
         const stored = localStorage.getItem("mangodb-cart");
-        if (stored) setCartItems(JSON.parse(stored));
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setCartItems(parsed);
+          setSelectedItemIds(parsed.map((i: any) => i.id));
+        }
       } finally {
         setLoading(false);
       }
@@ -122,13 +138,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (existingIndex > -1) {
       updatedItems[existingIndex].quantity += quantity;
     } else {
+      const newItemId = `cart-item-${Math.random().toString(36).substr(2, 9)}`;
       updatedItems.push({
-        id: `cart-item-${Math.random().toString(36).substr(2, 9)}`,
+        id: newItemId,
         product_id: product.id,
         quantity,
         selected_weight: weight,
         product,
       });
+      setSelectedItemIds(prev => [...prev, newItemId]);
     }
 
     saveLocalCart(updatedItems);
@@ -225,8 +243,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateWeight = async (cartItemId: string, weight: string) => {
+    const updatedItems = cartItems.map((item) =>
+      item.id === cartItemId ? { ...item, selected_weight: weight } : item
+    );
+    saveLocalCart(updatedItems);
+    toast.success(`Package size changed to ${weight}`);
+  };
+
   const clearCart = async () => {
     saveLocalCart([]);
+    setSelectedItemIds([]);
     setAppliedCoupon(null);
     setDiscountData({ type: 'percentage', value: 0 });
 
@@ -287,12 +314,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     toast.success("Promo code removed");
   };
 
-  // Pricing calculations
-  const subtotal = cartItems.reduce((acc, item) => {
+  const toggleItemSelection = (cartItemId: string) => {
+    setSelectedItemIds(prev => 
+      prev.includes(cartItemId) 
+        ? prev.filter(id => id !== cartItemId)
+        : [...prev, cartItemId]
+    );
+  };
+
+  const toggleAllSelection = (selected: boolean) => {
+    if (selected) {
+      setSelectedItemIds(cartItems.map(item => item.id));
+    } else {
+      setSelectedItemIds([]);
+    }
+  };
+
+  // Pricing calculations based ONLY on selected items
+  const activeItems = cartItems.filter(item => selectedItemIds.includes(item.id));
+
+  const subtotal = activeItems.reduce((acc, item) => {
     const price = item.product.sale_price || item.product.price;
     // Scale price by weight option if necessary
     let multiplier = 1;
-    if (item.selected_weight === "5kg") multiplier = 0.55;
+    if (item.selected_weight === "20kg") multiplier = 1.95;
+    else if (item.selected_weight === "5kg") multiplier = 0.55;
     else if (item.selected_weight === "2kg") multiplier = 0.25;
     else if (item.selected_weight === "1kg") multiplier = 0.13;
     
@@ -301,7 +347,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Delivery pricing: Dhaka is 120, Outside Dhaka is 200
   const isInsideDhaka = deliveryDistrict.toLowerCase().includes("dhaka");
-  const deliveryCharge = cartItems.length > 0 ? (isInsideDhaka ? 120 : 200) : 0;
+  const deliveryCharge = activeItems.length > 0 ? (isInsideDhaka ? 120 : 200) : 0;
 
   let discount = 0;
   if (discountData.type === 'percentage') {
@@ -323,6 +369,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addToCart,
         removeFromCart,
         updateQuantity,
+        updateWeight,
         clearCart,
         subtotal,
         deliveryCharge,
@@ -333,6 +380,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         total,
         deliveryDistrict,
         setDeliveryDistrict,
+        selectedItemIds,
+        toggleItemSelection,
+        toggleAllSelection,
       }}
     >
       {children}

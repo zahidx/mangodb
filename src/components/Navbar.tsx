@@ -136,16 +136,6 @@ export default function Navbar() {
               Varieties
             </Link>
 
-            <Link
-              href="/orders"
-              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
-                pathname === "/orders" 
-                  ? "text-[#1a2e24] after:w-full" 
-                  : "text-[#3b574a] dark:text-muted after:w-0"
-              }`}
-            >
-              Orders
-            </Link>
 
             <Link
               href="/track"
@@ -181,7 +171,7 @@ export default function Navbar() {
                     router.push("/dashboard?tab=notifications");
                   }
                 }}
-                className="relative p-2.5 rounded-xl bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
+                className="relative p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
                 aria-label="View Notifications"
               >
                 <Bell className="w-4 h-4" />
@@ -196,12 +186,12 @@ export default function Navbar() {
             {/* Shopping Cart Indicator */}
             <Link
               href="/cart"
-              className="relative p-2.5 rounded-xl bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm"
+              className="relative p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm"
               aria-label="View Cart"
             >
               <ShoppingCart className="w-4 h-4" />
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-[10px] font-black text-black ring-2 ring-background animate-pulse-slow">
+                <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-extrabold text-white ring-2 ring-background shadow-md">
                   {cartCount}
                 </span>
               )}
@@ -210,7 +200,7 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
+              className="p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             >
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -305,7 +295,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href="/signup"
-                  className="hidden sm:inline-block text-sm font-bold text-black bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] px-6 py-3 rounded-xl hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 whitespace-nowrap"
+                  className="hidden sm:inline-block text-sm font-bold text-black bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] px-6 py-3 rounded-md hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 whitespace-nowrap"
                 >
                   Sign up
                 </Link>
@@ -315,7 +305,7 @@ export default function Navbar() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2.5 rounded-xl bg-muted-bg border border-border text-foreground hover:border-[#fbbf24]/30 transition-all cursor-pointer shadow-sm"
+              className="lg:hidden p-2.5 rounded-md bg-muted-bg border border-border text-foreground hover:border-[#fbbf24]/30 transition-all cursor-pointer shadow-sm"
               aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -344,13 +334,6 @@ export default function Navbar() {
               Varieties
             </Link>
 
-            <Link
-              href="/orders"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2"
-            >
-              Orders
-            </Link>
 
             <Link
               href="/track"
