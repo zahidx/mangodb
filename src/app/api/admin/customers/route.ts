@@ -22,13 +22,31 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Sanitize to ensure is_blocked defaults to false if missing from table schema
-    const sanitizedData = (data || []).map((p: any) => ({
-      ...p,
-      is_blocked: p.is_blocked ?? false
-    }));
+    // Enrich with order stats (count + total spent)
+    const enrichedData = await Promise.all(
+      (data || []).map(async (p: any) => {
+        let orderCount = 0;
+        let totalSpent = 0;
+        try {
+          const { data: orders } = await supabase
+            .from("orders")
+            .select("total")
+            .eq("user_id", p.id);
+          if (orders) {
+            orderCount = orders.length;
+            totalSpent = orders.reduce((sum: number, o: any) => sum + (o.total || 0), 0);
+          }
+        } catch (_) {}
+        return {
+          ...p,
+          is_blocked: p.is_blocked ?? false,
+          order_count: orderCount,
+          total_spent: totalSpent,
+        };
+      })
+    );
 
-    return NextResponse.json({ data: sanitizedData });
+    return NextResponse.json({ data: enrichedData });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

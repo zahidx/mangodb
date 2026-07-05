@@ -12,6 +12,7 @@ import {
     Camera,
     CheckCircle2,
     Clock,
+    CornerDownLeft,
     CreditCard,
     Heart,
     LayoutDashboard,
@@ -45,6 +46,19 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "wishlist" | "addresses" | "account" | "payment" | "notifications" | "password" | "security">(initialTab);
   const [orderTab, setOrderTab] = useState<'active' | 'past'>('active');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const notifDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close notification dropdown on outside click
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(e.target as Node)) {
+        setShowNotifDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Sync tab with URL
   useEffect(() => {
@@ -127,6 +141,40 @@ function DashboardContent() {
     smsNotif: true
   });
   const [savingPrefs, setSavingPrefs] = useState(false);
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+  const [returnOrderId, setReturnOrderId] = useState<string | null>(null);
+  const [returnReason, setReturnReason] = useState("");
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+
+  const handleCancelConfirm = async () => {
+    if (!profile || !cancelOrderId) return;
+    const orderId = cancelOrderId;
+    setCancelOrderId(null);
+
+    try {
+      if (!profile.id.startsWith("demo-")) {
+        await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+        await supabase.from("notifications").insert({
+          user_id: profile.id,
+          title: "Order Cancelled",
+          message: `Your order #${orderId} has been cancelled successfully.`,
+          type: "order_cancelled"
+        });
+      } else {
+        const storedOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
+        const updatedOrders = storedOrders.map((o: any) => o.id === orderId ? { ...o, status: "cancelled" } : o);
+        localStorage.setItem("mangodb-orders", JSON.stringify(updatedOrders));
+        const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+        const newNotif = { id: `notif-${Date.now()}`, user_id: profile.id, title: "Order Cancelled", message: `Your order #${orderId} has been cancelled successfully.`, type: "order_cancelled", is_read: false, created_at: new Date().toISOString() };
+        localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify([newNotif, ...storedNotifs]));
+        setNotifications(prev => [newNotif, ...prev]);
+      }
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "cancelled" } : o));
+      toast.success("Order cancelled");
+    } catch (err) {
+      toast.error("Failed to cancel order");
+    }
+  };
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -250,48 +298,6 @@ function DashboardContent() {
       console.error("Error loading dashboard data:", err);
     } finally {
       setLoadingData(false);
-    }
-  };
-
-  const handleCancelOrder = async (orderId: string) => {
-    if (!profile) return;
-    if (!confirm("Are you sure you want to cancel this order?")) return;
-
-    try {
-      if (!profile.id.startsWith("demo-")) {
-        await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
-        
-        // Add Notification
-        await supabase.from("notifications").insert({
-          user_id: profile.id,
-          title: "Order Cancelled",
-          message: `Your order #${orderId} has been cancelled successfully.`,
-          type: "order_cancelled"
-        });
-
-      } else {
-        const storedOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
-        const updatedOrders = storedOrders.map((o: any) => o.id === orderId ? { ...o, status: "cancelled" } : o);
-        localStorage.setItem("mangodb-orders", JSON.stringify(updatedOrders));
-
-        const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
-        const newNotif = {
-          id: `notif-${Date.now()}`,
-          user_id: profile.id,
-          title: "Order Cancelled",
-          message: `Your order #${orderId} has been cancelled successfully.`,
-          type: "order_cancelled",
-          is_read: false,
-          created_at: new Date().toISOString()
-        };
-        localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify([newNotif, ...storedNotifs]));
-        setNotifications(prev => [newNotif, ...prev]);
-      }
-      
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "cancelled" } : o));
-      toast.success("Order cancelled");
-    } catch (err) {
-      toast.error("Failed to cancel order");
     }
   };
 
@@ -597,21 +603,11 @@ function DashboardContent() {
     toast.error("Account deletion requires contacting support.");
   };
 
-  if (loading || !profile) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-background flex items-center justify-center flex-col gap-3">
-        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-        <p className="text-sm text-[#475569] dark:text-muted-foreground font-bold">Verifying credentials...</p>
-      </div>
-    );
-  }
-
-  // Prepare Spend Data for Chart
+  // Prepare Spend Data for Chart (must be before early return to maintain hooks order)
   const spendData = React.useMemo(() => {
     if (!orders || orders.length === 0) return [];
     const monthlySpend: Record<string, number> = {};
     
-    // Initialize last 6 months to 0
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
@@ -653,12 +649,20 @@ function DashboardContent() {
     });
     
     return [
-      { name: 'Active', value: pending, color: '#F59E0B' }, // amber-500
-      { name: 'Delivered', value: delivered, color: '#10B981' }, // emerald-500
-      { name: 'Cancelled', value: cancelled, color: '#F43F5E' }, // rose-500
+      { name: 'Active', value: pending, color: '#F59E0B' },
+      { name: 'Delivered', value: delivered, color: '#10B981' },
+      { name: 'Cancelled', value: cancelled, color: '#F43F5E' },
     ].filter(item => item.value > 0);
   }, [orders]);
 
+  if (loading || !profile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-background flex items-center justify-center flex-col gap-3">
+        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+        <p className="text-sm text-[#475569] dark:text-muted-foreground font-bold">Verifying credentials...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-background text-[#0F172A] dark:text-foreground selection:bg-[#fbbf24] selection:text-black">
@@ -768,10 +772,81 @@ function DashboardContent() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <button className="relative text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
-            </button>
+            {/* Notification Bell */}
+            <div className="relative" ref={notifDropdownRef}>
+              <button
+                onClick={() => setShowNotifDropdown(prev => !prev)}
+                className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                title="Notifications"
+              >
+                <Bell className="w-5 h-5" />
+                {notifications.filter(n => !n.is_read).length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 ring-2 ring-white shadow-sm">
+                    {notifications.filter(n => !n.is_read).length > 9 ? '9+' : notifications.filter(n => !n.is_read).length}
+                  </span>
+                )}
+              </button>
+
+              {/* Dropdown */}
+              {showNotifDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                    <button
+                      onClick={() => { setShowNotifDropdown(false); setActiveTab('notifications' as any); router.push('/dashboard?tab=notifications', { scroll: false }); }}
+                      className="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+                    >
+                      View all
+                    </button>
+                  </div>
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-8 text-center">
+                        <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                        <p className="text-xs text-gray-400">No notifications yet</p>
+                      </div>
+                    ) : (
+                      notifications.slice(0, 5).map((notif) => (
+                        <button
+                          key={notif.id}
+                          onClick={() => { setShowNotifDropdown(false); setActiveTab('notifications' as any); router.push('/dashboard?tab=notifications', { scroll: false }); }}
+                          className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 ${
+                            !notif.is_read ? 'bg-emerald-50/40' : ''
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${
+                            notif.type === 'order_placed' ? 'bg-blue-50 text-blue-600' :
+                            notif.type === 'order_cancelled' ? 'bg-red-50 text-red-600' :
+                            'bg-emerald-50 text-emerald-600'
+                          }`}>
+                            <Bell className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={`text-xs ${notif.is_read ? 'text-gray-500' : 'text-gray-900 font-semibold'}`}>{notif.title}</p>
+                            <p className="text-[11px] text-gray-400 truncate mt-0.5">{notif.message}</p>
+                            <p className="text-[10px] text-gray-300 mt-0.5">
+                              {new Date(notif.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </p>
+                          </div>
+                          {!notif.is_read && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  {notifications.length > 5 && (
+                    <div className="px-4 py-2.5 border-t border-gray-100 text-center">
+                      <button
+                        onClick={() => { setShowNotifDropdown(false); setActiveTab('notifications' as any); router.push('/dashboard?tab=notifications', { scroll: false }); }}
+                        className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
+                      >
+                        View all {notifications.length} notifications
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <Link href="/" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
               Store &rarr;
             </Link>
@@ -977,44 +1052,91 @@ function DashboardContent() {
                   const activeOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
                   const pastOrders = orders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
                   const displayOrders = orderTab === 'active' ? activeOrders : pastOrders;
-                  
+                  const allStatuses = ["pending", "processing", "confirmed", "shipped", "in_transit", "out_for_delivery", "delivered", "cancelled"];
+
+                  const statusBadge = (status: string) => {
+                    const styles: Record<string, string> = {
+                      pending: "bg-amber-50 text-amber-700 border-amber-200",
+                      processing: "bg-blue-50 text-blue-700 border-blue-200",
+                      confirmed: "bg-blue-50 text-blue-700 border-blue-200",
+                      shipped: "bg-purple-50 text-purple-700 border-purple-200",
+                      in_transit: "bg-purple-50 text-purple-700 border-purple-200",
+                      out_for_delivery: "bg-indigo-50 text-indigo-700 border-indigo-200",
+                      delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                      cancelled: "bg-red-50 text-red-600 border-red-200",
+                    };
+                    const label = status.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+                    return { className: styles[status] || "bg-gray-50 text-gray-700 border-gray-200", label };
+                  };
+
+                  const StatusDot = ({ status }: { status: string }) => {
+                    const colors: Record<string, string> = {
+                      pending: "bg-amber-400",
+                      processing: "bg-blue-400",
+                      confirmed: "bg-blue-400",
+                      shipped: "bg-purple-400",
+                      in_transit: "bg-purple-400",
+                      out_for_delivery: "bg-indigo-400",
+                      delivered: "bg-emerald-400",
+                      cancelled: "bg-red-400",
+                    };
+                    return <span className={`w-1.5 h-1.5 rounded-full ${colors[status] || 'bg-gray-400'} inline-block`} />;
+                  };
+
                   return (
                     <div className="space-y-6">
-                      <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                          <h2 className="text-lg font-bold text-gray-900">Your Orders</h2>
-                          <p className="text-sm text-gray-500 mt-0.5">Track and manage all your mango orders</p>
+                          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Orders</h2>
+                          <p className="text-sm text-gray-500 mt-0.5">Track, manage, and review your mango deliveries.</p>
                         </div>
+                        {orders.length > 0 && (
+                          <div className="flex items-center gap-3 text-sm">
+                            <div className="flex items-center gap-1.5 text-gray-500">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                              <span>{orders.filter(o => o.status === 'delivered').length} delivered</span>
+                            </div>
+                            <span className="text-gray-300">|</span>
+                            <div className="flex items-center gap-1.5 text-gray-500">
+                              <span className="w-2 h-2 rounded-full bg-amber-400" />
+                              <span>{activeOrders.length} active</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Tabs Navigation */}
-                      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg w-fit">
-                        <button 
+                      {/* Segmented Tabs */}
+                      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+                        <button
                           onClick={() => setOrderTab('active')}
-                          className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
-                            orderTab === 'active' 
-                              ? 'bg-white text-gray-900 shadow-sm' 
+                          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+                            orderTab === 'active'
+                              ? 'bg-white text-gray-900 shadow-sm'
                               : 'text-gray-500 hover:text-gray-700'
                           }`}
                         >
+                          <Package className="w-4 h-4" />
                           Active
-                          <span className={`ml-1.5 px-1.5 py-0.5 rounded text-[10px] ${
+                          <span className={`ml-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
                             orderTab === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'
                           }`}>
                             {activeOrders.length}
                           </span>
                         </button>
-                        
-                        <button 
+                        <button
                           onClick={() => setOrderTab('past')}
-                          className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
-                            orderTab === 'past' 
-                              ? 'bg-white text-gray-900 shadow-sm' 
+                          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+                            orderTab === 'past'
+                              ? 'bg-white text-gray-900 shadow-sm'
                               : 'text-gray-500 hover:text-gray-700'
                           }`}
                         >
-                          Past
-                          <span className={`ml-1.5 px-1.5 py-0.5 rounded text-[10px] ${
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                          Completed
+                          <span className={`ml-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
                             orderTab === 'past' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'
                           }`}>
                             {pastOrders.length}
@@ -1022,144 +1144,140 @@ function DashboardContent() {
                         </button>
                       </div>
 
+                      {/* Empty State */}
                       {displayOrders.length === 0 ? (
-                        <div className="text-center py-20 bg-transparent space-y-4">
-                          <div className="w-20 h-20 rounded-md bg-muted flex items-center justify-center mx-auto text-muted-foreground">
-                            <Package className="w-10 h-10" />
+                        <div className="text-center py-20 bg-white border border-gray-200 rounded-2xl">
+                          <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
+                            <Package className="w-8 h-8 text-gray-300" />
                           </div>
-                          <h3 className="text-xl font-bold text-hero-text">No {orderTab === 'active' ? 'Active' : 'Past'} Orders Found</h3>
-                          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                            {orderTab === 'active' 
-                              ? "You don't have any ongoing deliveries right now." 
+                          <h3 className="text-lg font-semibold text-gray-900">No {orderTab === 'active' ? 'Active' : 'Past'} Orders</h3>
+                          <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
+                            {orderTab === 'active'
+                              ? "You don't have any ongoing deliveries right now."
                               : "You haven't completed any orders yet."}
                           </p>
                           {orderTab === 'active' && (
-                            <div className="pt-6">
-                              <Link href="/products" className="inline-flex items-center justify-center px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-md transition-all shadow-md hover:shadow-lg">
-                                Start Shopping
-                              </Link>
-                            </div>
+                            <Link href="/products" className="inline-flex items-center gap-2 mt-6 px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold text-sm rounded-xl transition-all shadow-sm">
+                              Browse Mangoes
+                              <ArrowRight className="w-4 h-4" />
+                            </Link>
                           )}
                         </div>
                       ) : (
-                        <div className="w-full">
-                          {/* Table Header (Desktop Only) */}
-                          <div className="hidden lg:flex items-center w-full bg-gray-50 rounded-lg px-4 py-2.5 mb-2">
-                            <div className="w-10 shrink-0 text-center text-[10px] font-semibold uppercase text-gray-400 tracking-wider">#</div>
-                            <div className="flex-1 min-w-0 grid grid-cols-12 gap-4">
-                              <div className="col-span-3 text-[10px] font-semibold uppercase text-gray-400 tracking-wider">Product</div>
-                              <div className="col-span-2 text-[10px] font-semibold uppercase text-gray-400 tracking-wider">Order ID</div>
-                              <div className="col-span-3 text-[10px] font-semibold uppercase text-gray-400 tracking-wider">Delivery</div>
-                              <div className="col-span-1 text-[10px] font-semibold uppercase text-gray-400 tracking-wider">Payment</div>
-                              <div className="col-span-1 text-[10px] font-semibold uppercase text-gray-400 tracking-wider">Amount</div>
-                              <div className="col-span-2 text-[10px] font-semibold uppercase text-gray-400 tracking-wider text-right pr-2">Action</div>
-                            </div>
-                          </div>
-
-                          {/* Table Body */}
-                          <div className="flex flex-col gap-2">
-                            {displayOrders.map((order, index) => (
-                              <div 
-                                key={order.id} 
-                                className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 hover:shadow-sm transition-all"
-                              >
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-center">
-                                  
-                                  {/* Numbering */}
-                                  <div className="hidden lg:flex w-10 shrink-0 justify-center">
-                                    <span className="text-sm font-bold text-gray-300 font-mono">
-                                      {String(index + 1).padStart(2, '0')}
-                                    </span>
+                        /* Orders List */
+                        <div className="space-y-3">
+                          {displayOrders.map((order, index) => {
+                            const badge = statusBadge(order.status);
+                            return (
+                              <div key={order.id} className="bg-white border border-gray-200 rounded-xl p-5 hover:border-gray-300 hover:shadow-md transition-all duration-200">
+                                
+                                {/* Mobile: Order Header */}
+                                <div className="flex items-center justify-between mb-3 lg:hidden">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-gray-400 font-mono">#{order.id}</span>
+                                    <StatusDot status={order.status} />
                                   </div>
+                                  <span className="text-lg font-bold text-gray-900">৳{order.total}</span>
+                                </div>
 
-                                  {/* 1. Product Summary */}
-                                  <div className="sm:col-span-2 lg:col-span-3 flex items-center gap-3">
-                                    <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
-                                      <img 
-                                        src={order.order_items?.[0]?.product?.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=300&auto=format&fit=crop&q=80"} 
-                                        alt="Order Item" 
+                                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                                  
+                                  {/* Product Info */}
+                                  <div className="flex items-center gap-3 min-w-0 lg:w-[280px] shrink-0">
+                                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0 shadow-sm">
+                                      <img
+                                        src={order.order_items?.[0]?.product?.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=300&auto=format&fit=crop&q=80"}
+                                        alt=""
                                         className="w-full h-full object-cover"
                                       />
                                     </div>
-                                    <div className="min-w-0 flex-1">
+                                    <div className="min-w-0">
                                       <h3 className="font-semibold text-gray-900 text-sm leading-tight truncate">
-                                        {order.order_items?.[0]?.product?.name || "Premium Mango Crate"}
+                                        {order.order_items?.[0]?.product?.name || "Premium Mango"}
                                       </h3>
                                       <p className="text-xs text-gray-400 truncate mt-0.5">
-                                        {order.order_items?.map((item: any) => `${item.quantity}x ${item.product?.name || ""}`).join(", ")}
+                                        {order.order_items?.map((item: any) => `${item.quantity}× ${item.product?.name || ""}`).join(", ")}
                                       </p>
-                                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                        order.status === "delivered" ? "bg-emerald-50 text-emerald-700" :
-                                        order.status === "cancelled" ? "bg-red-50 text-red-600" :
-                                        "bg-amber-50 text-amber-700"
-                                      }`}>
-                                        {order.status?.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Pending"}
+                                      <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${badge.className}`}>
+                                        <StatusDot status={order.status} />
+                                        {badge.label}
                                       </span>
                                     </div>
                                   </div>
 
-                                  {/* 2. Order Details */}
-                                  <div className="lg:col-span-2">
-                                    <p className="font-semibold text-gray-900 text-sm font-mono">#{order.id}</p>
-                                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                                      <Calendar className="w-3 h-3" />
-                                      {new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                    </p>
+                                  {/* Order Meta - Desktop */}
+                                  <div className="hidden lg:flex flex-1 items-center gap-4 min-w-0">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Order ID</p>
+                                      <p className="text-sm font-semibold text-gray-900 font-mono">#{order.id}</p>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Date</p>
+                                      <p className="text-sm font-semibold text-gray-900 flex items-center gap-1">
+                                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                        {new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                      </p>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Payment</p>
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-sm font-semibold text-gray-900 uppercase">{order.payment_method || "COD"}</span>
+                                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                                          order.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                                        }`}>
+                                          {order.payment_status === 'paid' ? 'Paid' : 'Pending'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="min-w-0 shrink-0 text-right">
+                                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total</p>
+                                      <p className="text-lg font-bold text-gray-900">৳{order.total}</p>
+                                    </div>
                                   </div>
 
-                                  {/* 3. Delivery Info */}
-                                  <div className="lg:col-span-3 min-w-0">
-                                    <p className="font-semibold text-gray-900 text-sm capitalize truncate">{order.shipping_address?.full_name}</p>
-                                    <p className="text-xs text-gray-400 truncate">{order.shipping_address?.address_line_1}</p>
-                                  </div>
-
-                                  {/* 4. Payment */}
-                                  <div className="lg:col-span-1">
-                                    <p className="font-semibold text-gray-900 text-sm uppercase">{order.payment_method || "COD"}</p>
-                                    <p className={`text-xs font-medium ${order.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                      {order.payment_status === 'paid' ? 'Paid' : 'Pending'}
-                                    </p>
-                                  </div>
-
-                                  {/* 5. Amount */}
-                                  <div className="lg:col-span-1">
-                                    <span className="text-lg font-bold text-gray-900">৳{order.total}</span>
-                                  </div>
-
-                                  {/* 6. Action */}
-                                  <div className="lg:col-span-2 flex items-center justify-end gap-2">
+                                  {/* Actions */}
+                                  <div className="flex items-center gap-2 lg:pl-4 lg:border-l lg:border-gray-100 shrink-0">
                                     {orderTab === 'active' && order.status === 'pending' && (
                                       <button
-                                        onClick={() => handleCancelOrder(order.id)}
-                                        className="px-3 py-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-semibold rounded-lg transition-all text-xs"
+                                        onClick={() => setCancelOrderId(order.id)}
+                                        className="px-3 py-2 bg-white border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50 font-medium rounded-lg transition-all text-xs"
                                       >
                                         Cancel
                                       </button>
                                     )}
-                                    <Link 
+                                    <Link
                                       href={`/track?id=${order.id}`}
-                                      className="px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-all text-xs flex items-center gap-1.5"
+                                      className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-all text-xs flex items-center gap-1.5 shadow-sm"
                                     >
                                       {orderTab === 'past' ? 'Details' : 'Track'}
-                                      <ArrowRight className="w-3 h-3" />
+                                      <ArrowRight className="w-3.5 h-3.5" />
                                     </Link>
                                   </div>
 
                                 </div>
-                              <div className="lg:hidden mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-                                <span className="text-lg font-bold text-gray-900">৳{order.total}</span>
-                                <div className="flex gap-2">
-                                  {orderTab === 'active' && order.status === 'pending' && (
-                                    <button onClick={() => handleCancelOrder(order.id)} className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-semibold rounded-lg text-xs">Cancel</button>
-                                  )}
-                                  <Link href={`/track?id=${order.id}`} className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg text-xs flex items-center gap-1">
-                                    {orderTab === 'past' ? 'Details' : 'Track'} <ArrowRight className="w-3 h-3" />
-                                  </Link>
+
+                                {/* Mobile: Meta Row */}
+                                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between lg:hidden">
+                                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                                    <span>{order.payment_method || "COD"} · {order.payment_status === 'paid' ? 'Paid' : 'Pending'}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {orderTab === 'active' && order.status === 'pending' && (
+                                      <button onClick={() => setCancelOrderId(order.id)} className="px-2.5 py-1.5 border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 rounded-lg text-xs font-medium">Cancel</button>
+                                    )}
+                                    {orderTab === 'past' && order.status === 'delivered' && (
+                                      <button onClick={() => setReturnOrderId(order.id)} className="px-2.5 py-1.5 border border-gray-200 text-gray-500 hover:text-indigo-600 hover:border-indigo-200 rounded-lg text-xs font-medium">Return</button>
+                                    )}
+                                    <Link href={`/track?id=${order.id}`} className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg text-xs flex items-center gap-1">
+                                      {orderTab === 'past' ? 'Details' : 'Track'} <ArrowRight className="w-3 h-3" />
+                                    </Link>
+                                  </div>
                                 </div>
+
                               </div>
-                              </div>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -1842,185 +1960,108 @@ function DashboardContent() {
 
                 {/* 6. PREFERENCES / NOTIFICATIONS TAB */}
                 {activeTab === "notifications" && (
-                  <div className="space-y-12 max-w-4xl">
+                  <div className="space-y-6 max-w-4xl">
                     
-                    {/* Notifications Section */}
-                    <div className="flex flex-col gap-6">
-                      <div className="border-b border-border pb-4 flex justify-between items-end">
-                        <div>
-                          <h2 className="font-serif-heading text-2xl font-bold text-hero-text flex items-center gap-2">
-                            <Bell className="w-6 h-6 text-emerald-600" />
-                            Recent Notifications
-                          </h2>
-                          <p className="text-sm text-muted-foreground mt-1 mb-2.5">Stay updated on your orders and account activity.</p>
-                        </div>
-                        {notifications.length > 0 && (
-                          <button
-                            onClick={async () => {
-                              if (!profile) return;
-                              if (!profile.id.startsWith("demo-")) {
-                                await supabase.from("notifications").update({ is_read: true }).eq("user_id", profile.id);
-                              }
-                              setNotifications(notifications.map(n => ({ ...n, is_read: true })));
-                              localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(notifications.map(n => ({ ...n, is_read: true }))));
-                            }}
-                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-md transition-colors"
-                          >
-                            Mark all as read
-                          </button>
-                        )}
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900 tracking-tight">Notifications</h2>
+                        <p className="text-sm text-gray-500 mt-0.5">Stay updated on your orders and account activity.</p>
                       </div>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={async () => {
+                            if (!profile) return;
+                            if (!profile.id.startsWith("demo-")) {
+                              await supabase.from("notifications").update({ is_read: true }).eq("user_id", profile.id);
+                            }
+                            setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+                            localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(notifications.map(n => ({ ...n, is_read: true }))));
+                          }}
+                          className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-all"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Stats bar */}
+                    {notifications.length > 0 && (
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1.5 text-gray-500">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                          <span>{notifications.length} total</span>
+                        </div>
+                        <span className="text-gray-200">|</span>
+                        <div className="flex items-center gap-1.5 text-gray-500">
+                          <span className="w-2 h-2 rounded-full bg-amber-400" />
+                          <span>{notifications.filter(n => !n.is_read).length} unread</span>
+                        </div>
+                      </div>
+                    )}
                       
-                      <div className="flex flex-col gap-3">
+                      {/* Notifications List */}
+                      <div className="space-y-2">
                         {notifications.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-card border-2 border-border border-dashed rounded-md text-center">
-                            <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-muted-bg flex items-center justify-center mb-4">
-                              <Bell className="w-8 h-8 text-slate-300 dark:text-muted-foreground" />
+                          <div className="text-center py-20 bg-white border border-gray-200 rounded-2xl">
+                            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
+                              <Bell className="w-8 h-8 text-gray-300" />
                             </div>
-                            <h3 className="text-lg font-bold text-hero-text mb-2">No notifications yet</h3>
-                            <p className="text-sm text-muted-foreground max-w-sm">
-                              When you have updates about your orders, deliveries, or account activity, they will appear right here.
+                            <h3 className="text-lg font-semibold text-gray-900">All caught up!</h3>
+                            <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
+                              When you have updates about your orders or account, they will appear here.
                             </p>
                           </div>
                         ) : (
-                          notifications.map((notif) => (
-                            <div key={notif.id} className={`p-5 rounded-md border flex gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${notif.is_read ? 'bg-white dark:bg-card border-border shadow-sm' : 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.05)]'}`}>
-                              <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center ${
-                                notif.type === 'order_placed' ? 'bg-blue-100 text-blue-600' :
-                                notif.type === 'order_cancelled' ? 'bg-rose-100 text-rose-600' :
-                                'bg-emerald-100 text-emerald-600'
-                              }`}>
-                                <Bell className="w-5 h-5" />
-                              </div>
-                              <div className="space-y-1 flex-grow">
-                                <div className="flex justify-between items-start gap-4">
-                                  <h4 className="text-sm font-bold text-hero-text">{notif.title}</h4>
-                                  <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider whitespace-nowrap bg-muted-bg px-2 py-1 rounded-md">
-                                    {new Date(notif.created_at).toLocaleDateString()}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{notif.message}</p>
-                              </div>
-                              {!notif.is_read && (
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 mt-2 shrink-0 animate-pulse" />
-                              )}
+                          <>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Recent Activity</span>
+                              <div className="h-px flex-1 bg-gray-100" />
                             </div>
-                          ))
+                            {notifications.map((notif) => {
+                              const typeStyles: Record<string, string> = {
+                                order_placed: "bg-blue-50 text-blue-600 border-blue-200",
+                                order_cancelled: "bg-red-50 text-red-600 border-red-200",
+                                order_shipped: "bg-purple-50 text-purple-600 border-purple-200",
+                                default: "bg-emerald-50 text-emerald-600 border-emerald-200",
+                              };
+                              const style = typeStyles[notif.type] || typeStyles.default;
+                              return (
+                                <div key={notif.id} className={`bg-white rounded-xl border p-4 flex gap-4 transition-all hover:shadow-sm ${notif.is_read ? 'border-gray-200' : 'border-emerald-200 bg-emerald-50/20 shadow-sm'}`}>
+                                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${style}`}>
+                                    {notif.type === 'order_placed' ? (
+                                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    ) : notif.type === 'order_cancelled' ? (
+                                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    ) : (
+                                      <Bell className="w-5 h-5" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <h4 className={`text-sm ${notif.is_read ? 'font-medium text-gray-900' : 'font-semibold text-gray-900'}`}>{notif.title}</h4>
+                                        <p className="text-sm text-gray-500 mt-0.5 leading-relaxed">{notif.message}</p>
+                                      </div>
+                                      <span className="text-[10px] text-gray-400 whitespace-nowrap bg-gray-50 px-2 py-1 rounded-md font-medium shrink-0">
+                                        {new Date(notif.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {!notif.is_read && (
+                                    <div className="flex flex-col items-center gap-1 shrink-0 justify-start pt-1">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                      <span className="text-[8px] text-emerald-500 font-semibold uppercase tracking-wider">New</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </>
                         )}
                       </div>
                     </div>
 
-                    {/* Preferences Section */}
-                    <div className="space-y-6 pt-6 border-t border-border">
-                      <div className="border-b border-border pb-4">
-                        <h2 className="font-serif-heading text-2xl font-bold text-hero-text flex items-center gap-2">
-                          <Settings className="w-6 h-6 text-emerald-600" />
-                          Display & Notification Settings
-                        </h2>
-                        <p className="text-sm text-muted-foreground mt-1 mb-2.5">Customize how MangoDB looks and communicates with you.</p>
-                      </div>
-
-                      <form onSubmit={handleUpdatePreferences} className="flex flex-col gap-6 font-sans">
-                        
-                        {/* Regional Settings */}
-                        <div className="bg-white dark:bg-card border border-border rounded-md overflow-hidden shadow-sm">
-                          <div className="p-4 bg-muted-bg/50 border-b border-border">
-                            <h3 className="text-sm font-bold text-hero-text">Regional Preferences</h3>
-                          </div>
-                          <div className="p-6 grid sm:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                              <label className="text-xs font-black uppercase text-muted-foreground tracking-wider block">Language</label>
-                              <div className="relative">
-                                <select
-                                  value={preferences.language}
-                                  onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))}
-                                  className="w-full bg-white dark:bg-card border border-border rounded-md px-4 py-3 text-sm font-bold text-hero-text focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer transition-colors"
-                                >
-                                  <option value="en">English (US)</option>
-                                  <option value="bn">Bengali (বাংলা)</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-xs font-black uppercase text-muted-foreground tracking-wider block">Currency</label>
-                              <div className="relative">
-                                <select
-                                  value={preferences.currency}
-                                  onChange={(e) => setPreferences(prev => ({ ...prev, currency: e.target.value }))}
-                                  className="w-full bg-white dark:bg-card border border-border rounded-md px-4 py-3 text-sm font-bold text-hero-text focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer transition-colors"
-                                >
-                                  <option value="BDT">BDT (৳)</option>
-                                  <option value="USD">USD ($)</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Visual & Comm Toggles */}
-                        <div className="bg-white dark:bg-card border border-border rounded-md overflow-hidden shadow-sm">
-                          <div className="p-4 bg-muted-bg/50 border-b border-border">
-                            <h3 className="text-sm font-bold text-hero-text">Visuals & Communication</h3>
-                          </div>
-                          
-                          <div className="divide-y divide-border">
-                            {/* Dark Mode Toggle */}
-                            <label className="flex items-center justify-between p-6 cursor-pointer hover:bg-muted-bg/30 transition-colors">
-                              <div className="space-y-1">
-                                <p className="text-sm font-bold text-hero-text">Dark Mode Interface</p>
-                                <p className="text-xs text-muted-foreground">Switch the platform theme to a darker, low-light aesthetic.</p>
-                              </div>
-                              <div className={`w-12 h-7 rounded-full transition-colors relative shrink-0 ${preferences.darkMode ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                <div className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${preferences.darkMode ? "translate-x-5" : ""}`} />
-                              </div>
-                              <input type="checkbox" className="hidden" checked={preferences.darkMode} onChange={(e) => setPreferences(prev => ({ ...prev, darkMode: e.target.checked }))} />
-                            </label>
-
-                            {/* Email Alerts Toggle */}
-                            <label className="flex items-center justify-between p-6 cursor-pointer hover:bg-muted-bg/30 transition-colors">
-                              <div className="space-y-1">
-                                <p className="text-sm font-bold text-hero-text">Email Notifications</p>
-                                <p className="text-xs text-muted-foreground">Receive critical order updates and tracking links directly to your inbox.</p>
-                              </div>
-                              <div className={`w-12 h-7 rounded-full transition-colors relative shrink-0 ${preferences.emailNotif ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                <div className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${preferences.emailNotif ? "translate-x-5" : ""}`} />
-                              </div>
-                              <input type="checkbox" className="hidden" checked={preferences.emailNotif} onChange={(e) => setPreferences(prev => ({ ...prev, emailNotif: e.target.checked }))} />
-                            </label>
-
-                            {/* SMS Alerts Toggle */}
-                            <label className="flex items-center justify-between p-6 cursor-pointer hover:bg-muted-bg/30 transition-colors">
-                              <div className="space-y-1">
-                                <p className="text-sm font-bold text-hero-text">SMS Delivery Alerts</p>
-                                <p className="text-xs text-muted-foreground">Get real-time text messages when your mangoes are out for delivery.</p>
-                              </div>
-                              <div className={`w-12 h-7 rounded-full transition-colors relative shrink-0 ${preferences.smsNotif ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                <div className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${preferences.smsNotif ? "translate-x-5" : ""}`} />
-                              </div>
-                              <input type="checkbox" className="hidden" checked={preferences.smsNotif} onChange={(e) => setPreferences(prev => ({ ...prev, smsNotif: e.target.checked }))} />
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="pt-2 flex justify-end">
-                          <button
-                            type="submit"
-                            disabled={savingPrefs}
-                            className="py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-md shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                          >
-                            {savingPrefs ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                            Save Preferences
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
                 )}
 
                 {/* 7. CHANGE PASSWORD TAB */}
@@ -2170,6 +2211,86 @@ function DashboardContent() {
           </div>
         </div>
       </main>
+
+      {/* Cancel Order Confirmation Modal */}
+      {cancelOrderId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setCancelOrderId(null)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="text-center">
+              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Cancel Order?</h3>
+              <p className="text-sm text-gray-500 mt-1.5">This action cannot be undone. Are you sure you want to cancel this order?</p>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setCancelOrderId(null)} className="flex-1 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold text-sm rounded-xl hover:bg-gray-50 transition-all cursor-pointer">
+                Keep Order
+              </button>
+              <button onClick={handleCancelConfirm} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold text-sm rounded-xl transition-all cursor-pointer shadow-sm">
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Return Request Modal */}
+      {returnOrderId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setReturnOrderId(null); setReturnReason(""); }} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="text-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4">
+                <CornerDownLeft className="w-7 h-7 text-indigo-500" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Request Return</h3>
+              <p className="text-sm text-gray-500 mt-1">Tell us why you'd like to return this order.</p>
+            </div>
+            <textarea
+              value={returnReason}
+              onChange={e => setReturnReason(e.target.value)}
+              placeholder="Describe the reason for return..."
+              rows={4}
+              className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 resize-none"
+            />
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => { setReturnOrderId(null); setReturnReason(""); }} className="flex-1 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold text-sm rounded-xl hover:bg-gray-50 transition-all cursor-pointer">
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!returnReason.trim()) { toast.error("Please describe the reason"); return; }
+                  setSubmittingReturn(true);
+                  try {
+                    const res = await fetch("/api/returns", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ order_id: returnOrderId, user_id: profile?.id, reason: returnReason.trim() }),
+                    });
+                    const result = await res.json();
+                    if (!res.ok) throw new Error(result.error);
+                    toast.success("Return request submitted!");
+                    setReturnOrderId(null);
+                    setReturnReason("");
+                  } catch (err: any) {
+                    toast.error(err.message || "Failed to submit return request");
+                  } finally { setSubmittingReturn(false); }
+                }}
+                disabled={submittingReturn || !returnReason.trim()}
+                className="flex-1 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-sm rounded-xl transition-all cursor-pointer disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
+              >
+                {submittingReturn ? <Loader2 className="w-4 h-4 animate-spin" /> : <CornerDownLeft className="w-4 h-4" />}
+                {submittingReturn ? "Submitting..." : "Submit Request"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

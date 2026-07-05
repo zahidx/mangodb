@@ -1,148 +1,184 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
-  Truck,
-  MapPin,
-  PackageCheck,
-  PackageOpen,
-  CheckCircle2,
-  Clock,
-  Search,
-  ArrowUpDown,
-  Filter,
-  Loader2,
-  Phone
+    ArrowUpDown,
+    Clock,
+    Edit2,
+    Globe,
+    Loader2,
+    MapPin,
+    Plus,
+    Search,
+    Trash2,
+    Truck,
+    X
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-interface Profile {
-  full_name: string;
-  phone: string;
-}
-
-interface Order {
+interface DeliveryZone {
   id: string;
+  area_name: string;
+  division: string;
+  delivery_charge: number;
+  estimated_days: number;
+  is_active: boolean;
   created_at: string;
-  status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
-  payment_status: string;
-  total: number;
-  shipping_address: any;
-  profile: Profile;
-  order_items: any[];
 }
 
 export default function AdminDeliveryPage() {
   const [loading, setLoading] = useState(true);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [zones, setZones] = useState<DeliveryZone[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "processing" | "shipped" | "delivered">("all");
-  const [sortBy, setSortBy] = useState<"date" | "status">("date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [updating, setUpdating] = useState<string | null>(null);
+  const [divisionFilter, setDivisionFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"area" | "charge" | "days">("area");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Modal States
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentZone, setCurrentZone] = useState<DeliveryZone | null>(null);
+
+  const [formData, setFormData] = useState({
+    area_name: "",
+    division: "",
+    delivery_charge: 0,
+    estimated_days: 3,
+    is_active: true,
+  });
 
   useEffect(() => {
-    loadDeliveries();
+    loadZones();
   }, []);
 
-  const loadDeliveries = async () => {
+  const loadZones = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/orders");
+      const res = await fetch("/api/admin/delivery-zones");
       const result = await res.json();
-      
       if (!res.ok) throw new Error(result.error);
-      
-      // Filter out pending and cancelled orders for the delivery view
-      // We mainly care about fulfillment lifecycle: confirmed -> processing -> shipped -> delivered
-      const deliveryOrders = (result.data || []).filter((o: Order) => 
-        ['confirmed', 'processing', 'shipped', 'delivered'].includes(o.status)
-      );
-      
-      setOrders(deliveryOrders);
+      setZones(result.data || []);
     } catch (err: any) {
-      toast.error(err.message || "Failed to fetch deliveries");
+      if (!err.message?.includes('schema cache') && !err.message?.includes('Table not found')) {
+        toast.error(err.message || "Failed to fetch delivery zones");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateStatus = async (id: string, newStatus: Order["status"]) => {
-    setUpdating(id);
+  const resetForm = () => {
+    setFormData({ area_name: "", division: "", delivery_charge: 0, estimated_days: 3, is_active: true });
+    setCurrentZone(null);
+  };
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.area_name.trim() || !formData.division.trim()) {
+      toast.error("Area name and division are required");
+      return;
+    }
     try {
-      const res = await fetch("/api/admin/orders", {
+      const res = await fetch("/api/admin/delivery-zones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      toast.success("Delivery zone added!");
+      setIsAddModalOpen(false);
+      loadZones();
+    } catch (err: any) {
+      toast.error(err.message || "Could not add zone");
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentZone) return;
+    try {
+      const res = await fetch("/api/admin/delivery-zones", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status: newStatus }),
+        body: JSON.stringify({ id: currentZone.id, ...formData }),
       });
-      if (!res.ok) throw new Error("Status update failed");
-      
-      setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
-      toast.success(`Order marked as ${newStatus}`);
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      toast.success("Zone updated!");
+      setIsEditModalOpen(false);
+      loadZones();
     } catch (err: any) {
-      toast.error(err.message || "Failed to update delivery status");
-    } finally {
-      setUpdating(null);
+      toast.error(err.message || "Could not update zone");
     }
   };
 
-  // Derived Stats
-  const processingCount = orders.filter(o => o.status === "confirmed" || o.status === "processing").length;
-  const inTransitCount = orders.filter(o => o.status === "shipped").length;
-  const deliveredCount = orders.filter(o => o.status === "delivered").length;
-  
-  const filteredOrders = orders
-    .filter((o) => {
-      const addressString = o.shipping_address ? JSON.stringify(o.shipping_address).toLowerCase() : "";
-      const nameString = o.profile?.full_name?.toLowerCase() || "";
-      const idString = o.id.toLowerCase();
-      
-      const searchMatch = searchQuery === "" || 
-        nameString.includes(searchQuery.toLowerCase()) || 
-        addressString.includes(searchQuery.toLowerCase()) ||
-        idString.includes(searchQuery.toLowerCase());
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm('Delete delivery zone "' + name + '"?')) return;
+    try {
+      const res = await fetch("/api/admin/delivery-zones?id=" + id, { method: "DELETE" });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      toast.success('"' + name + '" deleted');
+      loadZones();
+    } catch (err: any) {
+      toast.error(err.message || "Could not delete zone");
+    }
+  };
 
-      const statusMatch = statusFilter === "all" ? true :
-        statusFilter === "processing" ? (o.status === "confirmed" || o.status === "processing") :
-        o.status === statusFilter;
+  const handleToggleStatus = async (zone: DeliveryZone) => {
+    try {
+      const res = await fetch("/api/admin/delivery-zones", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: zone.id, is_active: !zone.is_active }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+      setZones(zones.map(z => z.id === zone.id ? { ...z, is_active: !z.is_active } : z));
+      toast.success("Zone " + (!zone.is_active ? "activated" : "deactivated"));
+    } catch { toast.error("Failed to update"); }
+  };
 
-      return searchMatch && statusMatch;
+  const openEdit = (zone: DeliveryZone) => {
+    setCurrentZone(zone);
+    setFormData({
+      area_name: zone.area_name,
+      division: zone.division,
+      delivery_charge: zone.delivery_charge,
+      estimated_days: zone.estimated_days,
+      is_active: zone.is_active,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const divisions = [...new Set(zones.map(z => z.division))].sort();
+
+  const filteredZones = zones
+    .filter(z => {
+      const matchSearch = z.area_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        z.division.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchDiv = divisionFilter === "all" || z.division === divisionFilter;
+      return matchSearch && matchDiv;
     })
     .sort((a, b) => {
-      let comparison = 0;
-      if (sortBy === "date") {
-        comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      } else if (sortBy === "status") {
-        comparison = a.status.localeCompare(b.status);
-      }
-      return sortOrder === "asc" ? comparison : -comparison;
+      let c = 0;
+      if (sortBy === "area") c = a.area_name.localeCompare(b.area_name);
+      else if (sortBy === "charge") c = a.delivery_charge - b.delivery_charge;
+      else c = a.estimated_days - b.estimated_days;
+      return sortOrder === "asc" ? c : -c;
     });
 
-  const toggleSort = (type: "date" | "status") => {
-    if (sortBy === type) setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    else { setSortBy(type); setSortOrder("desc"); }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-      case 'processing':
-        return <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200/50 flex items-center gap-1.5 w-fit"><span className="w-1.5 h-1.5 rounded-sm bg-indigo-500 animate-pulse" /> Processing</span>;
-      case 'shipped':
-        return <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-amber-50 text-amber-700 border border-amber-200/50 flex items-center gap-1.5 w-fit"><span className="w-1.5 h-1.5 rounded-sm bg-amber-500" /> In Transit</span>;
-      case 'delivered':
-        return <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200/50 flex items-center gap-1.5 w-fit"><span className="w-1.5 h-1.5 rounded-sm bg-emerald-500" /> Delivered</span>;
-      default:
-        return <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-slate-50 text-slate-700 border border-slate-200/50 flex items-center gap-1.5 w-fit"><span className="w-1.5 h-1.5 rounded-sm bg-slate-500" /> {status}</span>;
-    }
+  const toggleSort = (t: "area" | "charge" | "days") => {
+    if (sortBy === t) setSortOrder(s => s === "asc" ? "desc" : "asc");
+    else { setSortBy(t); setSortOrder("asc"); }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-          <p className="text-xs font-semibold text-[#475569]">Loading active deliveries...</p>
+          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+          <p className="text-xs font-semibold text-[#475569]">Loading delivery zones...</p>
         </div>
       </div>
     );
@@ -154,212 +190,228 @@ export default function AdminDeliveryPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="font-serif-heading text-2xl font-black text-[#0F172A] flex items-center gap-2">
-            <Truck className="w-6 h-6 text-indigo-600" />
-            Dispatch & Delivery Tracker
+            <Truck className="w-6 h-6 text-emerald-600" />
+            Delivery Zone Management
           </h2>
           <p className="text-xs text-[#475569] mt-1">
-            Manage order fulfillment, print labels, and track shipments in real-time.
+            Set delivery charges and estimated times for different areas across Bangladesh.
+          </p>
+        </div>
+        <button
+          onClick={() => { resetForm(); setIsAddModalOpen(true); }}
+          className="px-4.5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
+        >
+          <Plus className="w-4 h-4" />
+          Add Zone
+        </button>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
+          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Zones</span>
+          <p className="text-2xl font-black text-[#0F172A]">{zones.length}</p>
+        </div>
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
+          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Divisions</span>
+          <p className="text-2xl font-black text-[#0F172A]">{divisions.length}</p>
+        </div>
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
+          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Active Zones</span>
+          <p className="text-2xl font-black text-emerald-600">{zones.filter(z => z.is_active).length}</p>
+        </div>
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
+          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Avg Delivery Days</span>
+          <p className="text-2xl font-black text-[#0F172A]">
+            {zones.length ? Math.round(zones.reduce((s, z) => s + z.estimated_days, 0) / zones.length) : 0}
           </p>
         </div>
       </div>
 
-      {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm border-l-4 border-l-indigo-500">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Awaiting Dispatch</span>
-            <div className="w-8 h-8 rounded-md bg-indigo-50 flex items-center justify-center">
-              <PackageOpen className="w-4 h-4 text-indigo-600" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-[#0F172A]">{processingCount}</p>
-        </div>
-
-        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm border-l-4 border-l-amber-500">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">In Transit</span>
-            <div className="w-8 h-8 rounded-md bg-amber-50 flex items-center justify-center">
-              <Truck className="w-4 h-4 text-amber-600" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-[#0F172A]">{inTransitCount}</p>
-        </div>
-
-        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm border-l-4 border-l-emerald-500">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Delivered</span>
-            <div className="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center">
-              <PackageCheck className="w-4 h-4 text-emerald-600" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-[#0F172A]">{deliveredCount}</p>
-        </div>
-      </div>
-
-      {/* Filters Bar */}
+      {/* Filters */}
       <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-sm">
         <div className="relative w-full lg:w-96">
           <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search by customer, address, or ID..."
+            placeholder="Search by area or division..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-md border border-[#EEF2F7] bg-slate-50/50 text-xs font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-md border border-[#EEF2F7] bg-slate-50/50 text-xs font-semibold focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
           />
         </div>
-
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
-          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3.5 py-2 rounded-md transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10">
-            <Filter className="w-3.5 h-3.5 text-[#94A3B8]" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="bg-transparent text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
-            >
-              <option value="all">All Delivery States</option>
-              <option value="processing">Awaiting Dispatch</option>
-              <option value="shipped">In Transit</option>
-              <option value="delivered">Delivered</option>
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3.5 py-2 rounded-md">
+            <Globe className="w-3.5 h-3.5 text-[#94A3B8]" />
+            <select value={divisionFilter} onChange={e => setDivisionFilter(e.target.value)}
+              className="bg-transparent text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer">
+              <option value="all">All Divisions</option>
+              {divisions.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
-
           <span className="w-px h-6 bg-slate-200 hidden sm:block mx-1" />
-
-          <button onClick={() => toggleSort("date")} className={`flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer ${sortBy === "date" ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-[#475569] border-[#EEF2F7]"}`}>
-            Date <ArrowUpDown className="w-3 h-3 ml-0.5" />
+          <button onClick={() => toggleSort("area")}
+            className={"flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer " + (sortBy === "area" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
+            Area <ArrowUpDown className="w-3 h-3 ml-0.5" />
           </button>
-          <button onClick={() => toggleSort("status")} className={`flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer ${sortBy === "status" ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-[#475569] border-[#EEF2F7]"}`}>
-            Status <ArrowUpDown className="w-3 h-3 ml-0.5" />
+          <button onClick={() => toggleSort("charge")}
+            className={"flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer " + (sortBy === "charge" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
+            Charge <ArrowUpDown className="w-3 h-3 ml-0.5" />
+          </button>
+          <button onClick={() => toggleSort("days")}
+            className={"flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer " + (sortBy === "days" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
+            Days <ArrowUpDown className="w-3 h-3 ml-0.5" />
           </button>
         </div>
       </div>
 
-      {/* Deliveries Grid */}
-      {filteredOrders.length === 0 ? (
-        <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm p-16 text-center text-[#94A3B8] text-sm">
-          <Truck className="w-10 h-10 mx-auto text-[#CBD5E1] mb-3" />
-          <p className="font-bold">No active deliveries found</p>
-          <p className="text-xs text-[#94A3B8] mt-1">Try adjusting your filters.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {filteredOrders.map((order) => {
-            const isProcessing = order.status === "confirmed" || order.status === "processing";
-            const isShipped = order.status === "shipped";
-            const isDelivered = order.status === "delivered";
-
-            const address = order.shipping_address || {};
-
-            return (
-              <div key={order.id} className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden flex flex-col hover:border-indigo-200 hover:shadow-md transition-all">
-                {/* Card Header */}
-                <div className="p-4 border-b border-[#EEF2F7] bg-[#F8FAFC] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-white border border-[#EEF2F7] flex items-center justify-center shrink-0 shadow-sm font-black text-[#0F172A] text-xs">
-                      #{order.id.slice(0,4)}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-[#0F172A]">{order.profile?.full_name || "Unknown Customer"}</p>
-                      <div className="flex items-center gap-1 text-[10px] text-[#64748B] mt-0.5">
-                        <Clock className="w-3 h-3" />
-                        {new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                      </div>
-                    </div>
-                  </div>
-                  {getStatusBadge(order.status)}
-                </div>
-
-                {/* Card Body */}
-                <div className="p-4 flex-grow flex flex-col sm:flex-row gap-4">
-                  {/* Shipping Info */}
-                  <div className="flex-1 space-y-3">
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-[#94A3B8] mb-1.5 flex items-center gap-1">
-                        <MapPin className="w-3 h-3" /> Shipping Address
-                      </h4>
-                      <p className="text-xs font-semibold text-[#0F172A] leading-relaxed">
-                        {address.address}<br />
-                        {address.city}, {address.postalCode}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-[#94A3B8] mb-1.5 flex items-center gap-1">
-                        <Phone className="w-3 h-3" /> Contact
-                      </h4>
-                      <p className="text-xs font-semibold text-[#0F172A]">
-                        {address.phone || order.profile?.phone || "No phone provided"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Order Payload */}
-                  <div className="flex-1 bg-slate-50 border border-slate-100 rounded-md p-3">
-                    <h4 className="text-[10px] font-black uppercase tracking-wider text-[#94A3B8] mb-2">Package Contents ({order.order_items?.length || 0})</h4>
-                    <div className="space-y-2 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar">
-                      {(order.order_items || []).map((item: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-[#0F172A] truncate pr-2">
-                            {item.quantity}x {item.product?.name || "Unknown"}
-                          </span>
+      {/* Zones Table */}
+      <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+        {filteredZones.length === 0 ? (
+          <div className="p-16 text-center text-[#94A3B8] text-sm">
+            <Truck className="w-10 h-10 mx-auto text-[#CBD5E1] mb-3" />
+            <p className="font-bold">No delivery zones found</p>
+            <p className="text-xs mt-1 mb-4">Add your first delivery zone to start calculating shipping costs.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
+                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Area</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Division</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Charge</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Est. Days</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EEF2F7]">
+                {filteredZones.map(zone => (
+                  <tr key={zone.id} className="hover:bg-[#F8FAFC]/80 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-md bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
+                          <MapPin className="w-4 h-4 text-emerald-600" />
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        <div>
+                          <p className="text-sm font-extrabold text-[#0F172A]">{zone.area_name}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md uppercase">
+                        {zone.division}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-black text-emerald-600">
+                        ৳ {zone.delivery_charge.toLocaleString("en-BD")}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-bold text-[#475569] flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-[#94A3B8]" />
+                        {zone.estimated_days} {zone.estimated_days === 1 ? "day" : "days"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={"text-[10px] font-black uppercase px-2.5 py-1 rounded-md border inline-flex items-center gap-1.5 shadow-sm " + (zone.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-slate-50 text-slate-600 border-slate-200/50")}>
+                        <span className={"w-1.5 h-1.5 rounded-sm " + (zone.is_active ? "bg-emerald-500" : "bg-slate-400")} />
+                        {zone.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2.5">
+                        <button onClick={() => handleToggleStatus(zone)}
+                          className={"relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors duration-200 shadow-inner hover:scale-105 active:scale-95 " + (!zone.is_active ? "bg-slate-200" : "bg-emerald-500")}>
+                          <span className={"pointer-events-none inline-block h-4 w-4 transform rounded-md bg-white shadow-sm ring-0 transition duration-200 " + (!zone.is_active ? "translate-x-0" : "translate-x-4")} />
+                        </button>
+                        <button onClick={() => openEdit(zone)}
+                          className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer">
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => handleDelete(zone.id, zone.area_name)}
+                          className="p-2 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ====== ADD/EDIT MODAL ====== */}
+      {(isAddModalOpen || isEditModalOpen) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
+          <div className="relative w-full max-w-lg bg-white border border-[#EEF2F7] rounded-md shadow-2xl overflow-hidden z-10 text-left">
+            <div className="p-6 border-b border-[#EEF2F7] flex items-center justify-between bg-[#F8FAFC]">
+              <div>
+                <h3 className="font-serif-heading text-lg font-bold text-[#0F172A]">
+                  {isAddModalOpen ? "Add Delivery Zone" : "Edit Zone"}
+                </h3>
+              </div>
+              <button onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }}
+                className="p-1.5 rounded-md border border-[#EEF2F7] bg-white text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={isAddModalOpen ? handleAdd : handleUpdate} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-[#475569]">Area Name *</label>
+                  <input type="text" required value={formData.area_name}
+                    onChange={e => setFormData({ ...formData, area_name: e.target.value })}
+                    placeholder="e.g. Gulshan"
+                    className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
                 </div>
-
-                {/* Card Footer Actions */}
-                <div className="p-3 border-t border-[#EEF2F7] bg-white flex items-center gap-2">
-                  {isProcessing && (
-                    <button
-                      onClick={() => handleUpdateStatus(order.id, "shipped")}
-                      disabled={updating === order.id}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-md transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
-                    >
-                      {updating === order.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
-                      Dispatch / Mark Shipped
-                    </button>
-                  )}
-                  
-                  {isShipped && (
-                    <button
-                      onClick={() => handleUpdateStatus(order.id, "delivered")}
-                      disabled={updating === order.id}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-md transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
-                    >
-                      {updating === order.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                      Confirm Delivery
-                    </button>
-                  )}
-
-                  {isDelivered && (
-                    <div className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-50 text-slate-400 text-xs font-black rounded-md border border-slate-100">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Delivery Complete
-                    </div>
-                  )}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-[#475569]">Division *</label>
+                  <input type="text" required value={formData.division}
+                    onChange={e => setFormData({ ...formData, division: e.target.value })}
+                    placeholder="e.g. Dhaka"
+                    className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
                 </div>
               </div>
-            );
-          })}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-[#475569]">Delivery Charge (৳)</label>
+                  <input type="number" min="0" value={formData.delivery_charge}
+                    onChange={e => setFormData({ ...formData, delivery_charge: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-[#475569]">Est. Delivery (days)</label>
+                  <input type="number" min="1" value={formData.estimated_days}
+                    onChange={e => setFormData({ ...formData, estimated_days: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-xs font-bold text-[#0F172A] cursor-pointer w-fit">
+                <input type="checkbox" checked={formData.is_active}
+                  onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                Zone is Active
+              </label>
+              <div className="border-t border-[#EEF2F7] pt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }}
+                  className="px-4 py-2 border border-[#EEF2F7] hover:bg-[#F8FAFC] text-[#475569] font-bold text-xs rounded-md transition-all cursor-pointer">
+                  Cancel
+                </button>
+                <button type="submit"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-md shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+                  {isAddModalOpen ? "Create Zone" : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #F1F5F9; 
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #CBD5E1; 
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #94A3B8; 
-        }
-      `}} />
     </div>
   );
 }

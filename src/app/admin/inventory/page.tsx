@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
-  Boxes,
-  Search,
-  AlertTriangle,
-  ArrowUpDown,
-  Filter,
-  CheckCircle2,
-  XCircle,
-  TrendingDown,
-  Loader2,
-  Save,
-  Plus,
-  Minus
+    AlertTriangle,
+    ArrowUpDown,
+    Boxes,
+    CheckCircle2,
+    Filter,
+    Loader2,
+    Minus,
+    Plus,
+    Save,
+    Search,
+    TrendingDown,
+    XCircle
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 interface Product {
@@ -37,6 +37,23 @@ export default function AdminInventoryPage() {
   // Track modified stock levels before saving
   const [pendingAdjustments, setPendingAdjustments] = useState<Record<string, number>>({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Stock history
+  const [stockHistory, setStockHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const loadStockHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch("/api/admin/stock-history");
+      const result = await res.json();
+      if (res.ok) setStockHistory(result.data || []);
+    } catch (_) {
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadInventory();
@@ -381,6 +398,89 @@ export default function AdminInventoryPage() {
         )}
       </div>
       
+      {/* Stock History Toggle */}
+      <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+        <button
+          onClick={() => {
+            if (!showHistory) loadStockHistory();
+            setShowHistory(!showHistory);
+          }}
+          className="w-full px-6 py-4 flex items-center justify-between bg-[#F8FAFC] hover:bg-slate-100 transition-colors cursor-pointer border-b border-[#EEF2F7]"
+        >
+          <div className="flex items-center gap-2">
+            <TrendingDown className="w-4 h-4 text-blue-600" />
+            <span className="text-xs font-black text-[#0F172A] uppercase tracking-wider">Stock Change History</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[9px] font-bold rounded-full border border-blue-200">
+              {stockHistory.length} entries
+            </span>
+          </div>
+          <svg
+            className={`w-4 h-4 text-[#94A3B8] transition-transform duration-200 ${showHistory ? "rotate-180" : ""}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {showHistory && (
+          <div className="p-4">
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+              </div>
+            ) : stockHistory.length === 0 ? (
+              <div className="text-center py-8 text-[#94A3B8]">
+                <TrendingDown className="w-8 h-8 mx-auto mb-2 text-[#CBD5E1]" />
+                <p className="text-xs font-bold">No stock changes recorded yet</p>
+                <p className="text-[10px] mt-1">Changes will appear here after you adjust stock levels.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#EEF2F7] bg-slate-50/50 sticky top-0">
+                      <th className="px-4 py-2.5 text-[9px] font-black uppercase text-[#475569]">Date/Time</th>
+                      <th className="px-4 py-2.5 text-[9px] font-black uppercase text-[#475569]">Product</th>
+                      <th className="px-4 py-2.5 text-[9px] font-black uppercase text-[#475569]">Change</th>
+                      <th className="px-4 py-2.5 text-[9px] font-black uppercase text-[#475569]">New Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EEF2F7] text-xs">
+                    {stockHistory.map((entry: any) => (
+                      <tr key={entry.id} className="hover:bg-[#F8FAFC]/60">
+                        <td className="px-4 py-2.5 text-[#64748B] font-medium whitespace-nowrap">
+                          {new Date(entry.created_at).toLocaleDateString("en-US", {
+                            month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+                          })}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            {entry.product?.images?.[0] && (
+                              <img src={entry.product.images[0]} alt="" className="w-6 h-6 rounded object-cover" />
+                            )}
+                            <span className="font-semibold text-[#0F172A] truncate max-w-[180px]">
+                              {entry.product?.name || "Unknown product"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className={`inline-flex items-center gap-0.5 font-black ${
+                            entry.change_amount > 0 ? "text-emerald-600" : "text-rose-600"
+                          }`}>
+                            {entry.change_amount > 0 ? "+" : ""}{entry.change_amount}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 font-bold text-[#0F172A]">{entry.new_stock}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes pulse-border {
           0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }

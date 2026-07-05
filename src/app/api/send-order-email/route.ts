@@ -1,23 +1,35 @@
+import AdminOrderNotification from "@/emails/AdminOrderNotification";
+import OrderReceipt from "@/emails/OrderReceipt";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import OrderReceipt from "@/emails/OrderReceipt";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy_key");
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@mangodb.com";
 
 export async function POST(req: Request) {
   try {
-    const { orderId, customerName, email, total, productName, shippingAddress } = await req.json();
+    const {
+      orderId,
+      customerName,
+      email,
+      phone,
+      total,
+      productName,
+      shippingAddress,
+      paymentMethod,
+    } = await req.json();
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // In a real scenario without a verified domain, Resend requires sending to the verified email.
-    // For demo purposes, we usually send it to a verified test address or use a fallback.
-    const { data, error } = await resend.emails.send({
-      from: "MangoDB Orders <onboarding@resend.dev>", // Default resend testing domain
+    const results: { type: string; status: string; error?: string }[] = [];
+
+    // 1. Send order confirmation to customer
+    const customerResult = await resend.emails.send({
+      from: "MangoDB Orders <onboarding@resend.dev>",
       to: [email],
-      subject: `Order Confirmation - MangoDB #${orderId}`,
+      subject: `Order Confirmed 🥭 - MangoDB #${orderId}`,
       react: OrderReceipt({
         orderId,
         customerName,
@@ -27,12 +39,40 @@ export async function POST(req: Request) {
       }) as React.ReactElement,
     });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    if (customerResult.error) {
+      results.push({ type: "customer", status: "failed", error: customerResult.error.message });
+    } else {
+      results.push({ type: "customer", status: "sent" });
     }
 
-    return NextResponse.json({ success: true, data });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
+    // 2. Send admin notification
+    const adminResult = await resend.emails.send({
+      from: "MangoDB Orders <onboarding@resend.dev>",
+      to: [ADMIN_EMAIL],
+      subject: `🛵 New Order: ${orderId} — ${customerName}`,
+      react: AdminOrderNotification({
+        orderId,
+        customerName,
+        customerEmail: email,
+        customerPhone: phone || "N/A",
+        total,
+        productName,
+        shippingAddress,
+        paymentMethod: paymentMethod || "Cash on Delivery",
+      }) as React.ReactElement,
+    });
+
+    if (adminResult.error) {
+      results.push({ type: "admin", status: "failed", error: adminResult.error.message });
+    } else {
+      results.push({ type: "admin", status: "sent" });
+    }
+
+    return NextResponse.json({ success: true, results });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || "Failed to send emails" },
+      { status: 500 }
+    );
   }
 }

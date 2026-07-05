@@ -1,31 +1,33 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  Package,
-  ShoppingCart,
-  Coins,
-  Users,
-  TrendingUp,
-  ArrowUpRight,
-  Loader2,
-  AlertTriangle,
-  Clock,
-  Sparkles,
-  Plus,
-  BarChart3,
-} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
+import {
+    AlertTriangle,
+    ArrowUpRight,
+    BarChart3,
+    Bell,
+    Clock,
+    Coins,
+    Loader2,
+    Package,
+    Plus,
+    ShoppingCart,
+    Sparkles,
+    TrendingUp,
+    Users,
+    X,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+    Area,
+    AreaChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from "recharts";
 
 export default function AdminDashboardPage() {
@@ -44,6 +46,34 @@ export default function AdminDashboardPage() {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [productCount, setProductCount] = useState(0);
   const [categoryCount, setCategoryCount] = useState(0);
+
+  // Broadcast state
+  const [showBroadcast, setShowBroadcast] = useState(false);
+  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcasting, setBroadcasting] = useState(false);
+
+  const handleBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBroadcasting(true);
+    try {
+      const res = await fetch("/api/admin/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: broadcastTitle, message: broadcastMessage, type: "system" }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      toast.success(`Notification sent to ${result.sent_to} users!`);
+      setShowBroadcast(false);
+      setBroadcastTitle("");
+      setBroadcastMessage("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send notification");
+    } finally {
+      setBroadcasting(false);
+    }
+  };
 
   useEffect(() => {
     loadDashboard();
@@ -395,19 +425,68 @@ export default function AdminDashboardPage() {
             { label: "Add Product", href: "/admin/products", icon: Package, color: "from-emerald-50 to-emerald-100/50 border-emerald-200/60 text-emerald-700" },
             { label: "View Orders", href: "/admin/orders", icon: ShoppingCart, color: "from-amber-50 to-amber-100/50 border-amber-200/60 text-amber-700" },
             { label: "Manage Coupons", href: "/admin/coupons", icon: TrendingUp, color: "from-blue-50 to-blue-100/50 border-blue-200/60 text-blue-700" },
-            { label: "View Reports", href: "/admin/reports", icon: TrendingUp, color: "from-purple-50 to-purple-100/50 border-purple-200/60 text-purple-700" },
+            { label: "Broadcast", href: "#", icon: Bell, color: "from-rose-50 to-rose-100/50 border-rose-200/60 text-rose-700", onClick: () => setShowBroadcast(true) },
           ].map((action) => (
-            <a
+            <button
               key={action.label}
-              href={action.href}
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gradient-to-br ${action.color} border text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all`}
+              onClick={action.onClick || (() => window.location.href = action.href)}
+              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gradient-to-br ${action.color} border text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer w-full text-left`}
             >
               <action.icon className="w-4 h-4" />
               {action.label}
-            </a>
+            </button>
           ))}
         </div>
       </div>
+
+      {/* Broadcast Modal */}
+      {showBroadcast && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowBroadcast(false)} />
+          <div className="relative w-full max-w-lg bg-white border border-[#EEF2F7] rounded-2xl shadow-2xl overflow-hidden z-10">
+            <div className="p-6 border-b border-[#EEF2F7] flex items-center justify-between bg-[#F8FAFC]">
+              <div>
+                <h3 className="font-serif-heading text-lg font-bold text-[#0F172A]">Send Notification</h3>
+                <p className="text-[10px] text-[#94A3B8]">Broadcast a message to all customers.</p>
+              </div>
+              <button onClick={() => setShowBroadcast(false)} className="p-1.5 rounded-lg border border-[#EEF2F7] bg-white text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleBroadcast} className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-[#475569]">Title *</label>
+                <input type="text" required value={broadcastTitle} onChange={e => setBroadcastTitle(e.target.value)}
+                  placeholder="e.g. New Mango Harvest Available!"
+                  className="w-full px-3 py-2.5 rounded-lg border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-rose-500" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-[#475569]">Message *</label>
+                <textarea required rows={4} value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)}
+                  placeholder="Write your notification message..."
+                  className="w-full px-3 py-2.5 rounded-lg border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-rose-500 resize-none" />
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-[10px] text-amber-800 font-medium flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  This will send a notification to all registered users.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowBroadcast(false)}
+                  className="px-4 py-2 border border-[#EEF2F7] hover:bg-[#F8FAFC] text-[#475569] font-bold text-xs rounded-lg transition-all cursor-pointer">
+                  Cancel
+                </button>
+                <button type="submit" disabled={broadcasting}
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-lg shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                  {broadcasting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  {broadcasting ? "Sending..." : "Send to All Users"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

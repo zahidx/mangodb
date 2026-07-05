@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
-  Layers,
-  Search,
-  Plus,
-  Edit2,
-  Trash2,
-  Image as ImageIcon,
-  Loader2,
-  X,
-  ArrowUpDown,
-  Filter
+    ArrowUpDown,
+    Edit2,
+    Filter,
+    Image as ImageIcon,
+    Layers,
+    Loader2,
+    Plus,
+    Search,
+    Trash2,
+    X
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 interface Category {
@@ -37,6 +37,38 @@ export default function AdminCategoriesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+
+  // Image upload state
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageUploading(true);
+    try {
+      const formDataPayload = new FormData();
+      formDataPayload.append("file", file);
+      formDataPayload.append("bucket", "category-images");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formDataPayload,
+      });
+      const result = await res.json();
+      
+      if (!res.ok) throw new Error(result.error);
+      
+      setFormData({ ...formData, image_url: result.url });
+      toast.success("Image uploaded successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setImageUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   // Form States
   const [formData, setFormData] = useState({
@@ -422,8 +454,43 @@ export default function AdminCategoriesPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Image URL</label>
-                  <input type="text" value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." className="w-full px-3.5 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-amber-500" />
+                  <label className="text-[10px] font-black uppercase text-[#475569]">Category Image</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={imageUploading}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-dashed border-slate-300 text-slate-700 font-bold text-xs rounded-md transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {imageUploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ImageIcon className="w-4 h-4" />
+                      )}
+                      {imageUploading ? "Uploading..." : "Upload Image"}
+                    </button>
+                    {/* Preview */}
+                    {formData.image_url && (
+                      <div className="relative group w-14 h-14 rounded-md border border-slate-200 overflow-hidden bg-slate-50 shrink-0">
+                        <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, image_url: "" })}
+                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          <X className="w-3 h-3 text-white" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-slate-400 mt-1">Supported: JPEG, PNG, WebP, GIF. Max 5MB.</p>
                 </div>
 
                 <label className="flex items-center gap-2 text-xs font-bold text-[#0F172A] cursor-pointer mt-2 w-fit">

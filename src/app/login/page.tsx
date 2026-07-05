@@ -3,21 +3,21 @@
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import {
-  ArrowLeft,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  Leaf,
-  Loader2,
-  Lock,
-  Mail,
-  Moon,
-  Shield,
-  ShoppingBag,
-  Sun,
-  Truck,
-  User,
-  UserRound,
+    ArrowLeft,
+    ArrowRight,
+    Eye,
+    EyeOff,
+    Leaf,
+    Loader2,
+    Lock,
+    Mail,
+    Moon,
+    Shield,
+    ShoppingBag,
+    Sun,
+    Truck,
+    User,
+    UserRound,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -593,6 +593,11 @@ export default function LoginPage() {
                       )}
                     </button>
                   </div>
+                  <div className="flex justify-end mt-1">
+                    <Link href="/forgot-password" className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors">
+                      Forgot Password?
+                    </Link>
+                  </div>
                 </div>
 
                 <button
@@ -744,6 +749,24 @@ export default function LoginPage() {
                   Sign Up
                 </Link>
               </p>
+
+              {/* Guest Checkout */}
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center">
+                  <div className={dividerLineClass} />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className={dividerTextClass}>or</span>
+                </div>
+              </div>
+
+              <Link
+                href="/checkout"
+                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg border-2 border-dashed border-amber-400/60 text-sm font-semibold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:border-amber-500 transition-all"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                Continue as Guest
+              </Link>
 
               <p className={legalClass}>
                 By continuing, you agree to MangoDB&apos;s Terms of Service and

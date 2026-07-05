@@ -2,9 +2,13 @@
 
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import QuickViewModal from "@/components/QuickViewModal";
+import { ProductGridSkeleton } from "@/components/skeletons";
 import { useCart } from "@/context/CartContext";
-import { getCategories, getProducts } from "@/lib/supabase/queries";
-import type { Category, Product } from "@/types/database";
+import { useCompare } from "@/context/CompareContext";
+import { useInfiniteProducts } from "@/hooks/useInfiniteProducts";
+import { getCategories } from "@/lib/supabase/queries";
+import type { Category } from "@/types/database";
 import {
     Citrus,
     CupSoda,
@@ -28,11 +32,10 @@ import toast from "react-hot-toast";
 export default function ProductsPage() {
   const router = useRouter();
   const { addToCart } = useCart();
-  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Search & Filter state
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
@@ -48,6 +51,52 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<"newest" | "price_asc" | "price_desc" | "name">("newest");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // Debounce search — wait 300ms after user stops typing
+  useEffect(() => {
+    if (searchInput === searchTerm) return;
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput, searchTerm]);
+
+  // Infinite scroll hook
+  const {
+    products: allProducts,
+    loading,
+    loadingMore,
+    hasMore,
+    sentinelRef,
+  } = useInfiniteProducts({
+    categorySlug: selectedCategory === "all" ? undefined : selectedCategory,
+    search: searchTerm || undefined,
+    sortBy,
+    pageSize: 12,
+    resetKey: `products-${selectedCategory}-${searchTerm}-${sortBy}`,
+  });
+
+  // Apply local filters (district, price) on accumulated products
+  const products = React.useMemo(() => {
+    let list = allProducts;
+    if (selectedDistrict !== "all") {
+      list = list.filter((p: any) =>
+        p.metadata?.origin_district?.toLowerCase() === selectedDistrict.toLowerCase()
+      );
+    }
+    list = list.filter((p: any) => (p.sale_price || p.price) <= priceRange);
+    return list;
+  }, [allProducts, selectedDistrict, priceRange]);
+
+  // Fetch categories once
+  useEffect(() => {
+    getCategories().then((res) => {
+      if (res.data) setCategories(res.data);
+    });
+  }, []);
+
+  // Quick View state
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+
   // Wishlist state
   const [wishlist, setWishlist] = useState<string[]>([]);
 
@@ -57,6 +106,8 @@ export default function ProductsPage() {
       try { setWishlist(JSON.parse(savedWish)); } catch (e) {}
     }
   }, []);
+
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
 
   const toggleWishlist = (productId: string) => {
     let nextWish = [...wishlist];
@@ -71,53 +122,14 @@ export default function ProductsPage() {
     localStorage.setItem("mangodb-wishlist", JSON.stringify(nextWish));
   };
 
-  const fetchCatalog = async () => {
-    setLoading(true);
-    try {
-      const [prodRes, catRes] = await Promise.all([
-        getProducts({
-          categorySlug: selectedCategory === "all" ? undefined : selectedCategory,
-          search: searchTerm ? searchTerm : undefined,
-          sortBy,
-          limit: 100
-        }),
-        getCategories(),
-      ]);
-
-      if (prodRes.data) {
-        // Filter by origin_district locally if not 'all'
-        let list = prodRes.data;
-        if (selectedDistrict !== "all") {
-          list = list.filter((p: any) => 
-            p.metadata?.origin_district?.toLowerCase() === selectedDistrict.toLowerCase()
-          );
-        }
-        // Filter by price locally
-        list = list.filter((p: any) => (p.sale_price || p.price) <= priceRange);
-
-        setProducts(list);
-      }
-      if (catRes.data) {
-        setCategories(catRes.data);
-      }
-    } catch (error) {
-      toast.error("Failed to load catalog");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCatalog();
-  }, [selectedCategory, selectedDistrict, priceRange, sortBy]);
-
-  // Handle manual search submit
+  // Handle search submit (for the form)
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchCatalog();
+    setSearchTerm(searchInput); // Immediate — no debounce
   };
 
   const handleResetFilters = () => {
+    setSearchInput("");
     setSearchTerm("");
     setSelectedCategory("all");
     setSelectedDistrict("all");
@@ -174,15 +186,45 @@ export default function ProductsPage() {
           </div>
         </div>
 
+        {/* Search & Filter Bar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search products..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-md border border-gray-200 bg-white text-xs font-semibold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => { setSearchInput(""); setSearchTerm(""); }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </form>
+          <button
+            onClick={handleResetFilters}
+            className="px-4 py-2.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors cursor-pointer shrink-0"
+          >
+            Reset Filters
+          </button>
+        </div>
+
         {/* Products Grid */}
         <section className="w-full">
 
             {/* Loading / Empty States */}
             {loading ? (
-              <div className="h-96 flex flex-col items-center justify-center gap-3 bg-card/20 border border-border/60 rounded-3xl">
-                <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-                <p className="text-sm text-muted-foreground font-bold font-sans">Harvesting products...</p>
-              </div>
+              <ProductGridSkeleton count={8} />
             ) : products.length === 0 ? (
               <div className="h-96 flex flex-col items-center justify-center gap-4 bg-card/20 border border-border/60 rounded-3xl text-center p-8">
                 <span className="text-5xl">🥭</span>
@@ -222,6 +264,15 @@ export default function ProductsPage() {
                             <Truck className="w-3 h-3" />
                             Free Delivery
                           </span>
+                          {/* Quick View overlay */}
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                            <button
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(prod); }}
+                              className="px-4 py-2 bg-white text-gray-900 font-bold text-xs rounded-lg shadow-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                            >
+                              Quick View
+                            </button>
+                          </div>
                         </Link>
                         {/* Wishlist moved to top-left to accommodate the Free Delivery badge on the right */}
                         <button
@@ -233,6 +284,20 @@ export default function ProductsPage() {
                         >
                           <Heart className={`w-4 h-4 ${isWished ? "fill-red-500 text-red-500 border-none" : ""}`} />
                         </button>
+                        {/* Compare checkbox */}
+                        <label className="absolute bottom-2 left-2 z-20 flex items-center gap-1 px-2 py-1 rounded-md bg-black/40 backdrop-blur-sm border border-white/20 text-white cursor-pointer hover:bg-black/60 transition-colors text-[10px] font-medium">
+                          <input
+                            type="checkbox"
+                            checked={isInCompare(prod.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              if (e.target.checked) addToCompare(prod);
+                              else removeFromCompare(prod.id);
+                            }}
+                            className="w-3 h-3 rounded border-white/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 bg-white/20"
+                          />
+                          Compare
+                        </label>
                       </div>
 
                       <div className="p-4 flex flex-col grow justify-between space-y-3">
@@ -280,9 +345,37 @@ export default function ProductsPage() {
                 })}
               </div>
             )}
+
+            {/* Loading More Spinner */}
+            {loadingMore && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
+                <span className="text-xs font-semibold text-[#475569]">Loading more products...</span>
+              </div>
+            )}
+
+            {/* End of results */}
+            {!hasMore && !loading && products.length > 0 && (
+              <p className="text-center text-xs text-gray-400 mt-10 font-medium">
+                You've reached the end of the catalog 🥭
+              </p>
+            )}
+
+            {/* Sentinel element for IntersectionObserver */}
+            <div ref={sentinelRef} className="h-4" />
           </section>
       </main>
       </div>
+
+      {/* Quick View Modal */}
+      {quickViewProduct && (
+        <QuickViewModal
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+          wishlist={wishlist}
+          onToggleWishlist={toggleWishlist}
+        />
+      )}
 
       <Footer />
     </div>

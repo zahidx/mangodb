@@ -108,7 +108,8 @@ function TrackContent() {
         return;
       }
       const stored = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
-      const matched = stored.find((o: any) => o.id === formattedId);
+      const guestStored = JSON.parse(localStorage.getItem("mangodb-guest-orders") || "[]");
+      const matched = [...stored, ...guestStored].find((o: any) => o.id === formattedId);
       if (matched) {
         setOrder(matched);
       } else {

@@ -1,8 +1,12 @@
 import BackToTop from "@/components/BackToTop";
+import CartRecoveryPrompt from "@/components/CartRecoveryPrompt";
+import CompareBar from "@/components/CompareBar";
 import CookieConsent from "@/components/CookieConsent";
 import MarketingScripts from "@/components/MarketingScripts";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import { CompareProvider } from "@/context/CompareContext";
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono, Outfit, Playfair_Display } from "next/font/google";
 import Script from "next/script";
@@ -117,26 +121,107 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* JSON-LD Structured Data — Organization */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "MangoDB",
+              url: process.env.NEXT_PUBLIC_SITE_URL || "https://mangodb.com",
+              logo: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=200&h=200&fit=crop&q=80",
+              description: "Premium Rajshahi mangoes delivered fresh from orchard to doorstep.",
+              contactPoint: {
+                "@type": "ContactPoint",
+                telephone: "+880-1700-000000",
+                contactType: "customer service",
+                availableLanguage: ["Bengali", "English"],
+              },
+              sameAs: [
+                "https://facebook.com/mangodb",
+                "https://instagram.com/mangodb",
+              ],
+            }),
+          }}
+        />
+        {/* JSON-LD — WebSite */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "MangoDB",
+              url: process.env.NEXT_PUBLIC_SITE_URL || "https://mangodb.com",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: `${process.env.NEXT_PUBLIC_SITE_URL || "https://mangodb.com"}/products?search={search_term_string}`,
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden" suppressHydrationWarning>
         <AuthProvider>
           <CartProvider>
-            {children}
+            <CompareProvider>
+              {children}
+              <CompareBar />
+              <CartRecoveryPrompt />
+            </CompareProvider>
           </CartProvider>
         </AuthProvider>
         <Toaster
           position="top-right"
+          gutter={10}
+          containerClassName="mangodb-toaster"
           toastOptions={{
-            duration: 4000,
+            duration: 3500,
             style: {
-              background: "var(--card)",
-              color: "var(--card-foreground)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "var(--shadow-lg)",
+              borderRadius: "12px",
+              padding: "14px 18px",
+              fontSize: "13px",
+              fontWeight: 600,
+              fontFamily: "var(--font-sans, system-ui)",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+            },
+            success: {
+              style: {
+                background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)",
+                color: "#065f46",
+                border: "1px solid #a7f3d0",
+              },
+              iconTheme: {
+                primary: "#10b981",
+                secondary: "#ecfdf5",
+              },
+            },
+            error: {
+              style: {
+                background: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
+                color: "#991b1b",
+                border: "1px solid #fecaca",
+              },
+              iconTheme: {
+                primary: "#ef4444",
+                secondary: "#fef2f2",
+              },
+            },
+            loading: {
+              style: {
+                background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                color: "#075985",
+                border: "1px solid #bae6fd",
+              },
             },
           }}
         />
+        <ServiceWorkerRegister />
         <BackToTop />
         <CookieConsent />
         <MarketingScripts />

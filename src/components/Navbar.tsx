@@ -34,8 +34,11 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [notifList, setNotifList] = useState<any[]>([]);
+  const notifRef = useState<HTMLDivElement | null>(null);
 
-  // Load unread notifications
+  // Load unread count
   useEffect(() => {
     async function loadNotifs() {
       if (!profile) {
@@ -56,11 +59,58 @@ export default function Navbar() {
       }
     }
     loadNotifs();
-
-    // Optionally set up an interval to refresh notifs
-    const interval = setInterval(loadNotifs, 10000); // Check every 10s
+    const interval = setInterval(loadNotifs, 10000);
     return () => clearInterval(interval);
   }, [profile]);
+
+  // Load full list when dropdown opens
+  useEffect(() => {
+    if (!notifDropdownOpen || !profile) return;
+    const p = profile;
+    async function loadFull() {
+      if (!p.id.startsWith("demo-")) {
+        const { data } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", p.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        if (data) setNotifList(data);
+      } else {
+        const stored = JSON.parse(localStorage.getItem(`mangodb-notifications-${p.id}`) || "[]");
+        setNotifList(stored.slice(0, 10));
+      }
+    }
+    loadFull();
+  }, [notifDropdownOpen, profile]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!notifDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      const el = document.getElementById("notif-dropdown");
+      if (el && !el.contains(e.target as Node)) setNotifDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [notifDropdownOpen]);
+
+  const markAllRead = async () => {
+    if (!profile) return;
+    if (!profile.id.startsWith("demo-")) {
+      await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", profile.id)
+        .eq("is_read", false);
+    } else {
+      const stored = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+      const updated = stored.map((n: any) => ({ ...n, is_read: true }));
+      localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(updated));
+    }
+    setUnreadNotifs(0);
+    setNotifList(notifList.map((n: any) => ({ ...n, is_read: true })));
+  };
 
   // Sync theme state on mount
   useEffect(() => {
@@ -163,26 +213,77 @@ export default function Navbar() {
             {/* Global Search Bar */}
             <GlobalSearch />
 
-            {/* Notification Bell */}
+            {/* Notification Bell with Dropdown */}
             {profile && (
-              <button
-                onClick={() => {
-                  if (pathname === "/dashboard") {
-                    window.location.href = "/dashboard?tab=notifications";
-                  } else {
-                    router.push("/dashboard?tab=notifications");
-                  }
-                }}
-                className="hidden lg:block relative p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
-                aria-label="View Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadNotifs > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-rose-600 text-[10px] font-black text-white ring-2 ring-background animate-pulse-slow">
-                    {unreadNotifs}
-                  </span>
+              <div id="notif-dropdown" className="relative hidden lg:block">
+                <button
+                  onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
+                  className="relative p-2.5 rounded-md bg-muted-bg border border-border text-muted-foreground hover:text-[#fbbf24] hover:border-[#fbbf24]/30 transition-all shadow-sm cursor-pointer"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  {unreadNotifs > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-rose-600 text-[10px] font-black text-white ring-2 ring-background animate-pulse-slow">
+                      {unreadNotifs}
+                    </span>
+                  )}
+                </button>
+
+                {/* Dropdown */}
+                {notifDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                      <h3 className="text-xs font-black text-gray-800 dark:text-white uppercase tracking-wider">
+                        Notifications
+                      </h3>
+                      {unreadNotifs > 0 && (
+                        <button
+                          onClick={markAllRead}
+                          className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-72 overflow-y-auto">
+                      {notifList.length === 0 ? (
+                        <div className="px-4 py-8 text-center">
+                          <Bell className="w-6 h-6 mx-auto text-gray-300 dark:text-slate-600 mb-2" />
+                          <p className="text-xs text-gray-400 dark:text-slate-500 font-medium">No notifications yet</p>
+                        </div>
+                      ) : (
+                        notifList.map((n: any) => (
+                          <div
+                            key={n.id}
+                            className={`px-4 py-3 border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors ${
+                              !n.is_read ? "bg-emerald-50/50 dark:bg-emerald-900/10" : ""
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.is_read ? "bg-emerald-500" : "bg-transparent"}`} />
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-gray-800 dark:text-white">{n.title}</p>
+                                <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">{n.message}</p>
+                                <p className="text-[9px] text-gray-400 dark:text-slate-500 mt-1">
+                                  {new Date(n.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="px-4 py-2.5 border-t border-gray-100 dark:border-slate-700 text-center">
+                      <button
+                        onClick={() => { setNotifDropdownOpen(false); router.push("/dashboard?tab=notifications"); }}
+                        className="text-[10px] font-bold text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors cursor-pointer"
+                      >
+                        View all in Dashboard →
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
             )}
 
             {/* Shopping Cart Indicator */}

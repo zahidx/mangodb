@@ -1,21 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
-  Package,
-  Search,
-  Plus,
-  Edit2,
-  Trash2,
-  Image as ImageIcon,
-  Tag,
-  Loader2,
-  X,
-  ArrowUpDown,
-  Filter,
-  DollarSign,
-  Layers
+    ArrowUpDown,
+    Edit2,
+    Filter,
+    Image as ImageIcon,
+    Layers,
+    Loader2,
+    Package,
+    Plus,
+    Search,
+    Trash2,
+    X
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 interface Category {
@@ -53,6 +51,55 @@ export default function AdminProductsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+
+  // Image upload state
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const categoryFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setImageUploading(true);
+    try {
+      const uploadedUrls: string[] = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formDataPayload = new FormData();
+        formDataPayload.append("file", file);
+        formDataPayload.append("bucket", "product-images");
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formDataPayload,
+        });
+        const result = await res.json();
+        
+        if (!res.ok) throw new Error(result.error);
+        uploadedUrls.push(result.url);
+      }
+
+      // Append new URLs to existing images
+      const existingImages = formData.images ? formData.images.split(",").map(i => i.trim()).filter(i => i) : [];
+      const allImages = [...existingImages, ...uploadedUrls];
+      setFormData({ ...formData, images: allImages.join(", ") });
+      
+      toast.success(`${uploadedUrls.length} image(s) uploaded`);
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setImageUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const images = formData.images.split(",").map(i => i.trim()).filter(i => i);
+    images.splice(index, 1);
+    setFormData({ ...formData, images: images.join(", ") });
+  };
 
   // Form States
   const [formData, setFormData] = useState({
@@ -552,8 +599,57 @@ export default function AdminProductsPage() {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-[#475569]">Image URLs (comma separated)</label>
-                    <input type="text" placeholder="https://..., https://..." value={formData.images} onChange={(e) => setFormData({...formData, images: e.target.value})} className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
+                    <label className="text-[10px] font-black uppercase text-[#475569]">Product Images</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={imageUploading}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-dashed border-slate-300 text-slate-700 font-bold text-xs rounded-md transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        {imageUploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <ImageIcon className="w-4 h-4" />
+                        )}
+                        {imageUploading ? "Uploading..." : "Upload Images"}
+                      </button>
+                      {formData.images && (
+                        <span className="text-[10px] text-slate-500 font-medium">
+                          {formData.images.split(",").filter(i => i.trim()).length} image(s)
+                        </span>
+                      )}
+                    </div>
+                    {/* Image Previews */}
+                    {formData.images && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {formData.images.split(",").map((url, idx) => {
+                          const trimmed = url.trim();
+                          if (!trimmed) return null;
+                          return (
+                            <div key={idx} className="relative group w-16 h-16 rounded-md border border-slate-200 overflow-hidden bg-slate-50">
+                              <img src={trimmed} alt={`Product ${idx + 1}`} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(idx)}
+                                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              >
+                                <X className="w-4 h-4 text-white" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <p className="text-[9px] text-slate-400 mt-1">Supported: JPEG, PNG, WebP, GIF. Max 5MB each.</p>
                   </div>
                 </div>
                 

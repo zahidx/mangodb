@@ -17,6 +17,11 @@ export async function GET() {
       .order("name", { ascending: true });
 
     if (error) {
+      if (error.message?.includes("violates row-level security") || error.code === '42501') {
+        return NextResponse.json({
+          error: "Permission denied. Run the RLS migration or set SUPABASE_SERVICE_ROLE_KEY.",
+        }, { status: 400 });
+      }
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -46,6 +51,12 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
+      // Catch RLS policy violations
+      if (error.message?.includes("violates row-level security") || error.code === '42501') {
+        return NextResponse.json({
+          error: "Database permission error. Please run the RLS migration or set SUPABASE_SERVICE_ROLE_KEY in your .env.local file.",
+        }, { status: 400 });
+      }
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 

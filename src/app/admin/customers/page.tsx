@@ -1,24 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  Users,
-  Search,
-  Plus,
-  Edit2,
-  Trash2,
-  UserX,
-  UserCheck,
-  Shield,
-  Mail,
-  Phone,
-  Calendar,
-  Loader2,
-  X,
-  ArrowUpDown,
-  Filter,
-} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import {
+    ArrowUpDown,
+    Calendar,
+    Edit2,
+    Filter,
+    Loader2,
+    Mail,
+    Phone,
+    Plus,
+    Search,
+    Shield,
+    Trash2,
+    UserCheck,
+    Users,
+    X
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 interface Customer {
@@ -29,6 +28,8 @@ interface Customer {
   role: "user" | "admin";
   is_blocked: boolean;
   created_at: string;
+  order_count?: number;
+  total_spent?: number;
 }
 
 // Helper to format clean display names from email if name is empty or matches email
@@ -375,6 +376,50 @@ export default function AdminCustomersPage() {
         </button>
       </div>
 
+      {/* Stats Overview */}
+      {customers.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Customers</span>
+              <Users className="w-4 h-4 text-amber-500" />
+            </div>
+            <p className="text-2xl font-black text-[#0F172A]">{customers.length}</p>
+          </div>
+          <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Active</span>
+              <UserCheck className="w-4 h-4 text-emerald-500" />
+            </div>
+            <p className="text-2xl font-black text-emerald-600">
+              {customers.filter(c => !c.is_blocked).length}
+            </p>
+          </div>
+          <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Orders</span>
+              <span className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
+                <span className="text-blue-600 font-black text-sm">#</span>
+              </span>
+            </div>
+            <p className="text-2xl font-black text-blue-600">
+              {customers.reduce((sum, c) => sum + (c.order_count || 0), 0)}
+            </p>
+          </div>
+          <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Revenue</span>
+              <span className="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center">
+                <span className="text-emerald-600 font-black text-sm">৳</span>
+              </span>
+            </div>
+            <p className="text-2xl font-black text-emerald-600">
+              ৳ {customers.reduce((sum, c) => sum + (c.total_spent || 0), 0).toLocaleString("en-BD")}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Seed prompt for empty database */}
       {customers.length === 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-md p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -494,6 +539,8 @@ export default function AdminCustomersPage() {
                 <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
                   <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Customer Details</th>
                   <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Orders</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Total Spent</th>
                   <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Role</th>
                   <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Join Date</th>
@@ -532,8 +579,22 @@ export default function AdminCustomersPage() {
                             {customer.phone}
                           </p>
                         ) : (
-                          <span className="text-[10px] text-[#94A3B8] bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md font-semibold italic">Not Provided</span>
+                          <span className="text-[10px] text-[#94A3B8] bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md font-semibold italic">—</span>
                         )}
+                      </td>
+
+                      {/* Orders Count */}
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-extrabold text-[#0F172A]">
+                          {customer.order_count ?? 0}
+                        </span>
+                      </td>
+
+                      {/* Total Spent */}
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-black text-emerald-600">
+                          ৳ {((customer.total_spent ?? 0)).toLocaleString("en-BD")}
+                        </span>
                       </td>
 
                       {/* Role */}

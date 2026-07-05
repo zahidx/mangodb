@@ -127,6 +127,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const saveLocalCart = (items: ExtendedCartItem[]) => {
     setCartItems(items);
     localStorage.setItem("mangodb-cart", JSON.stringify(items));
+    // Track cart abandonment timestamp
+    if (items.length > 0) {
+      localStorage.setItem("mangodb-cart-last-updated", new Date().toISOString());
+      // Save user email/phone for guest recovery
+      const profileStr = localStorage.getItem("mangodb-guest-profile");
+      if (!profileStr) {
+        localStorage.setItem("mangodb-guest-profile", JSON.stringify({
+          email: "",
+          phone: "",
+          createdAt: new Date().toISOString()
+        }));
+      }
+    }
   };
 
   const addToCart = async (product: Product, quantity = 1, weight = "10kg", showToast = true) => {
@@ -277,43 +290,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const applyCoupon = async (code: string): Promise<boolean> => {
     const formattedCode = code.trim().toUpperCase();
-    
-    if (profile && !profile.id.startsWith("demo-")) {
-      try {
-        const { data, error } = await supabase
-          .from("coupons")
-          .select("*")
-          .eq("code", formattedCode)
-          .eq("is_active", true)
-          .single();
 
-        if (!error && data) {
-          setAppliedCoupon(data.code);
-          setDiscountData({ type: data.discount_type, value: data.discount_value });
-          toast.success(`Promo Code "${data.code}" applied!`);
-          return true;
-        }
-      } catch (e) {
-        console.warn("Error checking coupon from DB, using fallback");
+    try {
+      const res = await fetch("/api/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: formattedCode, subtotal }),
+      });
+      const result = await res.json();
+
+      if (result.valid && result.coupon) {
+        setAppliedCoupon(result.coupon.code);
+        setDiscountData({
+          type: result.coupon.discount_type,
+          value: result.coupon.discount_value,
+        });
+        toast.success(`Promo Code "${result.coupon.code}" applied!`);
+        return true;
+      } else {
+        toast.error(result.error || "Invalid or expired promo code");
+        return false;
       }
+    } catch {
+      toast.error("Failed to validate coupon");
+      return false;
     }
-
-    // Fallback/Local checks
-    const mockCoupons: Record<string, { type: 'percentage' | 'fixed', value: number }> = {
-      "MANGOLOVE": { type: 'percentage', value: 10 },
-      "FRESH100": { type: 'fixed', value: 100 },
-      "EIDSPL": { type: 'percentage', value: 15 }
-    };
-
-    if (formattedCode in mockCoupons) {
-      setAppliedCoupon(formattedCode);
-      setDiscountData(mockCoupons[formattedCode]);
-      toast.success(`Promo Code "${formattedCode}" applied!`);
-      return true;
-    }
-
-    toast.error("Invalid or expired promo code");
-    return false;
   };
 
   const removeCoupon = () => {
@@ -353,9 +354,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return acc + Math.round(price * multiplier) * item.quantity;
   }, 0);
 
-  // Delivery pricing: Dhaka is 120, Outside Dhaka is 200
-  const isInsideDhaka = deliveryDistrict.toLowerCase().includes("dhaka");
-  const deliveryCharge = activeItems.length > 0 ? (isInsideDhaka ? 120 : 200) : 0;
+  // Dynamic delivery pricing from delivery zones API
+  const [deliveryCharge, setDeliveryCharge] = useState(0);
+  const [estimatedDays, setEstimatedDays] = useState(3);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function lookupZone() {
+      try {
+        const res = await fetch("/api/delivery-zones?city=" + encodeURIComponent(deliveryDistrict));
+        const data = await res.json();
+        if (!cancelled && activeItems.length > 0) {
+          setDeliveryCharge(data.delivery_charge || 0);
+          setEstimatedDays(data.estimated_days || 3);
+        } else if (!cancelled) {
+          setDeliveryCharge(0);
+        }
+      } catch {
+        if (!cancelled) {
+          // Fallback to hardcoded values if API fails
+          const isInside = deliveryDistrict.toLowerCase().includes("dhaka");
+          setDeliveryCharge(activeItems.length > 0 ? (isInside ? 120 : 200) : 0);
+        }
+      }
+    }
+    lookupZone();
+    return () => { cancelled = true; };
+  }, [deliveryDistrict, activeItems.length]);
 
   let discount = 0;
   if (discountData.type === 'percentage') {

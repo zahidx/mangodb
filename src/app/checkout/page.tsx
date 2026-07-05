@@ -63,6 +63,9 @@ export default function CheckoutPage() {
   const [finalItems, setFinalItems] = useState<any[]>([]);
 
   const [savedPaymentMethods, setSavedPaymentMethods] = useState<any[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [showAddressSelector, setShowAddressSelector] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
 
   // Dummy payment form fields for realistic UI
   const [paymentForm, setPaymentForm] = useState({
@@ -109,6 +112,7 @@ export default function CheckoutPage() {
     async function loadSavedData() {
       if (!profile) return;
       try {
+        // Load saved payment methods
         let payments: any[] = [];
         if (!profile.id.startsWith("demo-")) {
           const { data } = await supabase.from("user_payment_methods").select("*").eq("user_id", profile.id).order("is_default", { ascending: false });
@@ -121,6 +125,37 @@ export default function CheckoutPage() {
         const defPayment = payments.find(p => p.is_default);
         if (defPayment) {
           setCheckoutForm(prev => ({ ...prev, paymentMethod: `saved-${defPayment.id}` }));
+        }
+
+        // Load saved addresses
+        let addrs: any[] = [];
+        if (!profile.id.startsWith("demo-")) {
+          const res = await fetch("/api/user/addresses");
+          const json = await res.json();
+          if (json.data) addrs = json.data;
+        } else {
+          const stored = localStorage.getItem(`mangodb-addresses-${profile.id}`);
+          if (stored) addrs = JSON.parse(stored);
+        }
+        setSavedAddresses(addrs);
+
+        // Load available coupons
+        try {
+          const couponRes = await fetch("/api/coupons");
+          const couponJson = await couponRes.json();
+          if (couponJson.data) setAvailableCoupons(couponJson.data);
+        } catch (_) {}
+
+        // Auto-fill with default address
+        const defaultAddr = addrs.find((a: any) => a.is_default);
+        if (defaultAddr) {
+          setCheckoutForm(prev => ({
+            ...prev,
+            name: defaultAddr.full_name || prev.name,
+            phone: defaultAddr.phone || prev.phone,
+            email: defaultAddr.email || prev.email,
+            address: `${defaultAddr.street_address}${defaultAddr.apartment ? `, ${defaultAddr.apartment}` : ""}, ${defaultAddr.area}, ${defaultAddr.city}, ${defaultAddr.state}, ${defaultAddr.country}`,
+          }));
         }
       } catch (err) {}
     }
@@ -207,8 +242,12 @@ export default function CheckoutPage() {
       })
     };
 
+    // Determine user / guest ID for persistence
+    const isGuest = !profile || profile.id.startsWith("demo-");
+    const guestId = isGuest ? `guest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` : null;
+    const userId = !isGuest ? profile.id : null;
+
     // If real Supabase database table exists, try executing insertion
-    const userId = profile?.id && !profile.id.startsWith("demo-") ? profile.id : null;
     if (userId) {
       try {
         const { data, error } = await supabase
@@ -265,8 +304,26 @@ export default function CheckoutPage() {
     }
 
     // Save order in localStorage for persistence / tracking lookup
-    const existingOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
-    localStorage.setItem("mangodb-orders", JSON.stringify([orderData, ...existingOrders]));
+    // Use a guest-specific key so guest orders are retrievable by email
+    const storageKey = isGuest ? `mangodb-guest-orders` : `mangodb-orders`;
+    const existingOrders = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const orderWithMeta = {
+      ...orderData,
+      _guestEmail: isGuest ? checkoutForm.email : undefined,
+      _guestId: guestId,
+      _isGuest: isGuest,
+    };
+    localStorage.setItem(storageKey, JSON.stringify([orderWithMeta, ...existingOrders]));
+
+    // Also index by email for guest tracking lookup
+    if (isGuest && checkoutForm.email) {
+      const emailKey = `mangodb-guest-orders-by-email`;
+      const byEmail = JSON.parse(localStorage.getItem(emailKey) || "{}");
+      const email = checkoutForm.email.toLowerCase().trim();
+      if (!byEmail[email]) byEmail[email] = [];
+      byEmail[email].push(orderId);
+      localStorage.setItem(emailKey, JSON.stringify(byEmail));
+    }
 
     if (profile && profile.id.startsWith("demo-")) {
       const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
@@ -292,9 +349,11 @@ export default function CheckoutPage() {
             orderId: orderId,
             customerName: checkoutForm.name,
             email: checkoutForm.email,
+            phone: checkoutForm.phone,
             total,
             productName: cartItems.map(i => `${i.product.name} (${i.selected_weight})`).join(", "),
             shippingAddress: checkoutForm.address,
+            paymentMethod: checkoutForm.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment",
           }),
         });
       } catch (err) {
@@ -393,13 +452,20 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <p className="text-xs text-gray-400 mb-6">Save your Order ID to track delivery status anytime.</p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <p className="text-xs text-gray-400 mb-4">
+              {profile && !profile.id.startsWith("demo-")
+                ? "You can view all your orders in your dashboard."
+                : `A confirmation has been sent to ${checkoutForm.email}. Save your Order ID to track delivery.`}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Link href={`/invoice/${orderCreatedId}`} className="flex-1 py-2.5 text-center border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                📄 Download Invoice
+              </Link>
               <Link href={`/track?id=${orderCreatedId}`} className="flex-1 py-2.5 text-center border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 Track Order
               </Link>
-              <Link href={profile ? "/dashboard" : "/products"} className="flex-1 py-2.5 text-center bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-semibold text-white transition-colors">
-                {profile ? "Go to Dashboard" : "Continue Shopping"}
+              <Link href={profile && !profile.id.startsWith("demo-") ? "/dashboard" : "/products"} className="flex-1 py-2.5 text-center bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-semibold text-white transition-colors">
+                {profile && !profile.id.startsWith("demo-") ? "Go to Dashboard" : "Continue Shopping"}
               </Link>
             </div>
           </div>
@@ -514,6 +580,49 @@ export default function CheckoutPage() {
                 />
                 <p className="text-xs text-gray-400 mt-1">We'll send your order receipt to this email.</p>
               </div>
+
+              {/* Saved Addresses Selector */}
+              {savedAddresses.length > 0 && (
+                <div className="mt-4">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Saved Addresses
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {savedAddresses.map((addr: any) => (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => {
+                          setCheckoutForm(prev => ({
+                            ...prev,
+                            name: addr.full_name || prev.name,
+                            phone: addr.phone || prev.phone,
+                            email: addr.email || prev.email,
+                            address: `${addr.street_address}${addr.apartment ? `, ${addr.apartment}` : ""}, ${addr.area}, ${addr.city}, ${addr.state}, ${addr.country}`,
+                          }));
+                          toast.success(`Using address: ${addr.label || "Home"}`);
+                        }}
+                        className={`px-3 py-2 rounded-lg border text-[11px] font-bold transition-all cursor-pointer text-left ${
+                          addr.is_default
+                            ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                            : "bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600"
+                        }`}
+                      >
+                        <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-0.5">
+                          {addr.label || "Address"}
+                          {addr.is_default && " ★ Default"}
+                        </span>
+                        <span className="block truncate max-w-[200px]">
+                          {addr.street_address}, {addr.city}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-gray-400 mb-2">
+                    Select a saved address above or type a new one below.
+                  </p>
+                </div>
+              )}
 
               <div className="mt-4">
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
@@ -1280,6 +1389,29 @@ export default function CheckoutPage() {
                   );
                 })}
               </div>
+
+              {/* Available Coupons */}
+              {availableCoupons.length > 0 && !appliedCoupon && (
+                <div className="border-t border-gray-200 pt-4 mb-4">
+                  <label className="text-xs font-semibold text-gray-700 block mb-2">Available Offers</label>
+                  <div className="flex flex-wrap gap-2">
+                    {availableCoupons.map((c: any) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => { setPromoCode(c.code); handleApplyCoupon(); }}
+                        className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer text-left"
+                      >
+                        <span className="block uppercase">{c.code}</span>
+                        <span className="text-[10px] font-medium text-emerald-500">
+                          {c.discount_type === "percentage" ? `${c.discount_value}% OFF` : `৳${c.discount_value} OFF`}
+                          {c.min_order_amount > 0 && ` • Min ৳${c.min_order_amount}`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Promo Code */}
               <div className="border-t border-gray-200 pt-4 mb-4">

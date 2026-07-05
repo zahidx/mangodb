@@ -1,12 +1,20 @@
 "use client";
 
+import BannerCarousel from "@/components/BannerCarousel";
+import FeaturedProducts from "@/components/FeaturedProducts";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import PromoBanners from "@/components/PromoBanners";
+import QuickViewModal from "@/components/QuickViewModal";
+import RecentlyViewed from "@/components/RecentlyViewed";
+import { ProductGridSkeleton } from "@/components/skeletons";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useCompare } from "@/context/CompareContext";
+import { useInfiniteProducts } from "@/hooks/useInfiniteProducts";
 import { createClient } from "@/lib/supabase/client";
-import { getCategories, getProducts } from "@/lib/supabase/queries";
+import { getCategories } from "@/lib/supabase/queries";
 import {
     ArrowRight,
     Award,
@@ -40,6 +48,7 @@ export default function HomePage() {
   const router = useRouter();
   const { profile: user } = useAuth();
   const { addToCart } = useCart();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const supabase = createClient() as any;
 
   // New States for competitor features (Express Checkout, Order Tracking, Video Player)
@@ -275,9 +284,11 @@ export default function HomePage() {
             orderId: newOrderId,
             customerName: checkoutForm.name,
             email: checkoutForm.email,
+            phone: checkoutForm.phone,
             total,
             productName: `${checkoutProduct.name} (${selectedWeight}kg)`,
             shippingAddress: checkoutForm.address,
+            paymentMethod: checkoutForm.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment",
           }),
         });
       } catch (err) {
@@ -330,10 +341,23 @@ export default function HomePage() {
     setSearchedTrackingId(null);
   };
 
-  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [dynamicCategories, setDynamicCategories] = useState<any[]>([]);
-  const [isLoadingDynamic, setIsLoadingDynamic] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+
+  // Infinite scroll for the "All Products" grid
+  const {
+    products: allProducts,
+    loading: allLoading,
+    loadingMore: allLoadingMore,
+    hasMore: allHasMore,
+    sentinelRef: allSentinelRef,
+  } = useInfiniteProducts({
+    categorySlug: activeCategory === "all" ? undefined : activeCategory,
+    sortBy: "newest",
+    pageSize: 12,
+    resetKey: `homepage-${activeCategory}`,
+  });
 
   // Fetch categories once on mount
   useEffect(() => {
@@ -348,28 +372,6 @@ export default function HomePage() {
     loadCategories();
   }, []);
 
-  // Fetch products based on active category
-  useEffect(() => {
-    async function loadProducts() {
-      setIsLoadingDynamic(true);
-      try {
-        const prodRes = await getProducts({ 
-          sortBy: "newest", 
-          limit: 12,
-          categorySlug: activeCategory === "all" ? undefined : activeCategory 
-        });
-        if (prodRes.data) {
-          setFeaturedProducts(prodRes.data);
-        }
-      } catch (err) {
-        console.error("Failed to load products", err);
-      } finally {
-        setIsLoadingDynamic(false);
-      }
-    }
-    loadProducts();
-  }, [activeCategory]);
-
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-[#fbbf24] selection:text-black relative flex flex-col transition-colors duration-200">
       {/* Background Glowing Orbs */}
@@ -382,58 +384,19 @@ export default function HomePage() {
       {/* ====== MAIN CONTENT WRAPPER ====== */}
       <div className="grow flex flex-col relative z-10 pt-16">
         
-        {/* 1. Hero Section (Rustic background, white text, green buttons) */}
-        <section className="relative w-full min-h-[600px] flex items-center justify-center overflow-hidden bg-black">
-          {/* Background Image with Premium Gradients */}
-          <div className="absolute inset-0 z-0">
-             <Image 
-               src="https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=1600&auto=format&fit=crop&q=80" 
-               alt="Gardeners" 
-               fill 
-               className="object-cover opacity-85" 
-               priority
-             />
-             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#f4f7f5] dark:to-background z-10 pointer-events-none" />
-             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 z-10 pointer-events-none" />
-          </div>
+        {/* 1. Dynamic Hero Banner Carousel (from admin panel) */}
+        <BannerCarousel />
 
-          <div className="relative z-20 text-center max-w-5xl px-4 flex flex-col items-center pt-12 pb-20 animate-fade-in">
-             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-bold mb-8 shadow-2xl">
-               <Sparkles className="w-4 h-4 text-[#fbbf24]" />
-               <span>100% Formalin & Carbide Free</span>
-             </div>
+        {/* 2. Promo & Offer Banner Grid */}
+        <PromoBanners />
 
-             <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[1.1] mb-6 tracking-tight drop-shadow-2xl">
-               Fresh & Chemical-Free<br />
-               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] filter drop-shadow-lg">
-                 Mangoes from Rajshahi
-               </span>
-             </h1>
-             
-             <p className="text-lg md:text-xl text-gray-200 mb-10 pb-[10px] max-w-2xl font-medium drop-shadow-md leading-relaxed">
-               Taste the true sweetness of premium, handpicked mangoes. Delivered directly from our safe-farming orchards to your home in 48 hours.
-             </p>
+        {/* 4. Featured Products — Horizontal Scroll */}
+        <FeaturedProducts />
 
-             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
-                <Link 
-                  href="/products" 
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-black font-black text-lg rounded-xl shadow-[0_0_40px_-10px_#fbbf24] hover:shadow-[0_0_60px_-15px_#fbbf24] hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  <ShoppingBag className="w-5 h-5" />
-                  Try our fruits
-                </Link>
-                <Link 
-                  href="/#farm" 
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white shadow-lg text-[#20BA5A] font-bold text-lg rounded-xl hover:bg-gray-50 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <Leaf className="w-5 h-5" />
-                  Our Contracted Gardens
-                </Link>
-             </div>
-          </div>
-        </section>
+        {/* 5. Recently Viewed */}
+        <RecentlyViewed />
 
-        {/* 2. Category Navigation Tabs */}
+        {/* 3. Category Navigation Tabs */}
         <section className="max-w-7xl mx-auto px-4 mt-8 relative z-20">
            <div className="flex flex-wrap items-center justify-center gap-3">
               <button 
@@ -476,19 +439,53 @@ export default function HomePage() {
               <div className="w-16 h-1 bg-[#527d62] mx-auto mt-4 rounded"></div>
            </div>
 
+           {/* Initial Loading */}
+           {allLoading && allProducts.length === 0 && (
+             <ProductGridSkeleton count={8} />
+           )}
+
+           {/* Products Grid */}
+           {!allLoading && allProducts.length === 0 && (
+             <div className="py-16 text-center text-gray-400">
+               <p className="font-bold">No products found in this category</p>
+             </div>
+           )}
+
            <div className="flex flex-wrap justify-center gap-6">
-              {featuredProducts.map(prod => (
+              {allProducts.map(prod => (
                  <div key={prod.id} className="w-full sm:w-[280px] shrink-0 group bg-white rounded-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100">
                     <div className="relative h-48 sm:h-52 w-full overflow-hidden shrink-0 bg-gray-50">
-                      <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
+                      <Link href={`/products/${prod.slug}`} className="block w-full h-full">
                         <Image src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"} alt={prod.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                         <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-black bg-[#FFC107] rounded-sm shadow-sm z-10">
                           <Truck className="w-3 h-3" /> Free Delivery
                         </span>
+                        {/* Quick View overlay */}
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                          <button
+                            onClick={(e) => { e.preventDefault(); setQuickViewProduct(prod); }}
+                            className="px-4 py-2 bg-white text-gray-900 font-bold text-xs rounded-lg shadow-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                          >
+                            Quick View
+                          </button>
+                        </div>
                       </Link>
                       <button onClick={(e) => { e.stopPropagation(); toggleWishlist(prod.id); }} className="absolute top-2 left-2 p-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-black/60 transition-colors z-20 cursor-pointer">
                         <Heart className={`w-4 h-4 ${wishlist.includes(prod.id) ? "fill-red-500 text-red-500 border-none" : ""}`} />
                       </button>
+                      {/* Compare checkbox */}
+                      <label className="absolute bottom-2 left-2 z-20 flex items-center gap-1 px-2 py-1 rounded-md bg-black/40 backdrop-blur-sm border border-white/20 text-white cursor-pointer hover:bg-black/60 transition-colors text-[10px] font-medium">
+                        <input
+                          type="checkbox"
+                          checked={isInCompare(prod.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) addToCompare(prod);
+                            else removeFromCompare(prod.id);
+                          }}
+                          className="w-3 h-3 rounded border-white/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 bg-white/20"
+                        />
+                        Compare
+                      </label>
                     </div>
                     <div className="p-4 flex flex-col grow justify-between space-y-3 text-center">
                       <Link href={`/products/${prod.slug}`} className="space-y-1 block group-hover:opacity-95">
@@ -523,12 +520,24 @@ export default function HomePage() {
                  </div>
               ))}
            </div>
-           
-           <div className="mt-10 text-center">
-              <Link href="/products" className="inline-flex items-center justify-center px-8 py-3 bg-white border border-gray-200 text-gray-800 font-bold rounded hover:bg-gray-50 transition-colors shadow-sm">
-                 View All Products
-              </Link>
-           </div>
+
+           {/* Loading More Spinner */}
+           {allLoadingMore && (
+             <div className="flex items-center justify-center gap-2 mt-10">
+               <Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
+               <span className="text-xs font-semibold text-[#475569]">Loading more products...</span>
+             </div>
+           )}
+
+           {/* End of results */}
+           {!allHasMore && allProducts.length > 0 && (
+             <p className="text-center text-xs text-gray-400 mt-10 font-medium">
+               You've reached the end of the catalog 🥭
+             </p>
+           )}
+
+           {/* Sentinel element for IntersectionObserver */}
+           <div ref={allSentinelRef} className="h-4" />
         </section>
 
         {/* 4. Why We Are Different */}
@@ -1197,6 +1206,16 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Quick View Modal */}
+      {quickViewProduct && (
+        <QuickViewModal
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+          wishlist={wishlist}
+          onToggleWishlist={toggleWishlist}
+        />
       )}
 
       <WhatsAppWidget />

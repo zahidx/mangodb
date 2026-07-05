@@ -84,6 +84,60 @@ export async function PUT(req: Request) {
       console.warn("Failed to create order status notification:", notifErr);
     }
 
+    // Auto-deduct or restore stock on status change
+    try {
+      if (status && data) {
+        // Fetch order items for this order
+        const { data: orderItems } = await supabase
+          .from("order_items")
+          .select("product_id, quantity")
+          .eq("order_id", id);
+
+        if (orderItems && orderItems.length > 0) {
+          if (status === "confirmed") {
+            // Deduct stock for each item
+            for (const item of orderItems) {
+              await supabase.rpc("decrement_stock", {
+                row_id: item.product_id,
+                amount: item.quantity,
+              }).catch(async () => {
+                // Fallback: direct update if RPC doesn't exist
+                const { data: prod } = await supabase
+                  .from("products")
+                  .select("stock")
+                  .eq("id", item.product_id)
+                  .single();
+                if (prod) {
+                  const newStock = Math.max(0, prod.stock - item.quantity);
+                  await supabase
+                    .from("products")
+                    .update({ stock: newStock })
+                    .eq("id", item.product_id);
+                }
+              });
+            }
+          } else if (status === "cancelled") {
+            // Restore stock for each item
+            for (const item of orderItems) {
+              const { data: prod } = await supabase
+                .from("products")
+                .select("stock")
+                .eq("id", item.product_id)
+                .single();
+              if (prod) {
+                await supabase
+                  .from("products")
+                  .update({ stock: prod.stock + item.quantity })
+                  .eq("id", item.product_id);
+              }
+            }
+          }
+        }
+      }
+    } catch (stockErr) {
+      console.warn("Failed to update stock:", stockErr);
+    }
+
     return NextResponse.json({ data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

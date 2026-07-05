@@ -1,29 +1,28 @@
 "use client";
 
-import React from "react";
+import { useAuth } from "@/context/AuthContext";
+import {
+    BarChart3,
+    ChevronLeft,
+    CreditCard,
+    FileText,
+    Grid3X3,
+    Image,
+    LayoutDashboard,
+    LogOut,
+    Package,
+    Settings,
+    ShoppingBag,
+    ShoppingCart,
+    Star,
+    Ticket,
+    Truck,
+    Users,
+    Warehouse,
+    X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Package,
-  Grid3X3,
-  Warehouse,
-  ShoppingCart,
-  Users,
-  Truck,
-  CreditCard,
-  Ticket,
-  Image,
-  Star,
-  BarChart3,
-  Settings,
-  FileText,
-  LogOut,
-  ShoppingBag,
-  X,
-  ChevronLeft,
-} from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -34,8 +33,9 @@ const NAV_ITEMS = [
   { label: "Customers", href: "/admin/customers", icon: Users },
   { label: "Delivery", href: "/admin/delivery", icon: Truck },
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
+  { label: "Returns", href: "/admin/returns", icon: ShoppingCart },
   { label: "Coupons", href: "/admin/coupons", icon: Ticket },
-  { label: "Content", href: "/admin/content", icon: Image },
+  { label: "Banners", href: "/admin/banners", icon: Image },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
   { label: "Reports", href: "/admin/reports", icon: BarChart3 },
   { label: "Settings", href: "/admin/settings", icon: Settings },

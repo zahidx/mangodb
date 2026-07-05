@@ -1,25 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import {
-  Package,
-  Calendar,
-  ArrowRight,
-  Loader2,
-  Search,
-  Filter,
-  CreditCard,
-  Trash2,
-  Eye,
-  RefreshCw,
-  X,
-  Mail,
-  User,
-  ShieldAlert,
-  MapPin,
-  CheckCircle
+    Calendar,
+    CheckCircle,
+    CreditCard,
+    Eye,
+    Filter,
+    Loader2,
+    Mail,
+    MapPin,
+    Package,
+    RefreshCw,
+    Search,
+    Trash2,
+    X
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 interface OrderItem {
@@ -38,7 +34,7 @@ interface OrderItem {
 interface Order {
   id: string;
   user_id: string;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
   subtotal: number;
   tax: number;
   total: number;
@@ -275,6 +271,7 @@ export default function AdminOrdersPage() {
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
                 <option value="processing">Processing</option>
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
@@ -481,10 +478,12 @@ export default function AdminOrdersPage() {
                             order.status === "cancelled" ? "bg-rose-50 text-rose-700 border-rose-200" :
                             order.status === "shipped" ? "bg-sky-50 text-sky-700 border-sky-200" :
                             order.status === "processing" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                            order.status === "confirmed" ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
                             "bg-amber-50 text-amber-700 border-amber-200"
                           }`}
                         >
                           <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
                           <option value="processing">Processing</option>
                           <option value="shipped">Shipped</option>
                           <option value="delivered">Delivered</option>
@@ -577,6 +576,7 @@ export default function AdminOrdersPage() {
                     className="w-full px-3 py-2.5 rounded-xl border border-[#EEF2F7] text-xs font-bold text-[#475569] bg-white focus:outline-none focus:border-amber-500 cursor-pointer shadow-sm"
                   >
                     <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
                     <option value="processing">Processing</option>
                     <option value="shipped">Shipped</option>
                     <option value="delivered">Delivered</option>
@@ -597,6 +597,79 @@ export default function AdminOrdersPage() {
                     <option value="paid">Paid (Verified)</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Order Progress Timeline */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-100">
+                <h4 className="text-[10px] font-black uppercase text-[#475569] tracking-wider flex items-center gap-1 mb-3">
+                  <CheckCircle className="w-3.5 h-3.5 text-[#94A3B8]" />
+                  Order Progress
+                </h4>
+                <div className="flex items-center justify-between relative">
+                  {/* Connecting line */}
+                  <div className="absolute top-3.5 left-0 right-0 h-0.5 bg-slate-200 rounded z-0" />
+                  <div
+                    className="absolute top-3.5 left-0 h-0.5 bg-emerald-500 rounded z-0 transition-all duration-500"
+                    style={{
+                      width: (() => {
+                        const steps = ["pending", "confirmed", "processing", "shipped", "delivered"];
+                        const idx = steps.indexOf(selectedOrder.status);
+                        if (selectedOrder.status === "cancelled") return "0%";
+                        return `${(idx / (steps.length - 1)) * 100}%`;
+                      })(),
+                    }}
+                  />
+                  {/* Steps */}
+                  {[
+                    { key: "pending", label: "Placed" },
+                    { key: "confirmed", label: "Confirmed" },
+                    { key: "processing", label: "Processing" },
+                    { key: "shipped", label: "Shipped" },
+                    { key: "delivered", label: "Delivered" },
+                  ].map((step) => {
+                    const steps = ["pending", "confirmed", "processing", "shipped", "delivered"];
+                    const currentIdx = steps.indexOf(selectedOrder.status);
+                    const stepIdx = steps.indexOf(step.key);
+                    const isCompleted = currentIdx >= stepIdx && selectedOrder.status !== "cancelled";
+                    const isCurrent = step.key === selectedOrder.status;
+                    const isCancelled = selectedOrder.status === "cancelled";
+                    return (
+                      <div key={step.key} className="flex flex-col items-center gap-1 relative z-10">
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 transition-all ${
+                            isCancelled
+                              ? "bg-slate-100 border-slate-300 text-slate-400"
+                              : isCompleted
+                              ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200"
+                              : isCurrent
+                              ? "bg-amber-400 border-amber-400 text-black shadow-md shadow-amber-200"
+                              : "bg-white border-slate-300 text-slate-400"
+                          }`}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          ) : (
+                            steps.indexOf(step.key) + 1
+                          )}
+                        </div>
+                        <span className={`text-[9px] font-bold whitespace-nowrap ${
+                          isCancelled ? "text-slate-400" :
+                          isCompleted ? "text-emerald-700" :
+                          isCurrent ? "text-amber-700" : "text-slate-400"
+                        }`}>
+                          {step.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {selectedOrder.status === "cancelled" && (
+                  <div className="mt-3 text-center">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 text-[10px] font-black rounded-full border border-rose-200">
+                      ✕ This order has been cancelled
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Shipping Address details */}

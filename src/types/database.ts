@@ -110,6 +110,7 @@ export interface Review {
   product_id: string;
   rating: number;
   comment: string | null;
+  images: string[] | null;
   is_approved: boolean;
   created_at: string;
   // Joined fields

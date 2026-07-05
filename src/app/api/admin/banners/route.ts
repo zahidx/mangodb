@@ -17,6 +17,10 @@ export async function GET() {
       .order("sort_order", { ascending: true });
 
     if (error) {
+      // Handle missing table gracefully
+      if (error.message?.includes('schema cache') || error.code === '42P01') {
+        return NextResponse.json({ data: [], notice: 'Table not found' });
+      }
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 

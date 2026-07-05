@@ -1,7 +1,10 @@
 "use client";
 
 import Footer from "@/components/Footer";
+import ImageZoom from "@/components/ImageZoom";
 import Navbar from "@/components/Navbar";
+import RecentlyViewed, { trackProductView } from "@/components/RecentlyViewed";
+import { ProductDetailSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { createClient } from "@/lib/supabase/client";
@@ -11,6 +14,7 @@ import {
     ArrowLeft,
     Award,
     Heart,
+    ImagePlus,
     Loader2,
     MapPin,
     Scale,
@@ -51,7 +55,10 @@ export default function ProductDetailsPage() {
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewImages, setReviewImages] = useState<string[]>([]);
+  const [reviewImageFiles, setReviewImageFiles] = useState<File[]>([]);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [ratingFilter, setRatingFilter] = useState<number>(0);
 
   useEffect(() => {
     async function loadDetails() {
@@ -88,6 +95,8 @@ export default function ProductDetailsPage() {
           if (Array.isArray(weightOpts) && weightOpts.length > 0) {
             setSelectedWeight(weightOpts[0]);
           }
+          // Track this product view
+          trackProductView(prodRes.data);
         } else {
           toast.error("Product not found");
         }
@@ -121,6 +130,10 @@ export default function ProductDetailsPage() {
     localStorage.setItem("mangodb-wishlist", JSON.stringify(list));
   };
 
+  const filteredReviews = ratingFilter > 0
+    ? reviews.filter((r: any) => r.rating === ratingFilter)
+    : reviews;
+
   const handleBuyNow = () => {
     if (!product) return;
     addToCart(product, quantity, selectedWeight, false);
@@ -138,12 +151,32 @@ export default function ProductDetailsPage() {
 
     setSubmittingReview(true);
     
+    // Upload review images first
+    const uploadedImageUrls: string[] = [...reviewImages];
+    for (const file of reviewImageFiles) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.url) {
+          uploadedImageUrls.push(uploadData.url);
+        }
+      } catch (err) {
+        console.warn("Failed to upload review image", err);
+      }
+    }
+
     const newReviewData = {
       id: `rev-${Math.random()}`,
       user_id: profile.id,
       product_id: product.id,
       rating,
       comment: comment.trim(),
+      images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
       is_approved: false,
       created_at: new Date().toISOString(),
       profile: {
@@ -163,15 +196,27 @@ export default function ProductDetailsPage() {
       }
     };
 
-    // If logged in via Supabase, write to database
+    // Submit review via API
     if (!profile.id.startsWith("demo-")) {
       try {
-        await supabase.from("reviews").insert({
-          user_id: profile.id,
-          product_id: product.id,
-          rating,
-          comment: comment.trim(),
+        const res = await fetch("/api/reviews", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: profile.id,
+            product_id: product.id,
+            rating,
+            comment: comment.trim(),
+            images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
+          }),
         });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error);
+        // Use the server response for accurate data
+        if (result.data) {
+          newReviewData.id = result.data.id;
+          newReviewData.created_at = result.data.created_at;
+        }
       } catch (dbErr) {
         console.warn("Could not write review in DB, saving locally only");
       }
@@ -179,18 +224,30 @@ export default function ProductDetailsPage() {
 
     setReviews([newReviewData, ...reviews]);
     setComment("");
-    toast.success("Review submitted!");
+    setReviewImages([]);
+    setReviewImageFiles([]);
+    toast.success("Review submitted! It will appear after admin approval.");
     setSubmittingReview(false);
+  };
+
+  const handleReviewImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(f => f.type.startsWith("image/")).slice(0, 5 - reviewImages.length - reviewImageFiles.length);
+    setReviewImageFiles(prev => [...prev, ...validFiles]);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const removeReviewImage = (index: number) => {
+    setReviewImages(prev => prev.filter((_, i) => i !== index));
+    setReviewImageFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-between">
         <Navbar />
-        <div className="grow flex items-center justify-center flex-col gap-3 pt-20">
-          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-          <p className="text-sm text-muted-foreground font-bold">Loading product details...</p>
-        </div>
+        <ProductDetailSkeleton />
         <Footer />
       </div>
     );
@@ -240,8 +297,61 @@ export default function ProductDetailsPage() {
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : "4.8";
 
+  // JSON-LD Structured Data for Google
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || `${product.name} — Premium quality sourced from ${origin}.`,
+    image: product.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600",
+    sku: product.id,
+    mpn: product.id.slice(0, 8),
+    brand: {
+      "@type": "Brand",
+      name: "MangoDB",
+    },
+    offers: {
+      "@type": "Offer",
+      url: typeof window !== "undefined" ? window.location.href : `/products/${product.slug}`,
+      priceCurrency: "BDT",
+      price: scaledPrice,
+      priceValidUntil: new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0],
+      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+      shippingDetails: {
+        "@type": "OfferShippingDetail",
+        shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "BDT" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "BD" },
+      },
+    },
+    aggregateRating: reviews.length > 0 ? {
+      "@type": "AggregateRating",
+      ratingValue: avgRating,
+      reviewCount: reviews.length,
+      bestRating: "5",
+    } : undefined,
+    review: reviews.slice(0, 5).map((r: any) => ({
+      "@type": "Review",
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: r.rating,
+        bestRating: "5",
+      },
+      author: {
+        "@type": "Person",
+        name: r.profile?.full_name || "Customer",
+      },
+    })),
+    category: product.category?.name || "Premium Mangoes",
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col relative selection:bg-[#fbbf24] selection:text-black overflow-x-hidden">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd, (key, value) => value === undefined ? null : value) }}
+      />
       <Navbar />
 
       {/* Background Orbs */}
@@ -266,14 +376,14 @@ export default function ProductDetailsPage() {
           
           {/* Left Column: Image Gallery */}
           <div className="md:col-span-6 space-y-4">
-            <div className="relative h-[320px] sm:h-[450px] w-full rounded-3xl overflow-hidden glass-card p-4 border border-border/80 shadow-2xl group cursor-zoom-in" onClick={() => setIsZoomed(true)}>
+            <div className="relative h-[320px] sm:h-[450px] w-full rounded-3xl overflow-hidden glass-card p-4 border border-border/80 shadow-2xl">
               <div className="relative w-full h-full rounded-2xl overflow-hidden">
-                <Image
+                <ImageZoom
                   src={product.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
                   alt={product.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full"
+                  zoom={2.5}
+                  lensSize={140}
                 />
               </div>
               {badge && (
@@ -471,6 +581,53 @@ export default function ProductDetailsPage() {
             Customer Reviews & Ratings
           </h2>
 
+          {/* Average Rating Bar */}
+          {reviews.length > 0 && (
+            <div className="bg-card/30 border border-border/60 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+              <div className="text-center sm:text-left shrink-0">
+                <div className="text-4xl font-black text-hero-text">
+                  {avgRating}
+                </div>
+                <div className="flex gap-0.5 mt-1 justify-center sm:justify-start">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-4 h-4 text-[#fbbf24] ${star <= Math.round(Number(avgRating)) ? "fill-current" : "opacity-30"}`}
+                    />
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+                  Based on {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+                </p>
+              </div>
+
+              {/* Rating distribution bars */}
+              <div className="flex-1 space-y-1.5 w-full">
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const count = reviews.filter((r: any) => r.rating === star).length;
+                  const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                  return (
+                    <button
+                      key={star}
+                      onClick={() => setRatingFilter(ratingFilter === star ? 0 : star)}
+                      className={`flex items-center gap-2 w-full cursor-pointer group ${ratingFilter === star ? "opacity-100" : "opacity-70 hover:opacity-100"} transition-opacity`}
+                    >
+                      <span className="text-[11px] font-bold text-muted-foreground w-3 shrink-0">{star}</span>
+                      <Star className="w-3 h-3 text-[#fbbf24] fill-[#fbbf24] shrink-0" />
+                      <div className="flex-1 h-2 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#fbbf24] rounded-full transition-all duration-300"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium w-6 text-right shrink-0">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="grid md:grid-cols-12 gap-8 items-start">
             {/* Review form */}
             <div className="md:col-span-4 bg-card/40 backdrop-blur-md border border-border/80 rounded-3xl p-6 space-y-6">
@@ -510,6 +667,40 @@ export default function ProductDetailsPage() {
                     />
                   </div>
 
+                  {/* Review Photos */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-400 tracking-wider uppercase block">
+                      Add Photos (optional)
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[...reviewImages, ...reviewImageFiles.map(f => URL.createObjectURL(f))].map((url, idx) => (
+                        <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-border group">
+                          <img src={url} alt="Review" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeReviewImage(idx)}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {(reviewImages.length + reviewImageFiles.length) < 5 && (
+                        <label className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-emerald-400 transition-colors bg-card/50">
+                          <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleReviewImageSelect}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Upload up to 5 images (JPEG, PNG). Max 5MB each.</p>
+                  </div>
+
                   <button
                     type="submit"
                     disabled={submittingReview}
@@ -535,16 +726,45 @@ export default function ProductDetailsPage() {
             </div>
 
             {/* Review List */}
-            <div className="md:col-span-8 space-y-6">
-              {reviews.length === 0 ? (
+            <div className="md:col-span-8 space-y-4">
+              {/* Rating filter chips */}
+              {reviews.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "All", value: 0 },
+                    { label: "5★", value: 5 },
+                    { label: "4★", value: 4 },
+                    { label: "3★", value: 3 },
+                    { label: "2★", value: 2 },
+                    { label: "1★", value: 1 },
+                  ].map((opt) => {
+                    const count = opt.value === 0 ? reviews.length : reviews.filter((r: any) => r.rating === opt.value).length;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => setRatingFilter(opt.value)}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                          ratingFilter === opt.value
+                            ? "bg-[#fbbf24] text-black border-[#fbbf24]"
+                            : "bg-card border-border text-muted-foreground hover:border-[#fbbf24]/50"
+                        }`}
+                      >
+                        {opt.label} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {filteredReviews.length === 0 ? (
                 <div className="p-8 text-center bg-card/20 border border-border/60 rounded-3xl font-sans">
                   <p className="text-xs text-muted-foreground">
-                    No reviews for this product yet. Be the first to review!
+                    {ratingFilter > 0 ? "No reviews with this rating yet." : "No reviews for this product yet. Be the first to review!"}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2">
-                  {reviews.map((rev) => (
+                  {filteredReviews.map((rev: any) => (
                     <div 
                       key={rev.id} 
                       className="bg-card/40 backdrop-blur-md border border-border/60 rounded-2xl p-5 space-y-3 font-sans shadow-sm"
@@ -559,9 +779,11 @@ export default function ProductDetailsPage() {
                               <h4 className="text-xs font-extrabold text-hero-text">
                                 {rev.profile?.full_name || "Premium customer"}
                               </h4>
-                              <span className="flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-                                <ShieldCheck className="w-2.5 h-2.5" /> Verified Purchaser
-                              </span>
+                              {rev.is_verified_purchase && (
+                                <span className="flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                                  <ShieldCheck className="w-2.5 h-2.5" /> Verified
+                                </span>
+                              )}
                             </div>
                             <p className="text-[9px] text-muted-foreground mt-0.5">
                               {new Date(rev.created_at).toLocaleDateString()}
@@ -582,6 +804,28 @@ export default function ProductDetailsPage() {
                       <p className="text-xs text-hero-text-secondary leading-relaxed">
                         {rev.comment}
                       </p>
+
+                      {/* Review Photos */}
+                      {rev.images && rev.images.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {rev.images.map((imgUrl: string, imgIdx: number) => (
+                            <a
+                              key={imgIdx}
+                              href={imgUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block w-16 h-16 rounded-lg overflow-hidden border border-border/60 hover:ring-2 hover:ring-emerald-400/50 transition-all"
+                            >
+                              <img
+                                src={imgUrl}
+                                alt={`Review photo ${imgIdx + 1}`}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -590,60 +834,108 @@ export default function ProductDetailsPage() {
           </div>
         </section>
 
-        {/* Related Products */}
+        {/* Related Products — Horizontal Scroll */}
         {relatedProducts.length > 0 && (
           <section className="border-t border-border pt-12 space-y-6">
-            <h2 className="font-serif-heading text-2xl font-bold text-hero-text">
-              Related Varieties
-            </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relatedProducts.map((prod) => {
-                const origin = (prod.metadata as any)?.origin_district || "Rajshahi";
-                return (
-                  <div
-                    key={prod.id}
-                    className="group glass-card rounded-2xl overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300"
+            <div className="flex items-center justify-between">
+              <h2 className="font-serif-heading text-2xl font-bold text-hero-text">
+                Related Varieties
+              </h2>
+              <Link
+                href={product?.category ? `/products?category=${product.category.slug}` : "/products"}
+                className="flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-500 transition-colors"
+              >
+                View All
+                <span className="text-lg leading-none">→</span>
+              </Link>
+            </div>
+            <div className="relative group/scroll">
+              {relatedProducts.length > 3 && (
+                <>
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById("related-scroll");
+                      if (el) el.scrollBy({ left: -320, behavior: "smooth" });
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all cursor-pointer opacity-0 group-hover/scroll:opacity-100"
+                    aria-label="Scroll left"
                   >
-                    <div className="relative h-44 w-full overflow-hidden shrink-0">
-                      <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
-                        <Image
-                          src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
-                          alt={prod.name}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </Link>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      <Link href={`/products/${prod.slug}`} className="block cursor-pointer group-hover:opacity-95">
-                        <div className="flex items-center justify-between text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">
-                          <span>{prod.category?.name || "Premium Grade"}</span>
-                          <span>{origin}</span>
-                        </div>
-                        <h3 className="font-serif-heading font-bold text-hero-text text-sm group-hover:text-[#fbbf24] transition-colors truncate mt-1">
-                          {prod.name}
-                        </h3>
-                      </Link>
-                      <div className="flex items-center justify-between pt-2 border-t border-border">
-                        <span className="text-base font-black text-hero-text">৳&nbsp;{prod.sale_price || prod.price}</span>
-                        <Link
-                          href={`/products/${prod.slug}`}
-                          className="px-3.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold transition-all"
-                        >
-                          View
+                    <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById("related-scroll");
+                      if (el) el.scrollBy({ left: 320, behavior: "smooth" });
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all cursor-pointer opacity-0 group-hover/scroll:opacity-100"
+                    aria-label="Scroll right"
+                  >
+                    <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </>
+              )}
+              <div
+                id="related-scroll"
+                className="flex gap-5 overflow-x-auto scroll-smooth pb-2 snap-x snap-mandatory scrollbar-hide"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {relatedProducts.map((prod) => {
+                  const origin = (prod.metadata as any)?.origin_district || "Rajshahi";
+                  return (
+                    <div
+                      key={prod.id}
+                      className="snap-start shrink-0 w-[260px] group bg-white rounded-xl overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100"
+                    >
+                      <div className="relative h-40 w-full overflow-hidden shrink-0 bg-gray-50">
+                        <Link href={`/products/${prod.slug}`} className="block w-full h-full">
+                          <Image
+                            src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
+                            alt={prod.name}
+                            fill
+                            sizes="260px"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
                         </Link>
                       </div>
+                      <div className="p-3.5 space-y-2.5">
+                        <Link href={`/products/${prod.slug}`} className="block group-hover:opacity-95">
+                          <div className="flex items-center justify-between text-[9px] font-bold text-emerald-600 uppercase tracking-wider">
+                            <span>{prod.category?.name || "Premium"}</span>
+                            <span>{origin}</span>
+                          </div>
+                          <h3 className="font-bold text-gray-800 text-sm group-hover:text-emerald-700 transition-colors truncate mt-1">
+                            {prod.name}
+                          </h3>
+                        </Link>
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <span className="text-base font-black text-gray-800">
+                            ৳&nbsp;{(prod.sale_price || prod.price).toLocaleString("en-BD")}
+                          </span>
+                          <Link
+                            href={`/products/${prod.slug}`}
+                            className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[10px] font-bold transition-all"
+                          >
+                            View
+                          </Link>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </section>
         )}
 
       </main>
       </div>
+
+      {/* Recently Viewed */}
+      <RecentlyViewed />
 
       {/* Image Zoom Lightbox */}
       {isZoomed && (

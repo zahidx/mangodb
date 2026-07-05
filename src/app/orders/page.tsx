@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { Package, Calendar, ArrowRight, Loader2 } from "lucide-react";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { getUserOrders } from "@/lib/supabase/queries";
+import { ArrowRight, Calendar, Loader2, Package, RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export default function OrdersPage() {
   const { profile, loading: authLoading } = useAuth();
+  const { addToCart } = useCart();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
@@ -54,6 +56,36 @@ export default function OrdersPage() {
   const activeOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
   const pastOrders = orders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
   const displayOrders = activeTab === 'active' ? activeOrders : pastOrders;
+
+  const handleReorder = (order: any) => {
+    const items = order.order_items || [];
+    if (items.length === 0) {
+      toast.error("No items to reorder");
+      return;
+    }
+    
+    let addedCount = 0;
+    items.forEach((item: any) => {
+      if (item.product) {
+        addToCart(
+          {
+            ...item.product,
+            sale_price: item.product.sale_price || item.product.price,
+          },
+          item.quantity,
+          item.selected_weight || "10kg",
+          false // Don't show toast for each item
+        );
+        addedCount++;
+      }
+    });
+
+    if (addedCount > 0) {
+      toast.success(`${addedCount} item${addedCount > 1 ? "s" : ""} added to cart!`);
+    } else {
+      toast.error("Could not reorder — product details missing");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
@@ -223,7 +255,16 @@ export default function OrdersPage() {
                           </div>
 
                           {/* 6. Action (col-span-2) */}
-                          <div className="lg:col-span-2 flex justify-start lg:justify-end pr-0 lg:pr-4">
+                          <div className="lg:col-span-2 flex items-center gap-2 justify-start lg:justify-end pr-0 lg:pr-4">
+                            {activeTab === 'past' && (
+                              <button
+                                onClick={() => handleReorder(order)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-300 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 font-bold rounded-lg transition-all text-[11px] whitespace-nowrap cursor-pointer"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                Reorder
+                              </button>
+                            )}
                             <Link 
                               href={`/track?id=${order.id}`}
                               className="w-full lg:w-auto px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-all shadow-sm flex items-center justify-center gap-1.5 text-[11px] whitespace-nowrap"

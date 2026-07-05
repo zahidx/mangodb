@@ -66,6 +66,17 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Missing product ID" }, { status: 400 });
     }
 
+    // Fetch previous stock before updating (for history logging)
+    let previousStock = 0;
+    if (updateData.stock !== undefined) {
+      const { data: existing } = await supabase
+        .from("products")
+        .select("stock")
+        .eq("id", id)
+        .single();
+      if (existing) previousStock = existing.stock;
+    }
+
     updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase
@@ -77,6 +88,23 @@ export async function PUT(req: Request) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // Log stock change to history
+    if (updateData.stock !== undefined && previousStock !== updateData.stock) {
+      const changeAmount = updateData.stock - previousStock;
+      try {
+        await supabase.from("stock_history").insert({
+          product_id: id,
+          previous_stock: previousStock,
+          new_stock: updateData.stock,
+          change_amount: changeAmount,
+          reason: "manual_adjustment",
+          changed_by: null, // Could be enhanced with admin user ID
+        });
+      } catch (logErr) {
+        console.warn("Failed to log stock history:", logErr);
+      }
     }
 
     return NextResponse.json({ data });
