@@ -175,10 +175,77 @@ export default function AdminDeliveryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-          <p className="text-xs font-semibold text-[#475569]">Loading delivery zones...</p>
+      <div className="flex flex-col gap-6 max-w-[1400px] text-[#0F172A] font-sans animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="h-8 w-48 bg-slate-200 rounded-md mb-2"></div>
+            <div className="h-4 w-64 sm:w-96 bg-slate-200 rounded-md"></div>
+          </div>
+          <div className="h-10 w-32 bg-slate-200 rounded-md shrink-0"></div>
+        </div>
+
+        {/* Stats Row Skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
+              <div className="h-3 w-20 bg-slate-200 rounded"></div>
+              <div className="h-8 w-16 bg-slate-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters Bar Skeleton */}
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-sm">
+          <div className="h-10 w-full lg:w-96 bg-slate-200 rounded-md"></div>
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <div className="h-10 w-32 bg-slate-200 rounded-md"></div>
+            <div className="hidden sm:block w-px h-6 bg-slate-200 mx-1"></div>
+            <div className="h-10 w-20 bg-slate-200 rounded-md"></div>
+            <div className="h-10 w-24 bg-slate-200 rounded-md"></div>
+            <div className="h-10 w-20 bg-slate-200 rounded-md"></div>
+          </div>
+        </div>
+
+        {/* Zones Table Skeleton */}
+        <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
+                  <th className="px-6 py-4"><div className="h-3 w-20 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4 flex justify-end"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EEF2F7]">
+                {[...Array(5)].map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-slate-200 rounded-md shrink-0"></div>
+                        <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4"><div className="h-6 w-16 bg-slate-200 rounded-md"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-200 rounded"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-200 rounded"></div></td>
+                    <td className="px-6 py-4"><div className="h-6 w-20 bg-slate-200 rounded-md"></div></td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2.5">
+                        <div className="h-5 w-9 bg-slate-200 rounded-md"></div>
+                        <div className="h-8 w-8 bg-slate-200 rounded-md"></div>
+                        <div className="h-8 w-8 bg-slate-200 rounded-md"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );

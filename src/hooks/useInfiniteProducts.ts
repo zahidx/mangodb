@@ -57,7 +57,23 @@ export function useInfiniteProducts(
     setError(null);
     setLoading(true);
     isFetchingRef.current = false;
+
+    // Nuclear safety timeout: guarantee loading clears after 8s
+    const safetyTimer = setTimeout(() => {
+      if (isFetchingRef.current) {
+        isFetchingRef.current = false;
+      }
+      setLoading(false);
+      setLoadingMore(false);
+      setError("Could not load products. Database may be unavailable.");
+    }, 8000);
+
     loadPage(0, true);
+
+    return () => {
+      clearTimeout(safetyTimer);
+      isFetchingRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
 
@@ -77,6 +93,9 @@ export function useInfiniteProducts(
 
         if (res.error) {
           setError(res.error.message || "Failed to load products");
+          setLoading(false);
+          setLoadingMore(false);
+          isFetchingRef.current = false;
           return;
         }
 

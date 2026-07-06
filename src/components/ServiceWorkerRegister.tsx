@@ -4,6 +4,9 @@ import { useEffect } from "react";
 
 export default function ServiceWorkerRegister() {
   useEffect(() => {
+    // Never register in development — prevents stale chunk caching
+    if (process.env.NODE_ENV === "development") return;
+
     if ("serviceWorker" in navigator) {
       // Wait until the page is fully loaded before registering
       window.addEventListener("load", () => {

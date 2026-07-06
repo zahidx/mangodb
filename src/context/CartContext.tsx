@@ -12,13 +12,14 @@ export interface ExtendedCartItem {
   product_id: string;
   quantity: number;
   selected_weight: string; // "1kg" | "2kg" | "5kg" | "10kg"
+  variant_id?: string;
   product: Product;
 }
 
 interface CartContextType {
   cartItems: ExtendedCartItem[];
   loading: boolean;
-  addToCart: (product: Product, quantity?: number, weight?: string, showToast?: boolean) => Promise<void>;
+  addToCart: (product: Product, quantity?: number, weight?: string, showToast?: boolean, variantId?: string) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   updateWeight: (cartItemId: string, weight: string) => Promise<void>;
@@ -35,6 +36,7 @@ interface CartContextType {
   selectedItemIds: string[];
   toggleItemSelection: (cartItemId: string) => void;
   toggleAllSelection: (selected: boolean) => void;
+  saveGuestCheckoutInfo: (email: string, name?: string, phone?: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -123,6 +125,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     loadCart();
   }, [profile]);
 
+  // Save guest email/phone for abandoned cart recovery
+  const saveGuestCheckoutInfo = (email: string, name?: string, phone?: string) => {
+    const profileData = { email, name: name || "", phone: phone || "", createdAt: new Date().toISOString() };
+    localStorage.setItem("mangodb-guest-profile", JSON.stringify(profileData));
+
+    // Also save to server for cron-based recovery
+    const cartItemsLocal = JSON.parse(localStorage.getItem("mangodb-cart") || "[]");
+    if (email && cartItemsLocal.length > 0) {
+      const total = cartItemsLocal.reduce((sum: number, item: any) => {
+        const price = item.product?.sale_price || item.product?.price || 0;
+        return sum + price * item.quantity;
+      }, 0);
+
+      fetch("/api/carts/abandoned-save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          name: name || "",
+          phone: phone || "",
+          item_count: cartItemsLocal.length,
+          cart_total: total,
+        }),
+      }).catch(() => {});
+    }
+  };
+
   // Save cart to local storage when it changes
   const saveLocalCart = (items: ExtendedCartItem[]) => {
     setCartItems(items);
@@ -142,7 +171,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addToCart = async (product: Product, quantity = 1, weight = "10kg", showToast = true) => {
+  const addToCart = async (product: Product, quantity = 1, weight = "10kg", showToast = true, variantId?: string) => {
     const existingIndex = cartItems.findIndex(
       (item) => item.product_id === product.id && item.selected_weight === weight
     );
@@ -158,6 +187,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         product_id: product.id,
         quantity,
         selected_weight: weight,
+        variant_id: variantId || undefined,
         product,
       });
       setSelectedItemIds(prev => [...prev, newItemId]);
@@ -413,6 +443,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         total,
         deliveryDistrict,
         setDeliveryDistrict,
+        saveGuestCheckoutInfo,
         selectedItemIds,
         toggleItemSelection,
         toggleAllSelection,

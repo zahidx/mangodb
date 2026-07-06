@@ -111,10 +111,91 @@ export default function AdminSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-slate-600 animate-spin" />
-          <p className="text-xs font-semibold text-[#475569]">Loading global settings...</p>
+      <div className="flex flex-col gap-6 max-w-[1000px] mx-auto w-full text-[#0F172A] font-sans animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="h-8 w-48 bg-slate-200 rounded-md mb-2"></div>
+            <div className="h-4 w-64 sm:w-96 bg-slate-200 rounded-md"></div>
+          </div>
+          <div className="h-10 w-32 bg-slate-200 rounded-md shrink-0"></div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Identity Skeleton */}
+          <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#EEF2F7] bg-[#F8FAFC]">
+              <div className="h-5 w-32 bg-slate-200 rounded"></div>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5 md:col-span-2">
+                <div className="h-3 w-20 bg-slate-200 rounded"></div>
+                <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <div className="h-3 w-24 bg-slate-200 rounded"></div>
+                <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Information Skeleton */}
+          <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#EEF2F7] bg-[#F8FAFC]">
+              <div className="h-5 w-40 bg-slate-200 rounded"></div>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <div className="h-3 w-24 bg-slate-200 rounded"></div>
+                <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-3 w-24 bg-slate-200 rounded"></div>
+                <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <div className="h-3 w-48 bg-slate-200 rounded"></div>
+                <div className="h-24 w-full bg-slate-200 rounded-md"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Shipping & Payment Defaults Skeleton */}
+          <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#EEF2F7] bg-[#F8FAFC]">
+              <div className="h-5 w-48 bg-slate-200 rounded"></div>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <div className="h-3 w-32 bg-slate-200 rounded"></div>
+                <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-3 w-32 bg-slate-200 rounded"></div>
+                <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+              </div>
+              <div className="md:col-span-2 pt-2 border-t border-[#EEF2F7]">
+                <div className="h-4 w-64 bg-slate-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Links Skeleton */}
+          <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#EEF2F7] bg-[#F8FAFC]">
+              <div className="h-5 w-32 bg-slate-200 rounded"></div>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <div className="h-3 w-24 bg-slate-200 rounded"></div>
+                <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-3 w-24 bg-slate-200 rounded"></div>
+                <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

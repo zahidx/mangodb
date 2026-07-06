@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, Loader2, Tag } from "lucide-react";
+import { PromoBannersSkeleton } from "@/components/skeletons";
+import { ArrowRight, Tag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -46,13 +47,7 @@ export default function PromoBanners() {
   }, []);
 
   if (loading) {
-    return (
-      <section className="max-w-7xl mx-auto px-4 mt-8">
-        <div className="flex items-center justify-center h-32 bg-white/50 border border-gray-100 rounded-xl">
-          <Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
-        </div>
-      </section>
-    );
+    return <PromoBannersSkeleton />;
   }
 
   if (banners.length === 0) return null;

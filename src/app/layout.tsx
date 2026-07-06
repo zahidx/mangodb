@@ -3,10 +3,8 @@ import CartRecoveryPrompt from "@/components/CartRecoveryPrompt";
 import CompareBar from "@/components/CompareBar";
 import CookieConsent from "@/components/CookieConsent";
 import MarketingScripts from "@/components/MarketingScripts";
+import Providers from "@/components/Providers";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-import { AuthProvider } from "@/context/AuthContext";
-import { CartProvider } from "@/context/CartContext";
-import { CompareProvider } from "@/context/CompareContext";
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono, Outfit, Playfair_Display } from "next/font/google";
 import Script from "next/script";
@@ -136,7 +134,7 @@ export default function RootLayout({
                 "@type": "ContactPoint",
                 telephone: "+880-1700-000000",
                 contactType: "customer service",
-                availableLanguage: ["Bengali", "English"],
+                availableLanguage: ["English", "Bengali"],
               },
               sameAs: [
                 "https://facebook.com/mangodb",
@@ -167,23 +165,19 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden" suppressHydrationWarning>
-        <AuthProvider>
-          <CartProvider>
-            <CompareProvider>
-              {children}
-              <CompareBar />
-              <CartRecoveryPrompt />
-            </CompareProvider>
-          </CartProvider>
-        </AuthProvider>
+        <Providers>
+          {children}
+          <CompareBar />
+          <CartRecoveryPrompt />
+        </Providers>
         <Toaster
-          position="top-right"
-          gutter={10}
+          position="bottom-center"
+          gutter={12}
           containerClassName="mangodb-toaster"
           toastOptions={{
             duration: 3500,
             style: {
-              borderRadius: "12px",
+              borderRadius: "14px",
               padding: "14px 18px",
               fontSize: "13px",
               fontWeight: 600,

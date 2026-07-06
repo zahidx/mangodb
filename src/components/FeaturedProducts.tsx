@@ -1,53 +1,23 @@
 "use client";
 
+import { FeaturedProductsSkeleton } from "@/components/skeletons";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import { getFeaturedProducts } from "@/lib/supabase/queries";
 import type { Product } from "@/types/database";
-import { Heart, Loader2, ShoppingBag, Star, Zap } from "lucide-react";
+import { Heart, ShoppingBag, Star, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
 
 export default function FeaturedProducts() {
   const { addToCart } = useCart();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const { wishlist, isInWishlist, toggleWishlist } = useWishlist();
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("mangodb-wishlist");
-    if (saved) {
-      try {
-        setWishlist(JSON.parse(saved));
-      } catch (_) {}
-    }
-  }, []);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await getFeaturedProducts(10);
-        if (res.data) setProducts(res.data);
-      } catch (_) {
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  const toggleWishlist = (id: string) => {
-    const next = wishlist.includes(id)
-      ? wishlist.filter((x) => x !== id)
-      : [...wishlist, id];
-    setWishlist(next);
-    localStorage.setItem("mangodb-wishlist", JSON.stringify(next));
-    toast.success(wishlist.includes(id) ? "Removed from wishlist" : "Added to wishlist");
-  };
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -63,6 +33,26 @@ export default function FeaturedProducts() {
     el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
   };
 
+  // Fetch featured products on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchFeatured() {
+      try {
+        const res = await getFeaturedProducts(8);
+        if (cancelled) return;
+        if (res.data) {
+          setProducts(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load featured products:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchFeatured();
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -72,13 +62,7 @@ export default function FeaturedProducts() {
   }, [products]);
 
   if (loading) {
-    return (
-      <section className="max-w-7xl mx-auto px-4 mt-14">
-        <div className="flex items-center justify-center h-40 bg-white/50 border border-gray-100 rounded-xl">
-          <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
-        </div>
-      </section>
-    );
+    return <FeaturedProductsSkeleton />;
   }
 
   if (products.length === 0) return null;
@@ -129,7 +113,7 @@ export default function FeaturedProducts() {
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {products.map((prod) => {
-            const isWished = wishlist.includes(prod.id);
+            const isWished = isInWishlist(prod.id);
             return (
               <div
                 key={prod.id}

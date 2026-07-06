@@ -1,11 +1,13 @@
 "use client";
 
+import Breadcrumbs from "@/components/Breadcrumbs";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import QuickViewModal from "@/components/QuickViewModal";
 import { ProductGridSkeleton } from "@/components/skeletons";
 import { useCart } from "@/context/CartContext";
 import { useCompare } from "@/context/CompareContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import { createClient } from "@/lib/supabase/client";
 import type { Category, Product } from "@/types/database";
 import { Heart, ShoppingBag } from "lucide-react";
@@ -21,11 +23,11 @@ export default function CategoryPage() {
   const supabase = createClient() as any;
   const { addToCart } = useCart();
   const { addToCompare, isInCompare, removeFromCompare } = useCompare();
+  const { wishlist, isInWishlist, toggleWishlist } = useWishlist();
 
   const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [wishlist, setWishlist] = useState<string[]>([]);
   const [quickViewProduct, setQuickViewProduct] = useState<any | null>(null);
 
   useEffect(() => {
@@ -33,10 +35,6 @@ export default function CategoryPage() {
     setLoading(true);
 
     async function load() {
-      // Load wishlist
-      const saved = localStorage.getItem("mangodb-wishlist");
-      if (saved) setWishlist(JSON.parse(saved));
-
       // Fetch category
       const { data: cat } = await supabase
         .from("categories")
@@ -56,19 +54,6 @@ export default function CategoryPage() {
     }
     load();
   }, [slug]);
-
-  const toggleWishlist = (productId: string) => {
-    let list = [...wishlist];
-    if (list.includes(productId)) {
-      list = list.filter((id) => id !== productId);
-      toast.success("Removed from wishlist");
-    } else {
-      list.push(productId);
-      toast.success("Added to wishlist");
-    }
-    setWishlist(list);
-    localStorage.setItem("mangodb-wishlist", JSON.stringify(list));
-  };
 
   if (loading) {
     return (
@@ -118,12 +103,13 @@ export default function CategoryPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
           <div className="max-w-7xl mx-auto">
-            <Link
-              href="/products"
-              className="text-emerald-300 hover:text-emerald-200 text-xs font-semibold tracking-wider uppercase mb-2 inline-block"
-            >
-              ← All Products
-            </Link>
+            <div className="mb-3">
+              <Breadcrumbs items={[
+                { label: "Home", href: "/" },
+                { label: "Shop Mangoes", href: "/products" },
+                { label: category.name },
+              ]} />
+            </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white font-serif">
               {category.name}
             </h1>

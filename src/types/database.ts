@@ -35,6 +35,21 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface ProductVariant {
+  id: string;
+  product_id: string;
+  label: string;           // "1kg", "5kg", "10kg", "1L"
+  sku: string;             // "HIMSAGAR-5KG"
+  price: number;
+  sale_price: number | null;
+  stock: number;
+  weight_kg: number | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Category {
   id: string;
   name: string;

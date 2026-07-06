@@ -455,7 +455,7 @@ export default function CheckoutPage() {
             <p className="text-xs text-gray-400 mb-4">
               {profile && !profile.id.startsWith("demo-")
                 ? "You can view all your orders in your dashboard."
-                : `A confirmation has been sent to ${checkoutForm.email}. Save your Order ID to track delivery.`}
+                : `A receipt has been sent to ${checkoutForm.email}. Use your Order ID or email to track delivery.`}
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
               <Link href={`/invoice/${orderCreatedId}`} className="flex-1 py-2.5 text-center border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
@@ -506,6 +506,32 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* === GUEST MODE BANNER === */}
+      {(!profile || profile.id.startsWith("demo-")) && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-0 pt-6">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+              <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-amber-800">Checking out as Guest</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                You&apos;re ordering without an account. Save your <strong>Order ID</strong> to track delivery.
+                <Link href="/login" className="ml-1 font-semibold underline hover:text-amber-900 transition-colors">Sign in</Link> for a personalized experience.
+              </p>
+            </div>
+            <Link
+              href="/login"
+              className="shrink-0 px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-bold text-amber-700 hover:bg-amber-50 transition-colors hidden sm:block"
+            >
+              Sign In
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* === MAIN CONTENT === */}
       <div className="grow max-w-5xl w-full mx-auto px-4 sm:px-6 py-8">

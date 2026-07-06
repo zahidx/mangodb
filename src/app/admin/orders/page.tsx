@@ -1,5 +1,6 @@
 "use client";
 
+import { useRealtimeOrderList } from "@/hooks/useRealtimeOrderList";
 import {
     Calendar,
     CheckCircle,
@@ -13,6 +14,7 @@ import {
     RefreshCw,
     Search,
     Trash2,
+    Wifi,
     X
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -58,8 +60,10 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [fetchedOrders, setFetchedOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [liveConnected, setLiveConnected] = useState(true);
+  const orders = useRealtimeOrderList(fetchedOrders);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
@@ -73,6 +77,14 @@ export default function AdminOrdersPage() {
     loadOrders();
   }, []);
 
+  // Check live connection
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveConnected(navigator.onLine);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const loadOrders = async () => {
     setLoading(true);
     try {
@@ -83,7 +95,7 @@ export default function AdminOrdersPage() {
         throw new Error(result.error || "Failed to load orders list");
       }
 
-      setOrders(result.data || []);
+      setFetchedOrders(result.data || []);
     } catch (err: any) {
       toast.error(err.message || "Database connection failed");
     } finally {
@@ -111,8 +123,8 @@ export default function AdminOrdersPage() {
 
       toast.success("Order updated successfully", { id: toastId });
       
-      // Update local state
-      setOrders((prev) =>
+      // Update local state (realtime hook will sync, but update instantly too)
+      setFetchedOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, ...updates } : o))
       );
 
@@ -141,7 +153,7 @@ export default function AdminOrdersPage() {
       }
 
       toast.success("Order deleted successfully", { id: toastId });
-      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      setFetchedOrders((prev) => prev.filter((o) => o.id !== orderId));
       if (selectedOrder?.id === orderId) {
         setIsDetailModalOpen(false);
       }
@@ -228,13 +240,26 @@ export default function AdminOrdersPage() {
     <div className="space-y-6">
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-[#EEF2F7] shadow-sm">
-        <div>
-          <h1 className="font-serif-heading text-2xl font-black text-[#0F172A] tracking-tight">
-            Orders Registry
-          </h1>
-          <p className="text-xs text-[#64748B] font-medium mt-1">
-            Monitor, update shipment statuses, verify payments, and manage e-commerce orders.
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="font-serif-heading text-2xl font-black text-[#0F172A] tracking-tight">
+              Orders Registry
+            </h1>
+            <p className="text-xs text-[#64748B] font-medium mt-1">
+              Monitor, update shipment statuses, verify payments, and manage e-commerce orders.
+            </p>
+          </div>
+          {/* Live indicator */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50">
+            <span className="relative flex h-2 w-2">
+              <span className={`absolute inline-flex h-full w-full rounded-full bg-emerald-400 ${liveConnected ? 'animate-ping' : ''} opacity-75`} />
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${liveConnected ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+            </span>
+            <span className="text-[10px] font-bold text-emerald-700">
+              {liveConnected ? "LIVE" : "Offline"}
+            </span>
+            <Wifi className={`w-3 h-3 ${liveConnected ? 'text-emerald-500' : 'text-gray-400'}`} />
+          </div>
         </div>
         <button
           onClick={loadOrders}
@@ -348,11 +373,61 @@ export default function AdminOrdersPage() {
 
         {/* Content list / table */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-3">
-            <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-            <p className="text-xs font-semibold text-[#64748B]">
-              Retrieving orders database...
-            </p>
+          <div className="overflow-x-auto animate-pulse">
+            <table className="w-full text-left border-collapse min-w-[1000px]">
+              <thead>
+                <tr className="border-b border-[#EEF2F7] bg-slate-50/50">
+                  <th className="px-6 py-4"><div className="h-3 w-8 bg-slate-200 rounded mx-auto"></div></th>
+                  <th className="px-6 py-4"><div className="h-3 w-24 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4"><div className="h-3 w-24 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4 flex justify-end"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-6 py-4 flex justify-end"><div className="h-3 w-20 bg-slate-200 rounded"></div></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EEF2F7]">
+                {[...Array(5)].map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4"><div className="h-4 w-6 bg-slate-200 rounded mx-auto"></div></td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-2">
+                        <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                        <div className="h-3 w-20 bg-slate-200 rounded"></div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-slate-200 rounded-full shrink-0"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                          <div className="h-3 w-32 bg-slate-200 rounded"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-2">
+                        <div className="h-4 w-12 bg-slate-200 rounded"></div>
+                        <div className="h-6 w-20 bg-slate-200 rounded-md"></div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="space-y-2 flex flex-col items-end">
+                        <div className="h-4 w-16 bg-slate-200 rounded"></div>
+                        <div className="h-3 w-12 bg-slate-200 rounded"></div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4"><div className="h-6 w-20 bg-slate-200 rounded-full"></div></td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="h-8 w-8 bg-slate-200 rounded-xl"></div>
+                        <div className="h-8 w-8 bg-slate-200 rounded-xl"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="text-center py-20 bg-transparent space-y-4">
@@ -388,7 +463,7 @@ export default function AdminOrdersPage() {
                   
                   // Product summarize
                   const firstItem = order.order_items?.[0];
-                  const totalItemsCount = order.order_items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+                  const totalItemsCount = order.order_items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
                   const itemSummary = firstItem?.product?.name 
                     ? `${firstItem.product.name}${totalItemsCount > 1 ? ` + ${totalItemsCount - 1} other items` : ""}`
                     : "Premium Mango Crate";

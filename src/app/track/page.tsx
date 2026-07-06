@@ -2,14 +2,17 @@
 
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import RealtimeOrderStatus from "@/components/RealtimeOrderStatus";
 import { getOrderById } from "@/lib/supabase/queries";
 import {
     Bike,
     Check,
+    ChevronRight,
     ClipboardList,
     Clock,
     Home,
     Loader2,
+    Mail,
     MapPin,
     Package,
     Phone,
@@ -27,8 +30,11 @@ function TrackContent() {
   const router = useRouter();
   const orderIdParam = searchParams.get("id");
 
+  const [searchMode, setSearchMode] = useState<"id" | "email">("id");
   const [searchId, setSearchId] = useState(orderIdParam ? orderIdParam.replace(/^#?MNG-/, '') : "");
+  const [searchEmail, setSearchEmail] = useState("");
   const [order, setOrder] = useState<any | null>(null);
+  const [orderList, setOrderList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -93,6 +99,8 @@ function TrackContent() {
 
     setLoading(true);
     setHasSearched(true);
+    setOrder(null);
+    setOrderList([]);
     router.replace(`/track?id=${formattedId}`);
 
     try {
@@ -124,6 +132,47 @@ function TrackContent() {
     }
   };
 
+  const performEmailSearch = async (email: string) => {
+    if (!email.trim()) return;
+    const cleanEmail = email.trim().toLowerCase();
+
+    setLoading(true);
+    setHasSearched(true);
+    setOrder(null);
+    setOrderList([]);
+
+    try {
+      // Search in guest orders by email
+      const byEmail = JSON.parse(localStorage.getItem("mangodb-guest-orders-by-email") || "{}");
+      const guestOrderIds: string[] = byEmail[cleanEmail] || [];
+
+      const guestStored = JSON.parse(localStorage.getItem("mangodb-guest-orders") || "[]");
+      const ordersByEmail = guestStored.filter((o: any) =>
+        o._guestEmail?.toLowerCase() === cleanEmail || guestOrderIds.includes(o.id)
+      );
+
+      // Also search in regular orders where shipping email matches
+      const storedOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
+      const matchedStored = storedOrders.filter((o: any) =>
+        o.shipping_address?.email?.toLowerCase() === cleanEmail
+      );
+
+      const allFound = [...ordersByEmail, ...matchedStored];
+      if (allFound.length > 0) {
+        setOrderList(allFound);
+        toast.success(`Found ${allFound.length} order(s) for ${cleanEmail}`);
+      } else {
+        setOrderList([]);
+        toast.error("No orders found for this email");
+      }
+    } catch (err) {
+      toast.error("Failed to search orders by email");
+      setOrderList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (orderIdParam) {
       setSearchId(orderIdParam.replace(/^#?MNG-/, ''));
@@ -133,7 +182,11 @@ function TrackContent() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    performSearch(searchId);
+    if (searchMode === "id") {
+      performSearch(searchId);
+    } else {
+      performEmailSearch(searchEmail);
+    }
   };
 
   const getTimelineSteps = (status: string, createdAt: string, updatedAt: string) => {
@@ -240,22 +293,71 @@ function TrackContent() {
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">Track Your Order</h1>
           <p className="text-gray-500 mt-2 text-sm sm:text-base max-w-md mx-auto">Enter your Order ID to see real-time delivery status and tracking timeline.</p>
 
-          <form onSubmit={handleSearchSubmit} className="mt-8 max-w-xl mx-auto">
+          {/* Search Mode Toggle */}
+          <div className="flex items-center justify-center gap-2 mt-6 mb-4">
+            <button
+              type="button"
+              onClick={() => setSearchMode("id")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                searchMode === "id"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              <Search className="w-3.5 h-3.5 inline mr-1.5" />
+              By Order ID
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchMode("email")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                searchMode === "email"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              <Mail className="w-3.5 h-3.5 inline mr-1.5" />
+              By Email (Guest)
+            </button>
+          </div>
+
+          <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter Order ID (e.g. 152305)"
-                  value={searchId}
-                  onChange={(e) => setSearchId(e.target.value)}
-                  className="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
-                />
-                {searchId && (
-                  <button type="button" onClick={() => setSearchId('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
-                    <XCircle className="w-4 h-4" />
-                  </button>
+                {searchMode === "id" ? (
+                  <>
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter Order ID (e.g. 152305)"
+                      value={searchId}
+                      onChange={(e) => setSearchId(e.target.value)}
+                      className="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                    />
+                    {searchId && (
+                      <button type="button" onClick={() => setSearchId('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="email"
+                      required
+                      placeholder="Enter your email address"
+                      value={searchEmail}
+                      onChange={(e) => setSearchEmail(e.target.value)}
+                      className="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                    />
+                    {searchEmail && (
+                      <button type="button" onClick={() => setSearchEmail('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
               <button
@@ -264,21 +366,97 @@ function TrackContent() {
                 className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                Track Order
+                {searchMode === "id" ? "Track Order" : "Find Orders"}
               </button>
             </div>
-            <p className="text-[11px] text-gray-400 mt-3 flex items-center justify-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              Try: <button type="button" onClick={() => { setSearchId("152305"); performSearch("MNG-152305"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">152305</button>,{" "}
-              <button type="button" onClick={() => { setSearchId("8842"); performSearch("MNG-8842"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">8842</button>,{" "}
-              <button type="button" onClick={() => { setSearchId("7731"); performSearch("MNG-7731"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">7731</button>
-            </p>
+            {searchMode === "id" && (
+              <p className="text-[11px] text-gray-400 mt-3 flex items-center justify-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Try: <button type="button" onClick={() => { setSearchId("152305"); performSearch("MNG-152305"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">152305</button>,{" "}
+                <button type="button" onClick={() => { setSearchId("8842"); performSearch("MNG-8842"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">8842</button>,{" "}
+                <button type="button" onClick={() => { setSearchId("7731"); performSearch("MNG-7731"); }} className="text-emerald-600 hover:text-emerald-700 font-medium underline-offset-2 hover:underline">7731</button>
+              </p>
+            )}
+            {searchMode === "email" && (
+              <p className="text-[11px] text-gray-400 mt-3 flex items-center justify-center gap-1">
+                <Mail className="w-3.5 h-3.5" />
+                Find all orders placed with this email address (works for guest checkouts).
+              </p>
+            )}
           </form>
         </div>
       </section>
 
       {/* ===== RESULTS ===== */}
       <div className="grow max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-10">
+
+        {/* Email Search Results — Order List */}
+        {!loading && hasSearched && orderList.length > 0 && !order && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Mail className="w-5 h-5 text-emerald-500" />
+                Your Orders ({orderList.length})
+              </h2>
+              <p className="text-xs text-gray-400">Click an order to track</p>
+            </div>
+            <div className="space-y-3">
+              {orderList.map((ord: any) => (
+                <button
+                  key={ord.id}
+                  onClick={() => performSearch(ord.id)}
+                  className="w-full bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between hover:border-emerald-300 hover:shadow-sm transition-all text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                      <Package className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-gray-900 font-mono">#{ord.id}</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {ord.order_items?.[0]?.product?.name || ord.order_items?.[0]?.product_name || "Mango Order"} · ৳{ord.total}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                      ord.status === "delivered" ? "bg-emerald-100 text-emerald-700" :
+                      ord.status === "cancelled" ? "bg-red-100 text-red-600" :
+                      "bg-amber-100 text-amber-700"
+                    }`}>
+                      {ord.status?.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {new Date(ord.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-gray-300" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No orders found for email */}
+        {!loading && hasSearched && orderList.length === 0 && !order && searchMode === "email" && (
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-200 shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-8 h-8 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">No Orders Found</h3>
+            <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
+              We couldn't find any orders for this email. Try searching by Order ID instead.
+            </p>
+            <button
+              onClick={() => setSearchMode("id")}
+              className="mt-4 px-5 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              Search by Order ID
+            </button>
+          </div>
+        )}
+
+        {/* Single Order Detail */}
         {!loading && hasSearched && order && (() => {
           const steps = getTimelineSteps(order.status, order.created_at, order.updated_at);
           const activeIndex = steps.filter(s => s.isCompleted).length - 1;
@@ -308,6 +486,7 @@ function TrackContent() {
                         <User className="w-4 h-4 text-emerald-600" />
                       </div>
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Shipping Information</span>
+                      <RealtimeOrderStatus orderId={order.id} onOrderUpdate={(updated) => setOrder(updated)} />
                     </div>
                     <div>
                       <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{order.shipping_address?.full_name}</h2>

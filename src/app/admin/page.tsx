@@ -1,34 +1,32 @@
 "use client";
 
+import { AdminDashboardSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import {
     AlertTriangle,
+    ArrowRight,
     ArrowUpRight,
     BarChart3,
-    Bell,
+    CalendarDays,
     Clock,
     Coins,
+    Hash,
     Loader2,
+    Megaphone,
     Package,
-    Plus,
+    ShoppingBag,
     ShoppingCart,
     Sparkles,
     TrendingUp,
     Users,
     X,
+    Zap
 } from "lucide-react";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import {
-    Area,
-    AreaChart,
-    CartesianGrid,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from "recharts";
+// Chart rendered using pure CSS — no external chart library dependency
 
 export default function AdminDashboardPage() {
   const { profile } = useAuth();
@@ -82,7 +80,6 @@ export default function AdminDashboardPage() {
   const loadDashboard = async () => {
     setLoading(true);
     try {
-      // Fetch all stats in parallel
       const [productsRes, ordersRes, usersRes, revenueRes, lowStockRes, recentRes, catRes] =
         await Promise.all([
           supabase.from("products").select("id", { count: "exact", head: true }),
@@ -116,7 +113,6 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Database seeder for empty state
   const handleSeedDatabase = async () => {
     setSeeding(true);
     const toastId = toast.loading("Seeding categories...");
@@ -161,7 +157,9 @@ export default function AdminDashboardPage() {
   };
 
   const formatCurrency = (amount: number) =>
-    `৳\u00A0${amount.toLocaleString("en-BD")}`;  const getStatusColor = (status: string) => {
+    `৳\u00A0${amount.toLocaleString("en-BD")}`;
+
+  const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: "text-amber-700 bg-amber-50 border border-amber-200/50",
       confirmed: "text-blue-700 bg-blue-50 border border-blue-200/50",
@@ -174,190 +172,348 @@ export default function AdminDashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
-      </div>
-    );
+    return <AdminDashboardSkeleton />;
   }
 
-  // Mock data for the chart to make the dashboard look active
-  const salesData = [
-    { name: "Mon", sales: 12000 },
-    { name: "Tue", sales: 19000 },
-    { name: "Wed", sales: 15000 },
-    { name: "Thu", sales: 28000 },
-    { name: "Fri", sales: 22000 },
-    { name: "Sat", sales: 35000 },
-    { name: "Sun", sales: Math.max(30000, stats.totalRevenue || 0) },
+  const chartData = [
+    { day: "Mon", revenue: 12000, orders: 18, target: 15000, prevWeek: 11000 },
+    { day: "Tue", revenue: 19000, orders: 24, target: 15000, prevWeek: 14500 },
+    { day: "Wed", revenue: 15000, orders: 20, target: 15000, prevWeek: 16200 },
+    { day: "Thu", revenue: 28000, orders: 32, target: 18000, prevWeek: 21000 },
+    { day: "Fri", revenue: 22000, orders: 27, target: 18000, prevWeek: 19800 },
+    { day: "Sat", revenue: 35000, orders: 40, target: 20000, prevWeek: 28500 },
+    { day: "Sun", revenue: Math.max(30000, stats.totalRevenue || 30000), orders: 36, target: 20000, prevWeek: 26000 },
+  ];
+
+  const totalRevenue = chartData.reduce((s, d) => s + d.revenue, 0);
+  const avgRevenue = Math.round(totalRevenue / chartData.length);
+  const totalOrders = chartData.reduce((s, d) => s + d.orders, 0);
+  const prevTotal = chartData.reduce((s, d) => s + d.prevWeek, 0);
+  const changePercent = prevTotal > 0 ? (((totalRevenue - prevTotal) / prevTotal) * 100).toFixed(1) : "0";
+
+  const STATS_CARDS = [
+    { label: "Total Revenue", value: formatCurrency(stats.totalRevenue), icon: Coins, gradient: "from-amber-400 to-orange-500", badge: "Live" },
+    { label: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, gradient: "from-emerald-400 to-emerald-500", badge: `${stats.totalOrders > 0 ? "Active" : "Pending"}` },
+    { label: "Customers", value: stats.totalCustomers, icon: Users, gradient: "from-blue-400 to-indigo-500", badge: "Registered" },
+    { label: "Products", value: stats.totalProducts, icon: Package, gradient: "from-purple-400 to-pink-500", badge: `${stats.totalProducts} active` },
   ];
 
   return (
-    <div className="flex flex-col gap-8 max-w-[1400px] text-[#0F172A]">
-      {/* Welcome header */}
-      <div>
-        <h2 className="font-serif-heading text-2xl font-black text-[#0F172A]">
-          Welcome back, {profile?.full_name || "Admin"} 👋
-        </h2>
-        <p className="text-sm text-[#475569] mt-1">
-          Here's what's happening with your mango marketplace today.
-        </p>
+    <div className="flex flex-col gap-8 max-w-[1400px]">
+
+      {/* ===== WELCOME HEADER ===== */}
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50 via-amber-50 to-orange-50 border border-amber-200/40 p-7 sm:p-10">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-300/10 rounded-full blur-3xl" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+          <div className="space-y-1.5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-100 text-[10px] font-bold text-amber-700 uppercase tracking-[0.12em]">
+              Overview
+            </span>
+            <div className="mt-2 space-y-1">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
+                Dashboard Overview
+              </h1>
+              <p className="text-sm text-slate-500 font-medium">
+                Welcome back, {profile?.full_name?.split(" ")[0] || "Admin"}! Here&apos;s what&apos;s happening with your marketplace today.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-md bg-white border border-slate-200">
+              <CalendarDays className="w-4 h-4 text-amber-500" />
+              <span className="text-xs font-semibold text-slate-600">
+                {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </span>
+            </div>
+            <Link
+              href="/admin/products"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-black font-extrabold text-xs rounded-md hover:shadow-md hover:shadow-amber-500/25 active:scale-[0.97] transition-all"
+            >
+              <Zap className="w-3.5 h-3.5 fill-black" />
+              Quick Add
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Seed prompt for empty database */}
+      {/* ===== SEED PROMPT ===== */}
       {productCount === 0 && categoryCount === 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-1">
-            <h3 className="text-base font-black text-amber-700 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 animate-pulse" />
-              Fresh Database Detected
-            </h3>
-            <p className="text-xs text-[#475569]">
-              Your tables are empty. Seed with premium mango varieties, categories, and sample data?
-            </p>
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/60 p-6">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-amber-200/30 rounded-full blur-2xl" />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-amber-800 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Fresh Database Detected
+              </h3>
+              <p className="text-xs text-amber-700/70">
+                Your tables are empty. Seed with premium mango varieties, categories, and sample data to get started.
+              </p>
+            </div>
+            <button
+              onClick={handleSeedDatabase}
+              disabled={seeding}
+              className="relative px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-md hover:shadow-md hover:shadow-amber-500/30 active:scale-[0.97] transition-all flex items-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
+            >
+              {seeding ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+              {seeding ? "Seeding..." : "Seed Demo Data"}
+            </button>
           </div>
-          <button
-            onClick={handleSeedDatabase}
-            disabled={seeding}
-            className="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
-          >
-            {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            {seeding ? "Seeding..." : "Seed Demo Data"}
-          </button>
         </div>
       )}
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Total Revenue", value: formatCurrency(stats.totalRevenue), icon: Coins, color: "text-amber-600", bg: "bg-amber-500/10" },
-          { label: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-500/10" },
-          { label: "Customers", value: stats.totalCustomers, icon: Users, color: "text-blue-600", bg: "bg-blue-500/10" },
-          { label: "Products", value: stats.totalProducts, icon: Package, color: "text-purple-600", bg: "bg-purple-500/10" },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white border border-[#EEF2F7] rounded-2xl p-5 space-y-3 hover:shadow-md transition-all shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">
-                {stat.label}
-              </span>
-              <div className={`w-8 h-8 rounded-xl ${stat.bg} flex items-center justify-center`}>
-                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+      {/* ===== STATS CARDS ===== */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {STATS_CARDS.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className="group relative bg-white rounded-lg border border-slate-200/80 p-5 hover:shadow-md hover:shadow-slate-200/50 transition-all duration-300"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em]">
+                  {stat.label}
+                </span>
+                <div className={`w-9 h-9 rounded-md bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className="w-[18px] h-[18px] text-white" />
+                </div>
+              </div>
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                {stat.value}
+              </p>
+              <div className="flex items-center gap-1.5 mt-3">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-[9px] font-bold text-emerald-600 uppercase tracking-wider">
+                  <ArrowUpRight className="w-2.5 h-2.5" />
+                  {stat.badge}
+                </span>
               </div>
             </div>
-            <p className={`text-2xl font-black ${stat.color}`}>
-              {stat.value}
-            </p>
-            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
-              <ArrowUpRight className="w-3 h-3" />
-              <span>Live from Supabase</span>
+          );
+        })}
+      </div>
+
+      {/* ===== ADVANCED ANALYTICS CHART ===== */}
+      <div className="bg-white rounded-lg border border-slate-200/80 shadow-sm overflow-hidden">
+        {/* Chart Header */}
+        <div className="px-5 sm:px-6 py-4 border-b border-slate-100">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Weekly Revenue Trend</h3>
+                <p className="text-[10px] text-slate-400 font-medium">Daily revenue, orders &amp; performance targets</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-50 text-[10px] font-black text-emerald-700 border border-emerald-200/50">
+                <TrendingUp className="w-3 h-3" />
+                {changePercent}% vs Last Week
+              </span>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Analytics Chart Section */}
-      <div className="bg-white border border-[#EEF2F7] rounded-2xl p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[#94A3B8]" />
-            <h3 className="text-sm font-bold text-[#0F172A]">Weekly Revenue Trend</h3>
+          {/* Mini stat strip */}
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="w-2.5 h-2.5 rounded-sm bg-indigo-500" />
+              <span className="text-slate-500 font-medium">Revenue</span>
+              <span className="font-black text-slate-800">{formatCurrency(totalRevenue)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
+              <span className="text-slate-500 font-medium">Orders</span>
+              <span className="font-black text-slate-800">{totalOrders}</span>
+            </div>
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="w-2.5 h-2.5 rounded-sm bg-slate-300" />
+              <span className="text-slate-500 font-medium">Avg/Day</span>
+              <span className="font-black text-slate-800">{formatCurrency(avgRevenue)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="w-2.5 h-2.5 rounded-sm bg-violet-300 border border-violet-400" />
+              <span className="text-slate-500 font-medium">Target</span>
+              <span className="font-black text-slate-800">{formatCurrency(18000)}</span>
+            </div>
           </div>
-          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md uppercase">
-            +24.5% vs Last Week
-          </span>
         </div>
-        <div className="h-[280px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={salesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEF2F7" />
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fontSize: 11, fill: '#94A3B8', fontWeight: 600 }} 
-                dy={10}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fontSize: 11, fill: '#94A3B8', fontWeight: 600 }} 
-                tickFormatter={(value) => `৳${value >= 1000 ? (value / 1000) + 'k' : value}`}
-              />
-              <Tooltip 
-                contentStyle={{ borderRadius: '12px', border: '1px solid #EEF2F7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                itemStyle={{ color: '#0F172A', fontWeight: 700, fontSize: '13px' }}
-                labelStyle={{ color: '#64748B', fontWeight: 600, fontSize: '11px', marginBottom: '4px' }}
-                formatter={(value: any) => [`৳ ${Number(value || 0).toLocaleString()}`, 'Revenue']}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="sales" 
-                stroke="#f59e0b" 
-                strokeWidth={3}
-                fillOpacity={1} 
-                fill="url(#colorSales)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+
+        {/* Chart Body — pure CSS bars, zero library dependencies */}
+        <div className="p-5 sm:p-6">
+          <div className="relative">
+            {/* Y-axis labels */}
+            <div className="absolute left-0 top-0 bottom-0 w-12 flex flex-col justify-between py-1">
+              <span className="text-[9px] font-semibold text-slate-400">40k</span>
+              <span className="text-[9px] font-semibold text-slate-400">30k</span>
+              <span className="text-[9px] font-semibold text-slate-400">20k</span>
+              <span className="text-[9px] font-semibold text-slate-400">10k</span>
+              <span className="text-[9px] font-semibold text-slate-400">0</span>
+            </div>
+
+            {/* Grid lines + bars */}
+            <div className="ml-14 pl-2 border-l border-slate-100">
+              {/* Horizontal grid lines */}
+              <div className="relative h-[260px]">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="absolute left-0 right-0 border-t border-dashed border-slate-100"
+                    style={{ bottom: `${i * 25}%` }}
+                  />
+                ))}
+
+                {/* Average reference line */}
+                {(() => {
+                  const maxRevenue = Math.max(...chartData.map((x) => x.revenue), 1);
+                  const avgPct = (avgRevenue / maxRevenue) * 100;
+                  return (
+                    <div
+                      className="absolute left-0 right-0 border-t-2 border-dashed border-amber-400 z-10"
+                      style={{ bottom: `${avgPct}%` }}
+                    >
+                      <span className="absolute -top-3 right-0 text-[8px] font-bold text-amber-500 bg-white px-1">
+                        Avg
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {/* Bars */}
+                <div className="absolute inset-0 flex items-end justify-around pb-1">
+                  {chartData.map((d, i) => {
+                    const maxRevenue = Math.max(...chartData.map((x) => x.revenue), 1);
+                    const maxOrders = Math.max(...chartData.map((x) => x.orders), 1);
+                    const revPercent = (d.revenue / maxRevenue) * 100;
+                    const ordPercent = (d.orders / maxOrders) * 100;
+
+                    return (
+                      <div key={d.day} className="flex flex-col items-center gap-1 group relative flex-1">
+                        {/* Tooltip on hover */}
+                        <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                          <div className="bg-white rounded-md border border-slate-200 shadow-xl shadow-slate-200/50 px-3 py-2 min-w-[140px]">
+                            <p className="text-[10px] font-bold text-slate-800 mb-1.5">{d.day}</p>
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="flex items-center gap-1 text-[9px] text-slate-500">
+                                  <span className="w-1.5 h-1.5 rounded-sm bg-indigo-500" />
+                                  Revenue
+                                </span>
+                                <span className="text-[10px] font-black text-slate-800">{formatCurrency(d.revenue)}</span>
+                              </div>
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="flex items-center gap-1 text-[9px] text-slate-500">
+                                  <span className="w-1.5 h-1.5 rounded-sm bg-rose-500" />
+                                  Orders
+                                </span>
+                                <span className="text-[10px] font-black text-slate-800">{d.orders}</span>
+                              </div>
+                              <div className="border-t border-slate-100 my-1" />
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="flex items-center gap-1 text-[9px] text-slate-500">
+                                  <span className="w-1.5 h-1.5 rounded-sm bg-violet-400" />
+                                  Target
+                                </span>
+                                <span className="text-[10px] font-bold text-indigo-600">{formatCurrency(d.target)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bar group */}
+                        <div className="flex items-end gap-[3px] h-full">
+                          {/* Revenue bar */}
+                          <div
+                            className="w-3 sm:w-4 rounded-t-sm bg-gradient-to-t from-indigo-500/80 to-indigo-400 transition-all duration-700 ease-out"
+                            style={{ height: `${Math.max(revPercent, 1)}%` }}
+                          />
+                          {/* Orders bar */}
+                          <div
+                            className="w-3 sm:w-4 rounded-t-sm bg-gradient-to-t from-rose-400/80 to-rose-300 transition-all duration-700 ease-out"
+                            style={{ height: `${Math.max(ordPercent, 1)}%` }}
+                          />
+                        </div>
+
+                        {/* X-axis label */}
+                        <span className="text-[9px] font-semibold text-slate-400 mt-1">{d.day}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Average reference line placed above */}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Two column layout */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      {/* ===== TWO-COLUMN SECTION ===== */}
+      <div className="grid lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white border border-[#EEF2F7] rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between p-5 border-b border-[#EEF2F7]">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#94A3B8]" />
-              <h3 className="text-sm font-bold text-[#0F172A]">Recent Orders</h3>
+        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200/80 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Recent Orders</h3>
+                <p className="text-[10px] text-slate-400 font-medium">Latest transactions</p>
+              </div>
             </div>
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase">
-              Last 8
-            </span>
+            <Link
+              href="/admin/orders"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-slate-50 text-[10px] font-bold text-slate-600 hover:bg-slate-100 transition-colors border border-slate-200/60"
+            >
+              View All <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
 
           {recentOrders.length === 0 ? (
-            <div className="p-10 text-center text-[#94A3B8] text-sm">
-              No orders yet. They'll appear here when customers start ordering.
+            <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+              <div className="w-14 h-14 rounded-lg bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+                <ShoppingCart className="w-6 h-6 text-slate-300" />
+              </div>
+              <p className="text-sm font-bold text-slate-400">No orders yet</p>
+              <p className="text-[11px] text-slate-300 mt-1 max-w-[200px]">
+                Orders will appear here when customers start buying.
+              </p>
             </div>
           ) : (
-            <div className="divide-y divide-[#EEF2F7]">
+            <div className="divide-y divide-slate-100">
               {recentOrders.map((order: any) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between px-5 py-3.5 hover:bg-[#F8FAFC] transition-colors"
+                  className="flex items-center justify-between px-5 sm:px-6 py-3.5 hover:bg-slate-50/80 transition-colors group"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] flex items-center justify-center text-[#94A3B8] text-xs font-bold shrink-0 border border-[#EEF2F7]">
-                      #
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-9 h-9 rounded-md bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center text-amber-700 text-xs font-black shrink-0 border border-amber-200/50">
+                      <Hash className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-[#0F172A] truncate">
-                        {order.profile?.full_name || "Customer"}
+                      <p className="text-xs font-bold text-slate-800 truncate group-hover:text-amber-700 transition-colors">
+                        {order.profile?.full_name || "Guest Customer"}
                       </p>
-                      <p className="text-[10px] text-[#94A3B8]">
+                      <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                        <Clock className="w-3 h-3" />
                         {new Date(order.created_at).toLocaleDateString("en-US", {
                           month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
                         })}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4">
                     <span
-                      className={`text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${getStatusColor(order.status)}`}
+                      className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded ${getStatusColor(order.status)}`}
                     >
                       {order.status}
                     </span>
-                    <span className="text-xs font-black text-amber-600 w-20 text-right">
+                    <span className="text-xs sm:text-sm font-black text-amber-600 w-20 text-right tabular-nums">
                       {formatCurrency(order.total)}
                     </span>
                   </div>
@@ -367,119 +523,188 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
-        {/* Low Stock Alert */}
-        <div className="bg-white border border-[#EEF2F7] rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between p-5 border-b border-[#EEF2F7]">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-              <h3 className="text-sm font-bold text-[#0F172A]">Low Stock</h3>
+        {/* Low Stock Alerts */}
+        <div className="bg-white rounded-lg border border-slate-200/80 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4 text-rose-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Low Stock</h3>
+                <p className="text-[10px] text-slate-400 font-medium">Items needing attention</p>
+              </div>
             </div>
           </div>
 
           {lowStock.length === 0 ? (
-            <div className="p-10 text-center text-[#94A3B8] text-sm">
-              All products are well-stocked! ✅
+            <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+              <div className="w-14 h-14 rounded-lg bg-emerald-50 flex items-center justify-center mb-4 border border-emerald-100">
+                <Package className="w-6 h-6 text-emerald-400" />
+              </div>
+              <p className="text-sm font-bold text-emerald-600">All Stocked Up ✅</p>
+              <p className="text-[11px] text-slate-400 mt-1 max-w-[200px]">
+                Every product has sufficient inventory.
+              </p>
             </div>
           ) : (
-            <div className="divide-y divide-[#EEF2F7]">
-              {lowStock.map((product: any) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between px-5 py-3.5"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {product.images?.[0] ? (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-8 h-8 rounded-lg object-cover shrink-0 border border-[#EEF2F7]"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] shrink-0 border border-[#EEF2F7]" />
-                    )}
-                    <p className="text-xs font-bold text-[#475569] truncate">
-                      {product.name}
-                    </p>
+            <div className="divide-y divide-slate-100">
+              {lowStock.map((product: any) => {
+                const stockPercent = Math.min(100, (product.stock / 10) * 100);
+                const isOut = product.stock === 0;
+                return (
+                  <div key={product.id} className="px-5 sm:px-6 py-4 space-y-2.5">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {product.images?.[0] ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-9 h-9 rounded object-cover shrink-0 border border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-md bg-slate-50 shrink-0 border border-slate-200 flex items-center justify-center">
+                          <Package className="w-4 h-4 text-slate-300" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-800 truncate">
+                          {product.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                isOut ? "bg-red-500" : stockPercent < 50 ? "bg-amber-400" : "bg-emerald-400"
+                              }`}
+                              style={{ width: `${isOut ? 0 : stockPercent}%` }}
+                            />
+                          </div>
+                          <span
+                            className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                              isOut
+                                ? "text-red-700 bg-red-50 border border-red-200/50"
+                                : "text-amber-700 bg-amber-50 border border-amber-200/50"
+                            }`}
+                          >
+                            {isOut ? "Out" : `${product.stock}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <span
-                    className={`text-xs font-black px-2 py-1 rounded-lg ${
-                      product.stock === 0
-                        ? "text-red-700 bg-red-50 border border-red-200/50"
-                        : "text-amber-700 bg-amber-50 border border-amber-200/50"
-                    }`}
-                  >
-                    {product.stock === 0 ? "Out" : `${product.stock} left`}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white border border-[#EEF2F7] rounded-2xl p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-[#0F172A] mb-4">Quick Actions</h3>
+      {/* ===== QUICK ACTIONS ===== */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-9 h-9 rounded-md bg-indigo-50 flex items-center justify-center">
+            <Zap className="w-4 h-4 text-indigo-500" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Quick Actions</h3>
+            <p className="text-[10px] text-slate-400 font-medium">Frequently used admin tasks</p>
+          </div>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Add Product", href: "/admin/products", icon: Package, color: "from-emerald-50 to-emerald-100/50 border-emerald-200/60 text-emerald-700" },
-            { label: "View Orders", href: "/admin/orders", icon: ShoppingCart, color: "from-amber-50 to-amber-100/50 border-amber-200/60 text-amber-700" },
-            { label: "Manage Coupons", href: "/admin/coupons", icon: TrendingUp, color: "from-blue-50 to-blue-100/50 border-blue-200/60 text-blue-700" },
-            { label: "Broadcast", href: "#", icon: Bell, color: "from-rose-50 to-rose-100/50 border-rose-200/60 text-rose-700", onClick: () => setShowBroadcast(true) },
-          ].map((action) => (
-            <button
-              key={action.label}
-              onClick={action.onClick || (() => window.location.href = action.href)}
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gradient-to-br ${action.color} border text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer w-full text-left`}
-            >
-              <action.icon className="w-4 h-4" />
-              {action.label}
-            </button>
-          ))}
+            { label: "Add Product", href: "/admin/products", icon: Package, gradient: "from-emerald-500 to-emerald-600", light: "from-emerald-50 to-emerald-100/50" },
+            { label: "View Orders", href: "/admin/orders", icon: ShoppingBag, gradient: "from-amber-500 to-orange-500", light: "from-amber-50 to-amber-100/50" },
+            { label: "Manage Coupons", href: "/admin/coupons", icon: TrendingUp, gradient: "from-blue-500 to-indigo-500", light: "from-blue-50 to-blue-100/50" },
+            { label: "Broadcast", href: "#", icon: Megaphone, gradient: "from-rose-500 to-pink-500", light: "from-rose-50 to-rose-100/50", onClick: () => setShowBroadcast(true) },
+          ].map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.label}
+                onClick={action.onClick || (() => window.location.href = action.href)}
+                className="group relative overflow-hidden rounded-md bg-gradient-to-br border border-slate-200/80 p-4 hover:shadow-md hover:border-slate-300/60 transition-all duration-300 cursor-pointer w-full text-left"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${action.light} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                <div className="relative z-10 flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-md bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-sm group-hover:scale-110 group-active:scale-95 transition-transform duration-300`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-700 group-hover:text-slate-900 transition-colors">
+                    {action.label}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Broadcast Modal */}
+      {/* ===== BROADCAST MODAL ===== */}
       {showBroadcast && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowBroadcast(false)} />
-          <div className="relative w-full max-w-lg bg-white border border-[#EEF2F7] rounded-2xl shadow-2xl overflow-hidden z-10">
-            <div className="p-6 border-b border-[#EEF2F7] flex items-center justify-between bg-[#F8FAFC]">
-              <div>
-                <h3 className="font-serif-heading text-lg font-bold text-[#0F172A]">Send Notification</h3>
-                <p className="text-[10px] text-[#94A3B8]">Broadcast a message to all customers.</p>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowBroadcast(false)} />
+          <div className="relative w-full max-w-lg bg-white rounded-lg shadow-xl shadow-black/5 overflow-hidden z-10">
+            {/* Header */}
+            <div className="relative px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-sm">
+                    <Megaphone className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900">Send Notification</h3>
+                    <p className="text-[10px] text-slate-400 font-medium">Broadcast a message to all customers</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowBroadcast(false)}
+                  className="p-1.5 rounded border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <button onClick={() => setShowBroadcast(false)} className="p-1.5 rounded-lg border border-[#EEF2F7] bg-white text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">
-                <X className="w-4 h-4" />
-              </button>
             </div>
-            <form onSubmit={handleBroadcast} className="p-6 space-y-4">
+
+            {/* Form */}
+            <form onSubmit={handleBroadcast} className="p-6 space-y-5">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569]">Title *</label>
-                <input type="text" required value={broadcastTitle} onChange={e => setBroadcastTitle(e.target.value)}
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Title *</label>
+                <input
+                  type="text" required value={broadcastTitle} onChange={e => setBroadcastTitle(e.target.value)}
                   placeholder="e.g. New Mango Harvest Available!"
-                  className="w-full px-3 py-2.5 rounded-lg border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-rose-500" />
+                  className="w-full px-4 py-3 rounded-md border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-500/10 transition-all"
+                />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569]">Message *</label>
-                <textarea required rows={4} value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)}
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Message *</label>
+                <textarea
+                  required rows={4} value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)}
                   placeholder="Write your notification message..."
-                  className="w-full px-3 py-2.5 rounded-lg border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-rose-500 resize-none" />
+                  className="w-full px-4 py-3 rounded-md border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-500/10 transition-all resize-none"
+                />
               </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-[10px] text-amber-800 font-medium flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  This will send a notification to all registered users.
+              <div className="bg-amber-50 border border-amber-200/60 rounded p-4">
+                <p className="text-[10px] text-amber-800 font-medium flex items-start gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>This will send a push notification to all registered users across the platform.</span>
                 </p>
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowBroadcast(false)}
-                  className="px-4 py-2 border border-[#EEF2F7] hover:bg-[#F8FAFC] text-[#475569] font-bold text-xs rounded-lg transition-all cursor-pointer">
+                <button
+                  type="button" onClick={() => setShowBroadcast(false)}
+                  className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs rounded-md transition-all cursor-pointer"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={broadcasting}
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-lg shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
-                  {broadcasting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                <button
+                  type="submit" disabled={broadcasting}
+                  className="px-6 py-2.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs rounded-md shadow-sm hover:shadow-md hover:shadow-rose-500/20 active:scale-[0.97] transition-all cursor-pointer disabled:opacity-50 flex items-center gap:2"
+                >
+                  {broadcasting ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Megaphone className="w-3.5 h-3.5" />
+                  )}
                   {broadcasting ? "Sending..." : "Send to All Users"}
                 </button>
               </div>

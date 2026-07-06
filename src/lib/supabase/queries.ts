@@ -21,7 +21,10 @@ export async function getProducts(options?: {
   sortBy?: "price_asc" | "price_desc" | "newest" | "name";
 }) {
   try {
-    const supabase = (await createClient()) as any;
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return { data: [], error: { message: "Supabase not configured" } };
+    }
+    const supabase = createClient() as any;
 
     let query = supabase
       .from("products")
@@ -102,6 +105,25 @@ export async function getFeaturedProducts(limit = 8) {
       return { data: [], error: res.error };
     }
     return { data: res.data || [], error: null };
+  } catch (err: any) {
+    return { data: [], error: err };
+  }
+}
+
+// ---- Product Variant Queries ----
+
+export async function getProductVariants(productId: string) {
+  try {
+    const supabase = (await createClient()) as any;
+    const { data, error } = await supabase
+      .from("product_variants")
+      .select("*")
+      .eq("product_id", productId)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) return { data: [], error };
+    return { data: data || [], error: null };
   } catch (err: any) {
     return { data: [], error: err };
   }

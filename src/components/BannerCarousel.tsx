@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Loader2, Pause, Play } from "lucide-react";
+import { HeroBannerSkeleton } from "@/components/skeletons";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
@@ -87,11 +88,7 @@ export default function BannerCarousel() {
   };
 
   if (loading) {
-    return (
-      <div className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-      </div>
-    );
+    return <HeroBannerSkeleton />;
   }
 
   if (banners.length === 0) {

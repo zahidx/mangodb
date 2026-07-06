@@ -74,11 +74,80 @@ export default function AdminReturnsPage() {
     return matchSearch && matchStatus;
   });
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6 max-w-[1400px] text-[#0F172A] font-sans animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 w-64 bg-slate-200 rounded-md mb-2"></div>
+            <div className="h-4 w-48 sm:w-80 bg-slate-200 rounded-md"></div>
+          </div>
+        </div>
+
+        {/* Stats Skeleton */}
+        <div className="grid grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white border border-[#EEF2F7] rounded-md p-4 shadow-sm">
+              <div className="h-3 w-16 bg-slate-200 rounded mb-2"></div>
+              <div className="h-8 w-12 bg-slate-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters Skeleton */}
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex gap-4 items-center shadow-sm">
+          <div className="relative flex-1 max-w-md">
+            <div className="h-10 w-full bg-slate-200 rounded-md"></div>
+          </div>
+          <div className="h-10 w-32 bg-slate-200 rounded-md"></div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
+                  <th className="px-5 py-3"><div className="h-3 w-20 bg-slate-200 rounded"></div></th>
+                  <th className="px-5 py-3"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-5 py-3"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-5 py-3"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-5 py-3"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                  <th className="px-5 py-3 flex justify-end"><div className="h-3 w-16 bg-slate-200 rounded"></div></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EEF2F7]">
+                {[...Array(5)].map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-slate-200 rounded-full shrink-0"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                          <div className="h-3 w-32 bg-slate-200 rounded"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3"><div className="h-4 w-16 bg-slate-200 rounded"></div></td>
+                    <td className="px-5 py-3"><div className="h-4 w-48 bg-slate-200 rounded"></div></td>
+                    <td className="px-5 py-3"><div className="h-4 w-20 bg-slate-200 rounded"></div></td>
+                    <td className="px-5 py-3"><div className="h-6 w-20 bg-slate-200 rounded-md"></div></td>
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <div className="h-7 w-20 bg-slate-200 rounded-md"></div>
+                        <div className="h-7 w-20 bg-slate-200 rounded-md"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-[1400px] text-[#0F172A] font-sans">

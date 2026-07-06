@@ -1,5 +1,5 @@
-import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
+import type { NextConfig } from "next";
 
 const withPWA = withPWAInit({
   dest: "public",
@@ -31,7 +31,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  turbopack: {},
+  turbopack: {
+    resolveAlias: {
+      // Force recharts to CJS build — Turbopack cannot resolve the ESM (es6/) factory
+      "recharts": "recharts/lib/index.js",
+    },
+  },
 };
 
 export default withPWA(nextConfig);

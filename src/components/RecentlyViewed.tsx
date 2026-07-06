@@ -1,6 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,17 +49,13 @@ export function trackProductView(product: {
 
 export default function RecentlyViewed() {
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [products, setProducts] = useState<ViewedProduct[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>([]);
 
   useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       setProducts(stored.slice(0, 6));
-    } catch (_) {}
-    try {
-      const saved = localStorage.getItem("mangodb-wishlist");
-      if (saved) setWishlist(JSON.parse(saved));
     } catch (_) {}
   }, []);
 
@@ -86,7 +83,7 @@ export default function RecentlyViewed() {
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {products.map((prod) => {
-            const isWished = wishlist.includes(prod.id);
+            const isWished = isInWishlist(prod.id);
             return (
               <div
                 key={prod.id}

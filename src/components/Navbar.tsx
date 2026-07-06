@@ -22,6 +22,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import GlobalSearch from "./GlobalSearch";
+import LanguageSwitcher from "./LanguageSwitcher";
+import LoyaltyPointsBadge from "./LoyaltyPointsBadge";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -212,6 +214,12 @@ export default function Navbar() {
           <div className="flex items-center gap-3 shrink-0 lg:pr-[45px]">
             {/* Global Search Bar */}
             <GlobalSearch />
+
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
+            {/* Loyalty Points Badge */}
+            {profile && <LoyaltyPointsBadge />}
 
             {/* Notification Bell with Dropdown */}
             {profile && (

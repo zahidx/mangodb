@@ -1,5 +1,6 @@
 "use client";
 
+import Breadcrumbs from "@/components/Breadcrumbs";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import QuickViewModal from "@/components/QuickViewModal";
@@ -7,6 +8,7 @@ import { ProductGridSkeleton } from "@/components/skeletons";
 import { useCart } from "@/context/CartContext";
 import { useCompare } from "@/context/CompareContext";
 import { useInfiniteProducts } from "@/hooks/useInfiniteProducts";
+import { useWishlist } from "@/hooks/useWishlist";
 import { getCategories } from "@/lib/supabase/queries";
 import type { Category } from "@/types/database";
 import {
@@ -66,6 +68,7 @@ export default function ProductsPage() {
     loading,
     loadingMore,
     hasMore,
+    error: productsError,
     sentinelRef,
   } = useInfiniteProducts({
     categorySlug: selectedCategory === "all" ? undefined : selectedCategory,
@@ -97,30 +100,8 @@ export default function ProductsPage() {
   // Quick View state
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
 
-  // Wishlist state
-  const [wishlist, setWishlist] = useState<string[]>([]);
-
-  useEffect(() => {
-    const savedWish = localStorage.getItem("mangodb-wishlist");
-    if (savedWish) {
-      try { setWishlist(JSON.parse(savedWish)); } catch (e) {}
-    }
-  }, []);
-
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
-
-  const toggleWishlist = (productId: string) => {
-    let nextWish = [...wishlist];
-    if (wishlist.includes(productId)) {
-      nextWish = nextWish.filter(id => id !== productId);
-      toast.success("Removed from wishlist");
-    } else {
-      nextWish.push(productId);
-      toast.success("Added to wishlist");
-    }
-    setWishlist(nextWish);
-    localStorage.setItem("mangodb-wishlist", JSON.stringify(nextWish));
-  };
+  const { wishlist, isInWishlist, toggleWishlist } = useWishlist();
 
   // Handle search submit (for the form)
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -146,6 +127,12 @@ export default function ProductsPage() {
       <div className="w-full relative z-10">
         <main className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-12 pt-28 pb-24">
         
+        {/* Breadcrumbs */}
+        <Breadcrumbs items={[
+          { label: "Home", href: "/" },
+          { label: "Shop Mangoes" },
+        ]} className="mb-6" />
+
         {/* Catalog Heading */}
         <div className="w-full mb-8">
           <h1 className="text-3xl sm:text-4xl font-black text-emerald-600">All Products</h1>
@@ -225,6 +212,36 @@ export default function ProductsPage() {
             {/* Loading / Empty States */}
             {loading ? (
               <ProductGridSkeleton count={8} />
+            ) : productsError ? (
+              <div className="h-96 flex flex-col items-center justify-center gap-4 bg-card/20 border border-red-500/20 rounded-3xl text-center p-8">
+                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                </div>
+                <h3 className="font-serif-heading text-xl font-bold text-hero-text">Failed to load products</h3>
+                <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
+                  {productsError.includes("relation") || productsError.includes("does not exist")
+                    ? "The database tables have not been set up yet. Please run the Supabase migrations."
+                    : productsError.includes("configured")
+                      ? "Supabase credentials are missing. Check your environment variables."
+                      : productsError}
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-all cursor-pointer"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    onClick={handleResetFilters}
+                    className="px-6 py-2.5 rounded-xl bg-accent/10 text-accent-dark dark:text-accent-light font-semibold border border-accent/20 hover:bg-accent/20 text-xs transition-all cursor-pointer"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
             ) : products.length === 0 ? (
               <div className="h-96 flex flex-col items-center justify-center gap-4 bg-card/20 border border-border/60 rounded-3xl text-center p-8">
                 <span className="text-5xl">🥭</span>
@@ -243,13 +260,13 @@ export default function ProductsPage() {
               /* Products Grid */
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((prod) => {
-                  const isWished = wishlist.includes(prod.id);
+                  const isWished = isInWishlist(prod.id);
                   const origin = (prod.metadata as any)?.origin_district || "Rajshahi";
                   const badge = (prod.metadata as any)?.badge;
                   return (
                     <div
                       key={prod.id}
-                      className="group bg-white rounded-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100"
+                      className="group bg-white rounded-xl overflow-hidden flex flex-col justify-between transition-all duration-300 border border-gray-100 hover:border-emerald-300 hover:shadow-[0_8px_30px_-8px_rgba(16,185,129,0.2)] hover:-translate-y-1"
                     >
                       <div className="relative h-48 sm:h-52 w-full overflow-hidden shrink-0 bg-gray-50">
                         <Link href={`/products/${prod.slug}`} className="block w-full h-full cursor-pointer">
@@ -258,31 +275,35 @@ export default function ProductsPage() {
                             alt={prod.name}
                             fill
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                           />
                           <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-black bg-[#FFC107] rounded-sm shadow-sm z-10">
                             <Truck className="w-3 h-3" />
                             Free Delivery
                           </span>
                           {/* Quick View overlay */}
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
                             <button
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(prod); }}
-                              className="px-4 py-2 bg-white text-gray-900 font-bold text-xs rounded-lg shadow-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                              className="px-5 py-2.5 bg-white text-gray-900 font-bold text-xs rounded-lg shadow-lg hover:bg-gray-100 transition-all cursor-pointer translate-y-4 group-hover:translate-y-0 duration-300"
                             >
                               Quick View
                             </button>
                           </div>
                         </Link>
-                        {/* Wishlist moved to top-left to accommodate the Free Delivery badge on the right */}
+                        {/* Wishlist */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleWishlist(prod.id);
+                            toggleWishlist(prod.id, prod.name);
                           }}
-                          className="absolute top-2 left-2 p-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-black/60 transition-colors cursor-pointer z-20 shadow-sm"
+                          className={`absolute top-2 left-2 p-2 rounded-full backdrop-blur-sm border transition-all cursor-pointer z-20 shadow-sm ${
+                            isWished
+                              ? "bg-red-500 border-red-400 text-white"
+                              : "bg-black/40 border-white/20 text-white hover:bg-black/60"
+                          }`}
                         >
-                          <Heart className={`w-4 h-4 ${isWished ? "fill-red-500 text-red-500 border-none" : ""}`} />
+                          <Heart className={`w-3.5 h-3.5 ${isWished ? "fill-white" : ""}`} />
                         </button>
                         {/* Compare checkbox */}
                         <label className="absolute bottom-2 left-2 z-20 flex items-center gap-1 px-2 py-1 rounded-md bg-black/40 backdrop-blur-sm border border-white/20 text-white cursor-pointer hover:bg-black/60 transition-colors text-[10px] font-medium">
@@ -301,8 +322,8 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="p-4 flex flex-col grow justify-between space-y-3">
-                        <Link href={`/products/${prod.slug}`} className="space-y-1 block cursor-pointer group-hover:opacity-95">
-                          <h3 className="font-sans font-bold text-gray-800 text-[15px] leading-tight line-clamp-2">
+                        <Link href={`/products/${prod.slug}`} className="space-y-1 block cursor-pointer">
+                          <h3 className="font-sans font-bold text-gray-800 text-[15px] leading-tight line-clamp-2 group-hover:text-emerald-700 transition-colors">
                             {prod.name}
                           </h3>
                           <div className="text-[11px] text-gray-500 leading-relaxed pt-1">
@@ -312,7 +333,7 @@ export default function ProductsPage() {
                         </Link>
 
                         <div className="flex flex-col gap-3 pt-1">
-                          <div className="text-[#4A7C59] font-bold text-[17px]">
+                          <div className="text-emerald-700 font-bold text-[17px] group-hover:scale-105 origin-left transition-transform">
                             {prod.sale_price ? (
                               <span>৳ {prod.sale_price} - ৳ {prod.sale_price * 3}</span>
                             ) : (
@@ -323,7 +344,7 @@ export default function ProductsPage() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => { addToCart(prod, 1, "10kg", false); router.push("/checkout"); }}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] sm:text-xs font-semibold shadow-sm"
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all cursor-pointer active:scale-[0.97] text-[11px] sm:text-xs font-bold shadow-sm hover:shadow-emerald-200"
                               title="Buy Now"
                             >
                               <Zap className="w-3.5 h-3.5 fill-white" />
@@ -331,11 +352,11 @@ export default function ProductsPage() {
                             </button>
                             <button
                               onClick={() => addToCart(prod, 1, "10kg")}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-2 border-2 border-[#527d62] text-[#527d62] hover:bg-[#527d62]/10 rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] sm:text-xs font-bold shadow-sm"
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all cursor-pointer active:scale-[0.97] text-[11px] sm:text-xs font-bold shadow-sm"
                               title="Add to Cart"
                             >
                               <ShoppingBag className="w-3.5 h-3.5" />
-                              Add to Cart
+                              Cart
                             </button>
                           </div>
                         </div>

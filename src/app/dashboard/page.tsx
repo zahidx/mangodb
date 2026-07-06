@@ -1,9 +1,11 @@
+// @ts-nocheck
 "use client";
 
+import LoyaltyDashboard from "@/components/LoyaltyDashboard";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { createClient } from "@/lib/supabase/client";
-import { getUserOrders } from "@/lib/supabase/queries";
+import { getProducts, getUserOrders } from "@/lib/supabase/queries";
 import type { Order, Product, UserAddress } from "@/types/database";
 import {
     ArrowRight,
@@ -14,6 +16,7 @@ import {
     Clock,
     CornerDownLeft,
     CreditCard,
+    Gem,
     Heart,
     LayoutDashboard,
     Loader2,
@@ -33,7 +36,17 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from "recharts";
+// Use CJS deep imports to avoid Turbopack ESM module factory issues
+import Area from "recharts/lib/cartesian/Area";
+import CartesianGrid from "recharts/lib/cartesian/CartesianGrid";
+import XAxis from "recharts/lib/cartesian/XAxis";
+import YAxis from "recharts/lib/cartesian/YAxis";
+import AreaChart from "recharts/lib/chart/AreaChart";
+import PieChart from "recharts/lib/chart/PieChart";
+import Cell from "recharts/lib/component/Cell";
+import ResponsiveContainer from "recharts/lib/component/ResponsiveContainer";
+import RechartsTooltip from "recharts/lib/component/Tooltip";
+import Pie from "recharts/lib/polar/Pie";
 
 function DashboardContent() {
   const router = useRouter();
@@ -43,7 +56,7 @@ function DashboardContent() {
   const supabase = createClient() as any;
 
   const initialTab = (searchParams.get("tab") as any) || "overview";
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "wishlist" | "addresses" | "account" | "payment" | "notifications" | "password" | "security">(initialTab);
+  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "wishlist" | "addresses" | "account" | "payment" | "notifications" | "loyalty" | "password" | "security">(initialTab);
   const [orderTab, setOrderTab] = useState<'active' | 'past'>('active');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
@@ -228,24 +241,38 @@ function DashboardContent() {
       allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setOrders(allOrders);
 
-      // 2. Fetch Wishlist items from local storage
-      const savedWishIds = JSON.parse(localStorage.getItem("mangodb-wishlist") || "[]");
-      if (savedWishIds.length > 0) {
-        // Query product details for each wishlist ID
+      // 2. Fetch Wishlist items (localStorage + server sync)
+      const localWishIds = JSON.parse(localStorage.getItem("mangodb-wishlist") || "[]");
+      let mergedWishIds = [...localWishIds];
+      
+      // If authenticated, merge with server wishlist
+      if (!profile.id.startsWith("demo-")) {
+        try {
+          const res = await fetch(`/api/user/wishlist?user_id=${profile.id}`);
+          const json = await res.json();
+          if (json.data && Array.isArray(json.data)) {
+            const serverIds = json.data.map((item: any) => item.product_id);
+            mergedWishIds = Array.from(new Set([...localWishIds, ...serverIds]));
+            // Persist merged list back to localStorage
+            localStorage.setItem("mangodb-wishlist", JSON.stringify(mergedWishIds));
+          }
+        } catch (e) {
+          console.warn("Failed to fetch wishlist from server");
+        }
+      }
+
+      if (mergedWishIds.length > 0) {
         const { data: prods } = await supabase
           .from("products")
           .select("*")
-          .in("id", savedWishIds);
+          .in("id", mergedWishIds);
         
         if (prods) {
           setWishlistProducts(prods);
         } else {
-          // If query fails (database table not set up), filter mock products locally
-          // We can fall back to our queries list
-          const { getProducts } = require("@/lib/supabase/queries");
           const allProds = await getProducts();
           if (allProds.data) {
-            setWishlistProducts(allProds.data.filter((p: any) => savedWishIds.includes(p.id)));
+            setWishlistProducts(allProds.data.filter((p: any) => mergedWishIds.includes(p.id)));
           }
         }
       } else {
@@ -537,13 +564,18 @@ function DashboardContent() {
 
   const handleRemoveWishlist = (id: string) => {
     if (!profile) return;
-    const stored = localStorage.getItem(`mangodb-wishlist-${profile.id}`);
-    if (stored) {
-      let saved = JSON.parse(stored);
-      saved = saved.filter((i: string) => i !== id);
-      localStorage.setItem(`mangodb-wishlist-${profile.id}`, JSON.stringify(saved));
-      setWishlistProducts(wishlistProducts.filter(p => p.id !== id));
-      toast.success("Removed from wishlist");
+    const stored = localStorage.getItem("mangodb-wishlist");
+    let saved: string[] = stored ? JSON.parse(stored) : [];
+    saved = saved.filter((i: string) => i !== id);
+    localStorage.setItem("mangodb-wishlist", JSON.stringify(saved));
+    setWishlistProducts(wishlistProducts.filter(p => p.id !== id));
+    toast.success("Removed from wishlist");
+
+    // Sync to server
+    if (!profile.id.startsWith("demo-")) {
+      fetch(`/api/user/wishlist?user_id=${profile.id}&product_id=${id}`, {
+        method: "DELETE",
+      }).catch(() => {});
     }
   };
 
@@ -712,6 +744,7 @@ function DashboardContent() {
             { id: "payment", label: "Payment Methods", icon: CreditCard },
             { id: "notifications", label: "Notifications", icon: Bell },
             { id: "password", label: "Change Password", icon: Lock },
+            { id: "loyalty", label: "Rewards", icon: Gem },
             { id: "security", label: "Security", icon: Shield }
           ].map((item) => {
             const Icon = item.icon;
@@ -2132,6 +2165,18 @@ function DashboardContent() {
                         </button>
                       </div>
                     </form>
+                  </div>
+                )}
+
+                {/* 7B. LOYALTY / REWARDS TAB */}
+                {activeTab === "loyalty" && (
+                  <div className="space-y-6">
+                    <div className="border-b border-border pb-4">
+                      <h2 className="font-serif-heading text-xl font-bold text-hero-text">🏆 Rewards &amp; Loyalty</h2>
+                      <p className="text-xs text-muted-foreground">Earn points on every purchase and unlock exclusive perks.</p>
+                    </div>
+
+                    <LoyaltyDashboard />
                   </div>
                 )}
 

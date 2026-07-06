@@ -1,5 +1,6 @@
 "use client";
 
+import Breadcrumbs from "@/components/Breadcrumbs";
 import Footer from "@/components/Footer";
 import ImageZoom from "@/components/ImageZoom";
 import Navbar from "@/components/Navbar";
@@ -7,15 +8,18 @@ import RecentlyViewed, { trackProductView } from "@/components/RecentlyViewed";
 import { ProductDetailSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import { createClient } from "@/lib/supabase/client";
-import { getProductBySlug, getProductReviews, getProducts } from "@/lib/supabase/queries";
-import type { Product, Review } from "@/types/database";
+import { getProductBySlug, getProductReviews, getProductVariants, getProducts } from "@/lib/supabase/queries";
+import type { Product, ProductVariant, Review } from "@/types/database";
 import {
     ArrowLeft,
     Award,
+    Bell,
     Heart,
     ImagePlus,
     Loader2,
+    Mail,
     MapPin,
     Scale,
     Send,
@@ -42,14 +46,23 @@ export default function ProductDetailsPage() {
   const supabase = createClient() as any;
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Selector states
+  // Selector states — get available labels from variants or fall back to metadata
+  const availableVariants = variants.length > 0 ? variants : [];
+  const [selectedVariantId, setSelectedVariantId] = useState<string>("");
   const [selectedWeight, setSelectedWeight] = useState<string>("10kg");
   const [quantity, setQuantity] = useState<number>(1);
-  const [isWished, setIsWished] = useState(false);
+  const { wishlist, toggleWishlist, isInWishlist } = useWishlist();
+  const isWished = product ? isInWishlist(product.id) : false;
+
+  // Stock notify state
+  const [showNotifyForm, setShowNotifyForm] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyingStock, setNotifyingStock] = useState(false);
 
   // Review form states
   const [rating, setRating] = useState<number>(5);
@@ -57,6 +70,7 @@ export default function ProductDetailsPage() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewImages, setReviewImages] = useState<string[]>([]);
   const [reviewImageFiles, setReviewImageFiles] = useState<File[]>([]);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [ratingFilter, setRatingFilter] = useState<number>(0);
 
@@ -69,20 +83,28 @@ export default function ProductDetailsPage() {
         if (prodRes.data) {
           setProduct(prodRes.data);
           
-          // Load wishlist state
-          const savedWish = localStorage.getItem("mangodb-wishlist");
-          if (savedWish) {
-            try {
-              const list = JSON.parse(savedWish);
-              setIsWished(list.includes(prodRes.data.id));
-            } catch (e) {}
-          }
+          // Wishlist state is now managed by useWishlist hook
 
-          // Fetch reviews and related products
-          const [revRes, relRes] = await Promise.all([
+          // Fetch variants, reviews, and related products
+          const [varRes, revRes, relRes] = await Promise.all([
+            getProductVariants(prodRes.data.id),
             getProductReviews(prodRes.data.id),
             getProducts({ categorySlug: prodRes.data.category?.slug, limit: 4 })
           ]);
+
+          if (varRes.data && varRes.data.length > 0) {
+            setVariants(varRes.data);
+            // Select first variant by default
+            const first = varRes.data[0];
+            setSelectedVariantId(first.id);
+            setSelectedWeight(first.label);
+          } else {
+            // Fallback: use metadata weight options
+            const weightOpts = (prodRes.data.metadata as any)?.weight_options;
+            if (Array.isArray(weightOpts) && weightOpts.length > 0) {
+              setSelectedWeight(weightOpts[0]);
+            }
+          }
 
           if (revRes.data) setReviews(revRes.data);
           if (relRes.data) {
@@ -90,11 +112,6 @@ export default function ProductDetailsPage() {
             setRelatedProducts(relRes.data.filter((p: any) => p.id !== prodRes.data.id));
           }
 
-          // Set default selected weight from metadata
-          const weightOpts = (prodRes.data.metadata as any)?.weight_options;
-          if (Array.isArray(weightOpts) && weightOpts.length > 0) {
-            setSelectedWeight(weightOpts[0]);
-          }
           // Track this product view
           trackProductView(prodRes.data);
         } else {
@@ -110,24 +127,9 @@ export default function ProductDetailsPage() {
     loadDetails();
   }, [slug]);
 
-  const toggleWishlist = () => {
+  const handleToggleWishlist = () => {
     if (!product) return;
-    const savedWish = localStorage.getItem("mangodb-wishlist");
-    let list: string[] = [];
-    if (savedWish) {
-      try { list = JSON.parse(savedWish); } catch (e) {}
-    }
-
-    if (isWished) {
-      list = list.filter(id => id !== product.id);
-      setIsWished(false);
-      toast.success("Removed from wishlist");
-    } else {
-      list.push(product.id);
-      setIsWished(true);
-      toast.success("Added to wishlist");
-    }
-    localStorage.setItem("mangodb-wishlist", JSON.stringify(list));
+    toggleWishlist(product.id, product.name);
   };
 
   const filteredReviews = ratingFilter > 0
@@ -276,21 +278,21 @@ export default function ProductDetailsPage() {
     );
   }
 
-  // Calculate scaled price based on weight:
-  // Base price is usually for 10kg crate.
-  // 5kg box: 55% of price
-  // 2kg box: 25% of price
-  // 1kg pouch: 13% of price
-  const basePrice = product.sale_price || product.price;
-  let multiplier = 1;
-  if (selectedWeight === "5kg") multiplier = 0.55;
-  else if (selectedWeight === "2kg") multiplier = 0.25;
-  else if (selectedWeight === "1kg") multiplier = 0.13;
-  const scaledPrice = Math.round(basePrice * multiplier);
+  // Get selected variant or compute price from multiplier (fallback)
+  const selectedVariant = selectedVariantId ? variants.find(v => v.id === selectedVariantId) : null;
+  const scaledPrice = selectedVariant
+    ? (selectedVariant.sale_price || selectedVariant.price)
+    : Math.round((product.sale_price || product.price) * (
+      selectedWeight === "5kg" ? 0.55 : selectedWeight === "2kg" ? 0.25 : selectedWeight === "1kg" ? 0.13 : 1
+    ));
+  const variantStock = selectedVariant ? selectedVariant.stock : product.stock;
+  const availableLabels = availableVariants.length > 0
+    ? availableVariants.map(v => v.label)
+    : ((product.metadata as any)?.weight_options || ["5kg", "10kg"]);
   
+  const allImages = product.images?.length ? product.images : ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"];
   const origin = (product.metadata as any)?.origin_district || "Rajshahi";
   const badge = (product.metadata as any)?.badge;
-  const weightOpts = (product.metadata as any)?.weight_options || ["5kg", "10kg"];
 
   // Average Rating
   const avgRating = reviews.length > 0 
@@ -316,7 +318,7 @@ export default function ProductDetailsPage() {
       priceCurrency: "BDT",
       price: scaledPrice,
       priceValidUntil: new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0],
-      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      availability: variantStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
       shippingDetails: {
         "@type": "OfferShippingDetail",
@@ -363,13 +365,11 @@ export default function ProductDetailsPage() {
         <main className="grow max-w-7xl w-full px-4 sm:px-6 lg:px-8 pt-32 pb-24 relative z-10 space-y-16">
         
         {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-card/80 border border-border px-4 py-2.5 rounded-xl w-fit shadow-sm">
-          <Link href="/" className="hover:text-[#fbbf24] transition-colors">Home</Link>
-          <span className="opacity-50">/</span>
-          <Link href="/products" className="hover:text-[#fbbf24] transition-colors">Shop Mangoes</Link>
-          <span className="opacity-50">/</span>
-          <span className="text-hero-text bg-[#fbbf24]/10 px-2 py-0.5 rounded text-[#fbbf24]">{product.name}</span>
-        </div>
+        <Breadcrumbs items={[
+          { label: "Home", href: "/" },
+          { label: "Shop Mangoes", href: "/products" },
+          { label: product.name },
+        ]} />
 
         {/* Product Details Section */}
         <div className="grid md:grid-cols-12 gap-12 items-start">
@@ -379,7 +379,7 @@ export default function ProductDetailsPage() {
             <div className="relative h-[320px] sm:h-[450px] w-full rounded-3xl overflow-hidden glass-card p-4 border border-border/80 shadow-2xl">
               <div className="relative w-full h-full rounded-2xl overflow-hidden">
                 <ImageZoom
-                  src={product.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
+                  src={allImages[activeImageIdx] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"}
                   alt={product.name}
                   className="w-full h-full"
                   zoom={2.5}
@@ -391,7 +391,37 @@ export default function ProductDetailsPage() {
                   {badge}
                 </span>
               )}
+              {/* Image counter */}
+              {allImages.length > 1 && (
+                <span className="absolute bottom-6 right-6 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold">
+                  {activeImageIdx + 1} / {allImages.length}
+                </span>
+              )}
             </div>
+
+            {/* Thumbnail Strip */}
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1" style={{ scrollbarWidth: "none" }}>
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIdx(idx)}
+                    className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                      idx === activeImageIdx
+                        ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-md"
+                        : "border-border/60 hover:border-emerald-300 opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1553279768-865429fa0078?w=100&fit=crop"; }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right Column: Content & Actions */}
@@ -433,13 +463,100 @@ export default function ProductDetailsPage() {
               </div>
 
               <span className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider ${
-                product.stock > 0
+                variantStock > 0
                   ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                   : "bg-red-500/10 text-red-500"
               }`}>
-                {product.stock > 0 ? "In Stock (Direct Harvest)" : "Harvest Blocked"}
+                {variantStock > 0 ? "In Stock (Direct Harvest)" : "Harvest Blocked"}
               </span>
             </div>
+
+            {/* Notify Me When Available — shown when out of stock */}
+            {variantStock <= 0 && (
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5 space-y-3">
+                {!showNotifyForm ? (
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-bold text-hero-text flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-amber-500" />
+                        Out of Stock
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        This variety is currently harvest-blocked. Get notified when it&apos;s back!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowNotifyForm(true)}
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                    >
+                      <Bell className="w-3.5 h-3.5" />
+                      Notify Me
+                    </button>
+                  </div>
+                ) : (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!notifyEmail.trim()) return;
+                      setNotifyingStock(true);
+                      try {
+                        const res = await fetch("/api/stock-notify", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            product_id: product.id,
+                            email: notifyEmail.trim(),
+                            user_id: profile?.id || null,
+                            product_name: product.name,
+                          }),
+                        });
+                        const json = await res.json();
+                        if (!res.ok) throw new Error(json.error);
+                        toast.success("You'll be notified when this variety is back in season!");
+                        setShowNotifyForm(false);
+                        setNotifyEmail("");
+                      } catch (err: any) {
+                        toast.error(err.message || "Failed to submit request");
+                      } finally {
+                        setNotifyingStock(false);
+                      }
+                    }}
+                    className="flex flex-col sm:flex-row gap-3"
+                  >
+                    <div className="flex-1 relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="email"
+                        required
+                        value={notifyEmail}
+                        onChange={(e) => setNotifyEmail(e.target.value)}
+                        placeholder={profile?.email || "Your email address"}
+                        className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm font-semibold text-hero-text placeholder-muted-foreground focus:outline-none focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 transition-all"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={notifyingStock}
+                      className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm"
+                    >
+                      {notifyingStock ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Bell className="w-3.5 h-3.5" />
+                      )}
+                      {notifyingStock ? "Submitting..." : "Notify Me"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowNotifyForm(false); setNotifyEmail(""); }}
+                      className="px-3 py-2.5 text-xs font-bold text-muted-foreground hover:text-hero-text transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
 
             <p className="text-sm text-hero-text-secondary leading-relaxed">
               {product.description}
@@ -452,28 +569,39 @@ export default function ProductDetailsPage() {
                 Select Crate / Box Weight Option
               </label>
               <div className="grid grid-cols-4 gap-3">
-                {["1kg", "2kg", "5kg", "10kg"].map((wt) => {
-                  const isAvailable = weightOpts.includes(wt);
+                {availableLabels.map((wt: string) => {
+                  const variant = availableVariants.find(v => v.label === wt);
+                  const vStock = variant ? variant.stock : 0;
+                  const isAvailable = variant ? vStock > 0 : availableLabels.includes(wt);
+                  const isSelected = selectedVariant ? selectedVariant.label === wt : selectedWeight === wt;
                   return (
                     <button
                       key={wt}
                       disabled={!isAvailable}
-                      onClick={() => setSelectedWeight(wt)}
+                      onClick={() => {
+                        setSelectedWeight(wt);
+                        if (variant) setSelectedVariantId(variant.id);
+                      }}
                       className={`py-3 rounded-xl text-xs font-black transition-all border cursor-pointer ${
                         !isAvailable 
                           ? "opacity-30 cursor-not-allowed border-border"
-                          : selectedWeight === wt
+                          : isSelected
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-[#34d399] border-emerald-500/40 font-extrabold ring-4 ring-emerald-500/5"
                             : "bg-card border-border text-muted hover:text-hero-text hover:border-emerald-500/20"
                       }`}
                     >
-                      {wt}
+                      <span className="block">{wt}</span>
+                      {variant && (
+                        <span className="block text-[9px] opacity-70 mt-0.5 font-medium">
+                          ৳{variant.sale_price || variant.price}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
               </div>
               <p className="text-[10px] text-muted-foreground font-medium">
-                * Note: Crate weights scale pricing proportionally (e.g. 5kg box is approx. 55% of the standard 10kg rate).
+                * Each weight option has its own pricing and stock. Select to see the exact price.
               </p>
             </div>
 
@@ -499,7 +627,7 @@ export default function ProductDetailsPage() {
 
                 {/* Wishlist Button for mobile */}
                 <button
-                  onClick={toggleWishlist}
+                  onClick={handleToggleWishlist}
                   className="sm:hidden p-3.5 rounded-xl bg-card border border-border text-muted-foreground hover:text-red-500 hover:border-red-500/20 transition-all cursor-pointer"
                 >
                   <Heart className={`w-5 h-5 ${isWished ? "fill-red-500 text-red-500" : ""}`} />
@@ -509,8 +637,8 @@ export default function ProductDetailsPage() {
               <div className="flex items-center gap-3 grow w-full">
                 {/* Add to Crate */}
                 <button
-                  onClick={() => addToCart(product, quantity, selectedWeight)}
-                  disabled={product.stock <= 0}
+                  onClick={() => addToCart(product, quantity, selectedWeight, true, selectedVariantId || undefined)}
+                  disabled={variantStock <= 0}
                   className="flex-1 py-3.5 bg-card hover:bg-muted-bg text-foreground font-extrabold rounded-xl shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs tracking-wider uppercase font-sans border border-border"
                 >
                   <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -520,7 +648,7 @@ export default function ProductDetailsPage() {
                 {/* Buy Now */}
                 <button
                   onClick={handleBuyNow}
-                  disabled={product.stock <= 0}
+                  disabled={variantStock <= 0}
                   className="flex-1 py-3.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] hover:from-amber-400 hover:to-amber-500 text-black font-extrabold rounded-xl shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs tracking-wider uppercase font-sans border border-[#fbbf24]/20"
                 >
                   Buy Now
@@ -528,7 +656,7 @@ export default function ProductDetailsPage() {
 
                 {/* Wishlist Button for desktop */}
                 <button
-                  onClick={toggleWishlist}
+                  onClick={handleToggleWishlist}
                   className="hidden sm:block p-3.5 rounded-xl bg-card border border-border text-muted-foreground hover:text-red-500 hover:border-red-500/20 transition-all cursor-pointer"
                 >
                   <Heart className={`w-5 h-5 ${isWished ? "fill-red-500 text-red-500" : ""}`} />
@@ -949,9 +1077,29 @@ export default function ProductDetailsPage() {
           >
             <X className="w-6 h-6" />
           </button>
+          {/* Gallery nav in lightbox */}
+          {allImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); setActiveImageIdx(prev => prev > 0 ? prev - 1 : allImages.length - 1); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 text-white hover:bg-white/25 transition-colors z-10"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setActiveImageIdx(prev => prev < allImages.length - 1 ? prev + 1 : 0); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 text-white hover:bg-white/25 transition-colors z-10"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+              <span className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-bold">
+                {activeImageIdx + 1} / {allImages.length}
+              </span>
+            </>
+          )}
           <div className="relative w-full max-w-4xl h-[80vh] rounded-2xl overflow-hidden shadow-2xl animate-hero-scale-in">
             <Image
-              src={product.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078"}
+              src={allImages[activeImageIdx] || product.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078"}
               alt={product.name}
               fill
               className="object-contain"
@@ -962,6 +1110,42 @@ export default function ProductDetailsPage() {
       )}
 
       <Footer />
+
+      {/* ===== STICKY ADD-TO-CART BAR (Mobile only) ===== */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:hidden safe-area-bottom">
+        <div className="flex items-center gap-3 px-4 py-3 max-w-7xl mx-auto">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-gray-900 truncate">{product?.name}</p>
+            <p className="text-sm font-black text-emerald-600">৳{scaledPrice}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Quantity selector */}
+            <div className="flex items-center bg-gray-100 rounded-lg">
+              <button
+                onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                className="px-3 py-2 font-bold text-gray-600 hover:text-gray-900 text-sm cursor-pointer"
+              >
+                −
+              </button>
+              <span className="px-2 font-extrabold text-sm text-gray-900 min-w-[20px] text-center">{quantity}</span>
+              <button
+                onClick={() => setQuantity(prev => prev + 1)}
+                className="px-3 py-2 font-bold text-gray-600 hover:text-gray-900 text-sm cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+            <button
+              onClick={() => product && addToCart(product, quantity, selectedWeight, true, selectedVariantId || undefined)}
+              disabled={variantStock <= 0}
+              className="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-black font-extrabold text-xs rounded-lg shadow-sm disabled:opacity-50 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              {variantStock > 0 ? "Add" : "Sold Out"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

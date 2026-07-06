@@ -54,7 +54,7 @@ self.addEventListener("fetch", (event) => {
     request.destination === "image" ||
     request.destination === "style" ||
     request.destination === "font" ||
-    url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico|css|js)$/)
+    url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico|css|woff2?|ttf|eot)$/)
   ) {
     event.respondWith(
       caches.match(request).then((cached) => {
