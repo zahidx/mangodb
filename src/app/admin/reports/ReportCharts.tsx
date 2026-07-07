@@ -1,20 +1,21 @@
 // @ts-nocheck
 "use client";
 
-// Use CJS version (lib/) to avoid Turbopack ESM module factory issue
-import Area from "recharts/lib/cartesian/Area";
-import Bar from "recharts/lib/cartesian/Bar";
-import CartesianGrid from "recharts/lib/cartesian/CartesianGrid";
-import XAxis from "recharts/lib/cartesian/XAxis";
-import YAxis from "recharts/lib/cartesian/YAxis";
-import AreaChart from "recharts/lib/chart/AreaChart";
-import BarChart from "recharts/lib/chart/BarChart";
-import PieChart from "recharts/lib/chart/PieChart";
-import Cell from "recharts/lib/component/Cell";
-import Legend from "recharts/lib/component/Legend";
-import ResponsiveContainer from "recharts/lib/component/ResponsiveContainer";
-import Tooltip from "recharts/lib/component/Tooltip";
-import Pie from "recharts/lib/polar/Pie";
+import {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 
 interface ReportData {
   totalRevenue: number;

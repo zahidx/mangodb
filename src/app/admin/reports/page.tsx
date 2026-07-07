@@ -114,7 +114,7 @@ export default function AdminReportsPage() {
             <BarChart3 className="w-6 h-6 text-cyan-600" />
             Analytics & Reports
           </h2>
-          <p className="text-xs text-[#475569] mt-1">
+          <p className="text-sm lg:text-xs text-[#475569] mt-1">
             Track your store's financial performance and sales trends.
           </p>
         </div>
@@ -125,7 +125,7 @@ export default function AdminReportsPage() {
             <select
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value)}
-              className="bg-transparent text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+              className="bg-transparent text-sm lg:text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
             >
               <option value="30d">Last 30 Days</option>
               <option value="90d">Last 90 Days</option>
@@ -135,7 +135,7 @@ export default function AdminReportsPage() {
           <a
             href={`/api/admin/reports/export?timeframe=${timeframe}`}
             download
-            className="px-4.5 py-2.5 bg-slate-900 hover:bg-cyan-600 text-white font-black text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
+            className="px-4.5 py-2.5 bg-slate-900 hover:bg-cyan-600 text-white font-black text-sm lg:text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
           >
             <Download className="w-4 h-4 text-current" />
             Export CSV
@@ -147,50 +147,50 @@ export default function AdminReportsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm border-l-4 border-l-cyan-500">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Net Revenue</span>
+            <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Net Revenue</span>
             <div className="w-8 h-8 rounded-md bg-cyan-50 flex items-center justify-center">
               <DollarSign className="w-4 h-4 text-cyan-600" />
             </div>
           </div>
           <p className="text-2xl font-black text-[#0F172A]">{formatCurrency(reportData.totalRevenue)}</p>
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-md">
+          <div className="flex items-center gap-1.5 text-xs lg:text-[10px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-md">
             <TrendingUp className="w-3 h-3" /> +12.5% vs last period
           </div>
         </div>
 
         <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm border-l-4 border-l-blue-500">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Orders</span>
+            <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Orders</span>
             <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
               <Package className="w-4 h-4 text-blue-600" />
             </div>
           </div>
           <p className="text-2xl font-black text-[#0F172A]">{reportData.totalSales}</p>
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-md">
+          <div className="flex items-center gap-1.5 text-xs lg:text-[10px] font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-md">
             <TrendingUp className="w-3 h-3" /> +4.2% vs last period
           </div>
         </div>
 
         <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm border-l-4 border-l-emerald-500">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Inventory Value</span>
+            <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Inventory Value</span>
             <div className="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center">
               <BarChart3 className="w-4 h-4 text-emerald-600" />
             </div>
           </div>
           <p className="text-2xl font-black text-[#0F172A]">{formatCurrency(reportData.inventoryValue)}</p>
-          <div className="text-[10px] font-medium text-[#94A3B8] pt-1">Current total warehouse value</div>
+          <div className="text-xs lg:text-[10px] font-medium text-[#94A3B8] pt-1">Current total warehouse value</div>
         </div>
 
         <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm border-l-4 border-l-violet-500">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Customers</span>
+            <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Customers</span>
             <div className="w-8 h-8 rounded-md bg-violet-50 flex items-center justify-center">
               <Users className="w-4 h-4 text-violet-600" />
             </div>
           </div>
           <p className="text-2xl font-black text-[#0F172A]">{reportData.customersCount}</p>
-          <div className="text-[10px] font-medium text-[#94A3B8] pt-1">Registered accounts</div>
+          <div className="text-xs lg:text-[10px] font-medium text-[#94A3B8] pt-1">Registered accounts</div>
         </div>
       </div>
 

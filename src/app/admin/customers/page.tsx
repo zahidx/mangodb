@@ -366,7 +366,7 @@ export default function AdminCustomersPage() {
         </div>
 
         {/* Filters Bar Skeleton */}
-        <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-sm">
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-3 sm:p-4 flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between shadow-sm">
           <div className="h-10 w-full lg:w-96 bg-slate-200 rounded-md"></div>
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
             <div className="h-10 w-32 bg-slate-200 rounded-md"></div>
@@ -433,11 +433,11 @@ export default function AdminCustomersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-serif-heading text-2xl font-black text-[#0F172A] flex items-center gap-2">
-            <Users className="w-6 h-6 text-amber-500" />
+          <h2 className="font-serif-heading text-xl sm:text-xl sm:text-2xl font-black text-[#0F172A] flex items-center gap-2">
+            <Users className="w-5 sm:w-6 h-5 sm:h-6 text-amber-500" />
             Customer Management
           </h2>
-          <p className="text-xs text-[#475569] mt-1">
+          <p className="text-sm sm:text-xs text-[#475569] mt-1">
             View active user profiles, add customers manually, adjust access, and block accounts directly from database API.
           </p>
         </div>
@@ -458,39 +458,39 @@ export default function AdminCustomersPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Customers</span>
+              <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Customers</span>
               <Users className="w-4 h-4 text-amber-500" />
             </div>
-            <p className="text-2xl font-black text-[#0F172A]">{customers.length}</p>
+            <p className="text-xl sm:text-2xl font-black text-[#0F172A]">{customers.length}</p>
           </div>
           <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Active</span>
+              <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Active</span>
               <UserCheck className="w-4 h-4 text-emerald-500" />
             </div>
-            <p className="text-2xl font-black text-emerald-600">
+            <p className="text-xl sm:text-2xl font-black text-emerald-600">
               {customers.filter(c => !c.is_blocked).length}
             </p>
           </div>
           <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Orders</span>
+              <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Orders</span>
               <span className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
                 <span className="text-blue-600 font-black text-sm">#</span>
               </span>
             </div>
-            <p className="text-2xl font-black text-blue-600">
+            <p className="text-xl sm:text-2xl font-black text-blue-600">
               {customers.reduce((sum, c) => sum + (c.order_count || 0), 0)}
             </p>
           </div>
           <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Revenue</span>
+              <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Revenue</span>
               <span className="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center">
                 <span className="text-emerald-600 font-black text-sm">৳</span>
               </span>
             </div>
-            <p className="text-2xl font-black text-emerald-600">
+            <p className="text-xl sm:text-2xl font-black text-emerald-600">
               ৳ {customers.reduce((sum, c) => sum + (c.total_spent || 0), 0).toLocaleString("en-BD")}
             </p>
           </div>
@@ -521,7 +521,7 @@ export default function AdminCustomersPage() {
       )}
 
       {/* Filters Bar */}
-      <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-sm">
+      <div className="bg-white border border-[#EEF2F7] rounded-md p-3 sm:p-4 flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between shadow-sm">
         {/* Search */}
         <div className="relative w-full lg:w-96">
           <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -530,18 +530,18 @@ export default function AdminCustomersPage() {
             placeholder="Search by name, email, or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-md border border-[#EEF2F7] bg-slate-50/50 text-xs font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all"
+            className="w-full pl-10 pr-4 py-3 sm:py-2.5 rounded-md border border-[#EEF2F7] bg-slate-50/50 text-sm sm:text-xs font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all"
           />
         </div>
 
         {/* Dropdowns & Sorts */}
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
-          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3.5 py-2 rounded-md transition-all focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3 sm:px-3.5 py-2.5 sm:py-2 rounded-md transition-all focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10 flex-1 sm:flex-none">
             <Filter className="w-3.5 h-3.5 text-[#94A3B8]" />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value as any)}
-              className="bg-transparent text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+              className="bg-transparent text-sm sm:text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
             >
               <option value="all">All Roles</option>
               <option value="user">User</option>
@@ -549,12 +549,12 @@ export default function AdminCustomersPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3.5 py-2 rounded-md transition-all focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10">
+          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3 sm:px-3.5 py-2.5 sm:py-2 rounded-md transition-all focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10 flex-1 sm:flex-none">
             <Shield className="w-3.5 h-3.5 text-[#94A3B8]" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="bg-transparent text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+              className="bg-transparent text-sm sm:text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
             >
               <option value="all">All Statuses</option>
               <option value="active">Active</option>
@@ -565,28 +565,17 @@ export default function AdminCustomersPage() {
           <span className="w-px h-6 bg-slate-200 hidden sm:block mx-1" />
 
           {/* Sort Buttons */}
-          <button
-            onClick={() => toggleSort("name")}
-            className={`flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer ${
-              sortBy === "name"
-                ? "bg-amber-500 text-slate-950 border-amber-500 font-extrabold shadow-sm hover:bg-amber-600"
-                : "bg-white text-[#475569] border-[#EEF2F7] hover:bg-[#F8FAFC]"
-            }`}
-          >
-            Name
-            <ArrowUpDown className="w-3 h-3 ml-0.5" />
+          <button onClick={() => toggleSort("name")}
+            className={`flex items-center gap-1 text-sm sm:text-xs font-bold px-3.5 py-2.5 sm:py-2 rounded-md border transition-all cursor-pointer flex-1 sm:flex-none justify-center ${
+              sortBy === "name" ? "bg-amber-500 text-slate-950 border-amber-500" : "bg-white text-[#475569] border-[#EEF2F7]"
+            }`}>
+            Name <ArrowUpDown className="w-3.5 sm:w-3 h-3.5 sm:h-3 ml-0.5" />
           </button>
-
-          <button
-            onClick={() => toggleSort("date")}
-            className={`flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer ${
-              sortBy === "date"
-                ? "bg-amber-500 text-slate-950 border-amber-500 font-extrabold shadow-sm hover:bg-amber-600"
-                : "bg-white text-[#475569] border-[#EEF2F7] hover:bg-[#F8FAFC]"
-            }`}
-          >
-            Join Date
-            <ArrowUpDown className="w-3 h-3 ml-0.5" />
+          <button onClick={() => toggleSort("date")}
+            className={`flex items-center gap-1 text-sm sm:text-xs font-bold px-3.5 py-2.5 sm:py-2 rounded-md border transition-all cursor-pointer flex-1 sm:flex-none justify-center ${
+              sortBy === "date" ? "bg-amber-500 text-slate-950 border-amber-500" : "bg-white text-[#475569] border-[#EEF2F7]"
+            }`}>
+            Join Date <ArrowUpDown className="w-3.5 sm:w-3 h-3.5 sm:h-3 ml-0.5" />
           </button>
         </div>
       </div>
@@ -599,164 +588,182 @@ export default function AdminCustomersPage() {
             <p className="font-bold">No database records found</p>
             <p className="text-xs text-[#94A3B8] mt-1 mb-4">Try adding a user, seeding demo data, or adjusting search query.</p>
             {customers.length === 0 && (
-              <button
-                onClick={handleSeedCustomers}
-                disabled={seeding}
-                className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-bold text-xs rounded-md transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
-              >
+              <button onClick={handleSeedCustomers} disabled={seeding}
+                className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-bold text-xs rounded-md transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm">
                 {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                 Seed Demo Customers
               </button>
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Customer Details</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Orders</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Total Spent</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Join Date</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EEF2F7]">
-                {filteredCustomers.map((customer) => {
-                  const displayName = getDisplayName(customer.full_name, customer.email);
-                  const avatarColor = getAvatarGradient(customer.email);
-                  return (
-                    <tr key={customer.id} className="hover:bg-[#F8FAFC]/80 transition-colors border-b border-[#EEF2F7] last:border-b-0">
-                      {/* Name & Email */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-md bg-gradient-to-tr ${avatarColor} flex items-center justify-center font-bold text-xs shrink-0 shadow-sm`}>
-                            {displayName.charAt(0).toUpperCase()}
+          <>
+            {/* Desktop table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Customer Details</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Phone</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Orders</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Total Spent</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Join Date</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#EEF2F7]">
+                  {filteredCustomers.map((customer) => {
+                    const displayName = getDisplayName(customer.full_name, customer.email);
+                    const avatarColor = getAvatarGradient(customer.email);
+                    return (
+                      <tr key={customer.id} className="hover:bg-[#F8FAFC]/80 transition-colors border-b border-[#EEF2F7] last:border-b-0">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-md bg-gradient-to-tr ${avatarColor} flex items-center justify-center font-bold text-xs shrink-0 shadow-sm`}>
+                              {displayName.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-extrabold text-[#0F172A] truncate">{displayName}</p>
+                              <p className="text-xs lg:text-[10px] text-[#64748B] truncate flex items-center gap-1 mt-0.5 font-medium">
+                                <Mail className="w-3 h-3 shrink-0 text-[#94A3B8]" />{customer.email}
+                              </p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-extrabold text-[#0F172A] truncate">
-                              {displayName}
+                        </td>
+                        <td className="px-6 py-4">
+                          {customer.phone ? (
+                            <p className="text-xs font-semibold text-[#475569] flex items-center gap-1">
+                              <Phone className="w-3 h-3 text-[#94A3B8]" />{customer.phone}
                             </p>
-                            <p className="text-[10px] text-[#64748B] truncate flex items-center gap-1 mt-0.5 font-medium">
-                              <Mail className="w-3 h-3 shrink-0 text-[#94A3B8]" />
-                              {customer.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Phone */}
-                      <td className="px-6 py-4">
-                        {customer.phone ? (
+                          ) : (
+                            <span className="text-xs lg:text-[10px] text-[#94A3B8] bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md font-semibold italic">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-extrabold text-[#0F172A]">{customer.order_count ?? 0}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-black text-emerald-600">
+                            ৳ {((customer.total_spent ?? 0)).toLocaleString("en-BD")}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button onClick={() => handleToggleRole(customer)}
+                            className={`text-xs lg:text-[10px] font-black uppercase px-2.5 py-1 rounded-md border transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm ${
+                              customer.role === "admin" ? "bg-indigo-50 text-indigo-700 border-indigo-200/50 hover:bg-indigo-100" : "bg-slate-50 text-slate-600 border-slate-200/50 hover:bg-slate-100"
+                            }`}>
+                            <span className={`w-1.5 h-1.5 rounded-sm ${customer.role === "admin" ? "bg-indigo-500" : "bg-slate-400"}`} />
+                            {customer.role}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-xs lg:text-[10px] font-black uppercase px-2.5 py-1 rounded-md border inline-flex items-center gap-1.5 shadow-sm ${
+                            customer.is_blocked ? "bg-rose-50 text-rose-700 border-rose-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-sm ${customer.is_blocked ? "bg-rose-500" : "bg-emerald-500 animate-pulse"}`} />
+                            {customer.is_blocked ? "Suspended" : "Active"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
                           <p className="text-xs font-semibold text-[#475569] flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-[#94A3B8]" />
-                            {customer.phone}
+                            <Calendar className="w-3.5 h-3.5 text-[#94A3B8]" />
+                            {new Date(customer.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                           </p>
-                        ) : (
-                          <span className="text-[10px] text-[#94A3B8] bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md font-semibold italic">—</span>
-                        )}
-                      </td>
-
-                      {/* Orders Count */}
-                      <td className="px-6 py-4">
-                        <span className="text-xs font-extrabold text-[#0F172A]">
-                          {customer.order_count ?? 0}
-                        </span>
-                      </td>
-
-                      {/* Total Spent */}
-                      <td className="px-6 py-4">
-                        <span className="text-xs font-black text-emerald-600">
-                          ৳ {((customer.total_spent ?? 0)).toLocaleString("en-BD")}
-                        </span>
-                      </td>
-
-                      {/* Role */}
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleToggleRole(customer)}
-                          title="Click to toggle role"
-                          className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm ${
-                            customer.role === "admin"
-                              ? "bg-indigo-50 text-indigo-700 border-indigo-200/50 hover:bg-indigo-100"
-                              : "bg-slate-50 text-slate-600 border-slate-200/50 hover:bg-slate-100"
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-sm ${customer.role === "admin" ? "bg-indigo-500" : "bg-slate-400"}`} />
-                          {customer.role}
-                        </button>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-6 py-4">
-                        <span
-                          className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border inline-flex items-center gap-1.5 shadow-sm ${
-                            customer.is_blocked
-                              ? "bg-rose-50 text-rose-700 border-rose-200/50"
-                              : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-sm ${customer.is_blocked ? "bg-rose-500" : "bg-emerald-500 animate-pulse"}`} />
-                          {customer.is_blocked ? "Suspended" : "Active"}
-                        </span>
-                      </td>
-
-                      {/* Join Date */}
-                      <td className="px-6 py-4">
-                        <p className="text-xs font-semibold text-[#475569] flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#94A3B8]" />
-                          {new Date(customer.created_at).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </p>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2.5">
-                          {/* Sliding Toggle Switch */}
-                          <button
-                            onClick={() => handleToggleBlock(customer)}
-                            title={customer.is_blocked ? "Activate customer account" : "Suspend customer account"}
-                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner hover:scale-105 active:scale-95 ${
-                              customer.is_blocked ? "bg-slate-200 hover:bg-slate-300" : "bg-emerald-500 hover:bg-emerald-600"
-                            }`}
-                          >
-                            <span
-                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-md bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2.5">
+                            <button onClick={() => handleToggleBlock(customer)}
+                              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors shadow-inner ${
+                                customer.is_blocked ? "bg-slate-200" : "bg-emerald-500"
+                              }`}>
+                              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-md bg-white shadow-sm transition duration-200 ${
                                 customer.is_blocked ? "translate-x-0" : "translate-x-4"
-                              }`}
-                            />
-                          </button>
+                              }`} />
+                            </button>
+                            <button onClick={() => openEditModal(customer)} title="Edit Customer"
+                              className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer">
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => handleDeleteCustomer(customer.id, customer.full_name)} title="Delete Customer"
+                              className="p-2 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-                          <button
-                            onClick={() => openEditModal(customer)}
-                            title="Edit Customer"
-                            className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer shadow-sm"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
+            {/* Mobile cards */}
+            <div className="lg:hidden divide-y divide-[#EEF2F7]">
+              {filteredCustomers.map((customer) => {
+                const displayName = getDisplayName(customer.full_name, customer.email);
+                const avatarColor = getAvatarGradient(customer.email);
+                return (
+                  <div key={customer.id} className="p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-tr ${avatarColor} flex items-center justify-center font-bold text-sm shrink-0 shadow-sm`}>
+                        {displayName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-extrabold text-[#0F172A]">{displayName}</p>
+                        <p className="text-xs text-[#64748B]">{customer.email}</p>
+                        {customer.phone && <p className="text-xs text-[#64748B] mt-0.5">{customer.phone}</p>}
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <button onClick={() => handleToggleRole(customer)}
+                            className={`text-[11px] font-black uppercase px-2 py-0.5 rounded-md border inline-flex items-center gap-1 ${
+                              customer.role === "admin" ? "bg-indigo-50 text-indigo-700 border-indigo-200/50" : "bg-slate-50 text-slate-600 border-slate-200/50"
+                            }`}>
+                            <span className={`w-1 h-1 rounded-sm ${customer.role === "admin" ? "bg-indigo-500" : "bg-slate-400"}`} />
+                            {customer.role}
                           </button>
-
-                          <button
-                            onClick={() => handleDeleteCustomer(customer.id, customer.full_name)}
-                            title="Delete Customer"
-                            className="p-2 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white hover:border-rose-600 hover:shadow-rose-100 hover:scale-105 transition-all duration-200 cursor-pointer shadow-sm"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <span className={`text-[11px] font-black uppercase px-2 py-0.5 rounded-md border inline-flex items-center gap-1 ${
+                            customer.is_blocked ? "bg-rose-50 text-rose-700 border-rose-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                          }`}>
+                            <span className={`w-1 h-1 rounded-sm ${customer.is_blocked ? "bg-rose-500" : "bg-emerald-500"}`} />
+                            {customer.is_blocked ? "Suspended" : "Active"}
+                          </span>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-[#94A3B8] font-semibold">Orders</span>
+                        <p className="font-bold text-[#0F172A]">{customer.order_count ?? 0}</p>
+                      </div>
+                      <div>
+                        <span className="text-[#94A3B8] font-semibold">Total Spent</span>
+                        <p className="font-black text-emerald-600">৳ {((customer.total_spent ?? 0)).toLocaleString("en-BD")}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <p className="text-xs text-[#64748B]">
+                        {new Date(customer.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleToggleBlock(customer)}
+                          className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors ${customer.is_blocked ? "bg-slate-200" : "bg-emerald-500"}`}>
+                          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white shadow-sm transition duration-200 ${customer.is_blocked ? "translate-x-0" : "translate-x-4"}`} />
+                        </button>
+                        <button onClick={() => openEditModal(customer)} className="p-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDeleteCustomer(customer.id, customer.full_name)} className="p-2.5 rounded-lg border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
@@ -771,7 +778,7 @@ export default function AdminCustomersPage() {
             <div className="p-6 border-b border-[#EEF2F7] flex items-center justify-between bg-[#F8FAFC]">
               <div>
                 <h3 className="font-serif-heading text-lg font-bold text-[#0F172A]">Add Customer</h3>
-                <p className="text-[10px] text-[#94A3B8]">Create a new database customer profile.</p>
+                <p className="text-xs lg:text-[10px] text-[#94A3B8]">Create a new database customer profile.</p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -783,7 +790,7 @@ export default function AdminCustomersPage() {
 
             <form onSubmit={handleAddCustomer} className="p-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                   Full Name
                 </label>
                 <input
@@ -797,7 +804,7 @@ export default function AdminCustomersPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                   Email Address
                 </label>
                 <input
@@ -811,7 +818,7 @@ export default function AdminCustomersPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                   Phone Number
                 </label>
                 <input
@@ -825,7 +832,7 @@ export default function AdminCustomersPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                     Role
                   </label>
                   <select
@@ -839,7 +846,7 @@ export default function AdminCustomersPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                     Access Status
                   </label>
                   <select
@@ -884,7 +891,7 @@ export default function AdminCustomersPage() {
             <div className="p-6 border-b border-[#EEF2F7] flex items-center justify-between bg-[#F8FAFC]">
               <div>
                 <h3 className="font-serif-heading text-lg font-bold text-[#0F172A]">Edit Customer Details</h3>
-                <p className="text-[10px] text-[#94A3B8]">Modify database record fields for this customer.</p>
+                <p className="text-xs lg:text-[10px] text-[#94A3B8]">Modify database record fields for this customer.</p>
               </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
@@ -896,7 +903,7 @@ export default function AdminCustomersPage() {
 
             <form onSubmit={handleUpdateCustomer} className="p-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                   Full Name
                 </label>
                 <input
@@ -910,7 +917,7 @@ export default function AdminCustomersPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                   Email Address
                 </label>
                 <input
@@ -924,7 +931,7 @@ export default function AdminCustomersPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                   Phone Number
                 </label>
                 <input
@@ -938,7 +945,7 @@ export default function AdminCustomersPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                     Role
                   </label>
                   <select
@@ -952,7 +959,7 @@ export default function AdminCustomersPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569] tracking-wider block">
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569] tracking-wider block">
                     Access Status
                   </label>
                   <select

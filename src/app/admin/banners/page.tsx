@@ -249,7 +249,7 @@ export default function AdminBannersPage() {
         </div>
 
         {/* Filters Bar Skeleton */}
-        <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-sm">
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-3 sm:p-4 flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between shadow-sm">
           <div className="h-10 w-full lg:w-96 bg-slate-200 rounded-md"></div>
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
             <div className="h-10 w-32 bg-slate-200 rounded-md"></div>
@@ -311,11 +311,11 @@ export default function AdminBannersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-serif-heading text-2xl font-black text-[#0F172A] flex items-center gap-2">
-            <ImageIcon className="w-6 h-6 text-indigo-500" />
+          <h2 className="font-serif-heading text-xl sm:text-xl sm:text-2xl font-black text-[#0F172A] flex items-center gap-2">
+            <ImageIcon className="w-5 sm:w-6 h-5 sm:h-6 text-indigo-500" />
             Banner Management
           </h2>
-          <p className="text-xs text-[#475569] mt-1">
+          <p className="text-sm sm:text-xs text-[#475569] mt-1">
             Create and manage hero sliders, promo banners, and offer banners for your storefront.
           </p>
         </div>
@@ -329,25 +329,25 @@ export default function AdminBannersPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-sm">
+      <div className="bg-white border border-[#EEF2F7] rounded-md p-3 sm:p-4 flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between shadow-sm">
         <div className="relative w-full lg:w-96">
           <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search banners..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-md border border-[#EEF2F7] bg-slate-50/50 text-xs font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 sm:py-2.5 rounded-md border border-[#EEF2F7] bg-slate-50/50 text-sm sm:text-xs font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
-          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3.5 py-2 rounded-md transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3 py-2.5 sm:px-3.5 sm:py-2 rounded-md transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10">
             <Filter className="w-3.5 h-3.5 text-[#94A3B8]" />
             <select
               value={positionFilter}
               onChange={e => setPositionFilter(e.target.value)}
-              className="bg-transparent text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+              className="bg-transparent text-sm sm:text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
             >
               <option value="all">All Positions</option>
               {POSITIONS.map(p => (
@@ -356,12 +356,12 @@ export default function AdminBannersPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3.5 py-2 rounded-md transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10">
+          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3 py-2.5 sm:px-3.5 sm:py-2 rounded-md transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10">
             <Filter className="w-3.5 h-3.5 text-[#94A3B8]" />
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value as any)}
-              className="bg-transparent text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+              className="bg-transparent text-sm sm:text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -371,14 +371,14 @@ export default function AdminBannersPage() {
 
           <span className="w-px h-6 bg-slate-200 hidden sm:block mx-1" />
 
-          <button onClick={() => toggleSort("sort_order")} className={`flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer ${sortBy === "sort_order" ? "bg-indigo-500 text-white border-indigo-500" : "bg-white text-[#475569] border-[#EEF2F7]"}`}>
-            Order <ArrowUpDown className="w-3 h-3 ml-0.5" />
+          <button onClick={() => toggleSort("sort_order")} className={`flex items-center gap-1 text-sm sm:text-xs font-bold px-3.5 py-2.5 sm:py-2 rounded-md border transition-all cursor-pointer flex-1 sm:flex-none justify-center ${sortBy === "sort_order" ? "bg-indigo-500 text-white border-indigo-500" : "bg-white text-[#475569] border-[#EEF2F7]"}`}>
+            Order <ArrowUpDown className="w-3.5 sm:w-3 h-3.5 sm:h-3 ml-0.5" />
           </button>
-          <button onClick={() => toggleSort("title")} className={`flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer ${sortBy === "title" ? "bg-indigo-500 text-white border-indigo-500" : "bg-white text-[#475569] border-[#EEF2F7]"}`}>
-            Title <ArrowUpDown className="w-3 h-3 ml-0.5" />
+          <button onClick={() => toggleSort("title")} className={`flex items-center gap-1 text-sm sm:text-xs font-bold px-3.5 py-2.5 sm:py-2 rounded-md border transition-all cursor-pointer flex-1 sm:flex-none justify-center ${sortBy === "title" ? "bg-indigo-500 text-white border-indigo-500" : "bg-white text-[#475569] border-[#EEF2F7]"}`}>
+            Title <ArrowUpDown className="w-3.5 sm:w-3 h-3.5 sm:h-3 ml-0.5" />
           </button>
-          <button onClick={() => toggleSort("date")} className={`flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer ${sortBy === "date" ? "bg-indigo-500 text-white border-indigo-500" : "bg-white text-[#475569] border-[#EEF2F7]"}`}>
-            Date <ArrowUpDown className="w-3 h-3 ml-0.5" />
+          <button onClick={() => toggleSort("date")} className={`flex items-center gap-1 text-sm sm:text-xs font-bold px-3.5 py-2.5 sm:py-2 rounded-md border transition-all cursor-pointer flex-1 sm:flex-none justify-center ${sortBy === "date" ? "bg-indigo-500 text-white border-indigo-500" : "bg-white text-[#475569] border-[#EEF2F7]"}`}>
+            Date <ArrowUpDown className="w-3.5 sm:w-3 h-3.5 sm:h-3 ml-0.5" />
           </button>
         </div>
       </div>
@@ -392,90 +392,167 @@ export default function AdminBannersPage() {
             <p className="text-xs text-[#94A3B8] mt-1 mb-4">Add your first banner to display on the homepage.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Banner</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Position</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Order</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EEF2F7]">
-                {filteredBanners.map(banner => (
-                  <tr key={banner.id} className="hover:bg-[#F8FAFC]/80 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-20 h-14 rounded-md bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
-                          {banner.image_url ? (
-                            <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <ImageIcon className="w-5 h-5 text-slate-400" />
-                          )}
-                        </div>
-                        <div className="min-w-0 max-w-[300px]">
-                          <p className="text-sm font-extrabold text-[#0F172A] truncate">{banner.title}</p>
-                          {banner.subtitle && (
-                            <p className="text-[10px] text-[#64748B] truncate mt-0.5 font-medium">{banner.subtitle}</p>
-                          )}
-                          {banner.link_url && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <LinkIcon className="w-3 h-3 text-indigo-400" />
-                              <span className="text-[9px] text-indigo-500 truncate">{banner.link_url}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md uppercase">
-                        {POSITION_LABELS[banner.position] || banner.position}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-bold text-[#0F172A]">#{banner.sort_order}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border inline-flex items-center gap-1.5 shadow-sm ${
-                        banner.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-slate-50 text-slate-600 border-slate-200/50"
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-sm ${banner.is_active ? "bg-emerald-500" : "bg-slate-400"}`} />
-                        {banner.is_active ? "Active" : "Draft"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2.5">
-                        <button
-                          onClick={() => handleToggleStatus(banner)}
-                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors duration-200 ease-in-out shadow-inner hover:scale-105 active:scale-95 ${
-                            !banner.is_active ? "bg-slate-200 hover:bg-slate-300" : "bg-indigo-500 hover:bg-indigo-600"
-                          }`}
-                        >
-                          <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-md bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                            !banner.is_active ? "translate-x-0" : "translate-x-4"
-                          }`} />
-                        </button>
-                        <button
-                          onClick={() => openEditModal(banner)}
-                          className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteBanner(banner.id, banner.title)}
-                          className="p-2 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+<>
+            {/* Desktop table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Banner</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Position</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Order</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[#EEF2F7]">
+                  {filteredBanners.map(banner => (
+                    <tr key={banner.id} className="hover:bg-[#F8FAFC]/80 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-20 h-14 rounded-md bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+                            {banner.image_url ? (
+                              <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <ImageIcon className="w-5 h-5 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="min-w-0 max-w-[300px]">
+                            <p className="text-sm font-extrabold text-[#0F172A] truncate">{banner.title}</p>
+                            {banner.subtitle && (
+                              <p className="text-xs lg:text-[10px] text-[#64748B] truncate mt-0.5 font-medium">{banner.subtitle}</p>
+                            )}
+                            {banner.link_url && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <LinkIcon className="w-3 h-3 text-indigo-400" />
+                                <span className="text-[11px] lg:text-[9px] text-indigo-500 truncate">{banner.link_url}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs lg:text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md uppercase">
+                          {POSITION_LABELS[banner.position] || banner.position}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-bold text-[#0F172A]">#{banner.sort_order}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-xs lg:text-[10px] font-black uppercase px-2.5 py-1 rounded-md border inline-flex items-center gap-1.5 shadow-sm ${
+                          banner.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-slate-50 text-slate-600 border-slate-200/50"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-sm ${banner.is_active ? "bg-emerald-500" : "bg-slate-400"}`} />
+                          {banner.is_active ? "Active" : "Draft"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2.5">
+                          <button
+                            onClick={() => handleToggleStatus(banner)}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors duration-200 ease-in-out shadow-inner hover:scale-105 active:scale-95 ${
+                              !banner.is_active ? "bg-slate-200 hover:bg-slate-300" : "bg-indigo-500 hover:bg-indigo-600"
+                            }`}
+                          >
+                            <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-md bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                              !banner.is_active ? "translate-x-0" : "translate-x-4"
+                            }`} />
+                          </button>
+                          <button
+                            onClick={() => openEditModal(banner)}
+                            className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBanner(banner.id, banner.title)}
+                            className="p-2 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="lg:hidden divide-y divide-[#EEF2F7]">
+              {filteredBanners.map(banner => (
+                <div key={banner.id} className="p-4 space-y-3">
+                  {/* Image & Title */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-12 rounded-md bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+                      {banner.image_url ? (
+                        <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="w-5 h-5 text-slate-400" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-extrabold text-[#0F172A] truncate">{banner.title}</p>
+                      {banner.subtitle && (
+                        <p className="text-xs text-[#64748B] truncate mt-0.5 font-medium">{banner.subtitle}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Position & Order */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md uppercase">
+                      {POSITION_LABELS[banner.position] || banner.position}
+                    </span>
+                    <span className="text-sm font-bold text-[#0F172A]">Order: #{banner.sort_order}</span>
+                  </div>
+
+                  {/* Link URL */}
+                  {banner.link_url && (
+                    <div className="flex items-center gap-1">
+                      <LinkIcon className="w-3 h-3 text-indigo-400" />
+                      <span className="text-xs text-indigo-500 truncate">{banner.link_url}</span>
+                    </div>
+                  )}
+
+                  {/* Status & Actions */}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className={`text-xs font-black uppercase px-2.5 py-1 rounded-md border inline-flex items-center gap-1.5 shadow-sm ${
+                      banner.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-slate-50 text-slate-600 border-slate-200/50"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-sm ${banner.is_active ? "bg-emerald-500" : "bg-slate-400"}`} />
+                      {banner.is_active ? "Active" : "Draft"}
+                    </span>
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        onClick={() => handleToggleStatus(banner)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors duration-200 ease-in-out shadow-inner hover:scale-105 active:scale-95 ${
+                          !banner.is_active ? "bg-slate-200 hover:bg-slate-300" : "bg-indigo-500 hover:bg-indigo-600"
+                        }`}
+                      >
+                        <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-md bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          !banner.is_active ? "translate-x-0" : "translate-x-4"
+                        }`} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(banner)}
+                        className="p-2.5 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBanner(banner.id, banner.title)}
+                        className="p-2.5 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -487,7 +564,7 @@ export default function AdminBannersPage() {
             <div className="p-6 border-b border-[#EEF2F7] flex items-center justify-between bg-[#F8FAFC] shrink-0">
               <div>
                 <h3 className="font-serif-heading text-lg font-bold text-[#0F172A]">{isAddModalOpen ? "Add New Banner" : "Edit Banner"}</h3>
-                <p className="text-[10px] text-[#94A3B8]">Configure hero slider or promotional banner.</p>
+                <p className="text-xs lg:text-[10px] text-[#94A3B8]">Configure hero slider or promotional banner.</p>
               </div>
               <button onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="p-1.5 rounded-md border border-[#EEF2F7] bg-white text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
@@ -497,7 +574,7 @@ export default function AdminBannersPage() {
             <form onSubmit={isAddModalOpen ? handleAddBanner : handleUpdateBanner} className="p-6 overflow-y-auto space-y-5">
               {/* Title */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569]">Banner Title *</label>
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Banner Title *</label>
                 <input
                   type="text"
                   required
@@ -510,7 +587,7 @@ export default function AdminBannersPage() {
 
               {/* Subtitle */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569]">Subtitle</label>
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Subtitle</label>
                 <input
                   type="text"
                   value={formData.subtitle}
@@ -522,7 +599,7 @@ export default function AdminBannersPage() {
 
               {/* Image Upload */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569]">Banner Image *</label>
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Banner Image *</label>
                 <div className="flex items-center gap-3">
                   <input
                     ref={fileInputRef}
@@ -545,7 +622,7 @@ export default function AdminBannersPage() {
                     {imageUploading ? "Uploading..." : "Upload Image"}
                   </button>
                   {formData.image_url && (
-                    <span className="text-[10px] text-emerald-600 font-medium">✓ Image selected</span>
+                    <span className="text-xs lg:text-[10px] text-emerald-600 font-medium">✓ Image selected</span>
                   )}
                 </div>
                 {/* Preview */}
@@ -561,12 +638,12 @@ export default function AdminBannersPage() {
                     </button>
                   </div>
                 )}
-                <p className="text-[9px] text-slate-400 mt-1">Recommended: 1920x600px. Supported: JPEG, PNG, WebP. Max 5MB.</p>
+                <p className="text-[11px] lg:text-[9px] text-slate-400 mt-1">Recommended: 1920x600px. Supported: JPEG, PNG, WebP. Max 5MB.</p>
               </div>
 
               {/* Link URL */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-[#475569]">Link URL (optional)</label>
+                <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Link URL (optional)</label>
                 <input
                   type="text"
                   value={formData.link_url}
@@ -579,7 +656,7 @@ export default function AdminBannersPage() {
               {/* Position & Order */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Position</label>
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Position</label>
                   <select
                     value={formData.position}
                     onChange={e => setFormData({ ...formData, position: e.target.value })}
@@ -591,7 +668,7 @@ export default function AdminBannersPage() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Sort Order</label>
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Sort Order</label>
                   <input
                     type="number"
                     min="0"

@@ -5,7 +5,6 @@ import {
     Clock,
     Edit2,
     Globe,
-    Loader2,
     MapPin,
     Plus,
     Search,
@@ -196,7 +195,7 @@ export default function AdminDeliveryPage() {
         </div>
 
         {/* Filters Bar Skeleton */}
-        <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-sm">
+        <div className="bg-white border border-[#EEF2F7] rounded-md p-3 sm:p-4 flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between shadow-sm">
           <div className="h-10 w-full lg:w-96 bg-slate-200 rounded-md"></div>
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <div className="h-10 w-32 bg-slate-200 rounded-md"></div>
@@ -256,11 +255,11 @@ export default function AdminDeliveryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-serif-heading text-2xl font-black text-[#0F172A] flex items-center gap-2">
-            <Truck className="w-6 h-6 text-emerald-600" />
+          <h2 className="font-serif-heading text-xl sm:text-xl sm:text-2xl font-black text-[#0F172A] flex items-center gap-2">
+            <Truck className="w-5 sm:w-6 h-5 sm:h-6 text-emerald-600" />
             Delivery Zone Management
           </h2>
-          <p className="text-xs text-[#475569] mt-1">
+          <p className="text-sm sm:text-xs text-[#475569] mt-1">
             Set delivery charges and estimated times for different areas across Bangladesh.
           </p>
         </div>
@@ -276,58 +275,58 @@ export default function AdminDeliveryPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
-          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Zones</span>
-          <p className="text-2xl font-black text-[#0F172A]">{zones.length}</p>
+          <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Zones</span>
+          <p className="text-xl sm:text-2xl font-black text-[#0F172A]">{zones.length}</p>
         </div>
         <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
-          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Divisions</span>
-          <p className="text-2xl font-black text-[#0F172A]">{divisions.length}</p>
+          <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Divisions</span>
+          <p className="text-xl sm:text-2xl font-black text-[#0F172A]">{divisions.length}</p>
         </div>
         <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
-          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Active Zones</span>
-          <p className="text-2xl font-black text-emerald-600">{zones.filter(z => z.is_active).length}</p>
+          <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Active Zones</span>
+          <p className="text-xl sm:text-2xl font-black text-emerald-600">{zones.filter(z => z.is_active).length}</p>
         </div>
         <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-2 shadow-sm">
-          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Avg Delivery Days</span>
-          <p className="text-2xl font-black text-[#0F172A]">
+          <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Avg Delivery Days</span>
+          <p className="text-xl sm:text-2xl font-black text-[#0F172A]">
             {zones.length ? Math.round(zones.reduce((s, z) => s + z.estimated_days, 0) / zones.length) : 0}
           </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-[#EEF2F7] rounded-md p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-sm">
+      <div className="bg-white border border-[#EEF2F7] rounded-md p-3 sm:p-4 flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between shadow-sm">
         <div className="relative w-full lg:w-96">
           <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by area or division..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-md border border-[#EEF2F7] bg-slate-50/50 text-xs font-semibold focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 sm:py-2.5 rounded-md border border-[#EEF2F7] bg-slate-50/50 text-sm sm:text-xs font-semibold focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3.5 py-2 rounded-md">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#EEF2F7] px-3 sm:px-3.5 py-2.5 sm:py-2 rounded-md flex-1 sm:flex-none">
             <Globe className="w-3.5 h-3.5 text-[#94A3B8]" />
             <select value={divisionFilter} onChange={e => setDivisionFilter(e.target.value)}
-              className="bg-transparent text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer">
+              className="bg-transparent text-sm sm:text-xs font-bold text-[#475569] border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer">
               <option value="all">All Divisions</option>
               {divisions.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <span className="w-px h-6 bg-slate-200 hidden sm:block mx-1" />
           <button onClick={() => toggleSort("area")}
-            className={"flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer " + (sortBy === "area" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
-            Area <ArrowUpDown className="w-3 h-3 ml-0.5" />
+            className={"flex items-center gap-1 font-bold px-3.5 py-2.5 sm:py-2 rounded-md border transition-all cursor-pointer flex-1 sm:flex-none justify-center text-sm sm:text-xs " + (sortBy === "area" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
+            Area <ArrowUpDown className="w-3.5 sm:w-3 h-3.5 sm:h-3 ml-0.5" />
           </button>
           <button onClick={() => toggleSort("charge")}
-            className={"flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer " + (sortBy === "charge" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
-            Charge <ArrowUpDown className="w-3 h-3 ml-0.5" />
+            className={"flex items-center gap-1 font-bold px-3.5 py-2.5 sm:py-2 rounded-md border transition-all cursor-pointer flex-1 sm:flex-none justify-center text-sm sm:text-xs " + (sortBy === "charge" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
+            Charge <ArrowUpDown className="w-3.5 sm:w-3 h-3.5 sm:h-3 ml-0.5" />
           </button>
           <button onClick={() => toggleSort("days")}
-            className={"flex items-center gap-1 text-xs font-bold px-3.5 py-2 rounded-md border transition-all cursor-pointer " + (sortBy === "days" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
-            Days <ArrowUpDown className="w-3 h-3 ml-0.5" />
+            className={"flex items-center gap-1 font-bold px-3.5 py-2.5 sm:py-2 rounded-md border transition-all cursor-pointer flex-1 sm:flex-none justify-center text-sm sm:text-xs " + (sortBy === "days" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-[#475569] border-[#EEF2F7]")}>
+            Days <ArrowUpDown className="w-3.5 sm:w-3 h-3.5 sm:h-3 ml-0.5" />
           </button>
         </div>
       </div>
@@ -341,74 +340,118 @@ export default function AdminDeliveryPage() {
             <p className="text-xs mt-1 mb-4">Add your first delivery zone to start calculating shipping costs.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Area</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Division</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Charge</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Est. Days</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-[#94A3B8] uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EEF2F7]">
-                {filteredZones.map(zone => (
-                  <tr key={zone.id} className="hover:bg-[#F8FAFC]/80 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-md bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
-                          <MapPin className="w-4 h-4 text-emerald-600" />
+          <>
+            {/* Desktop table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Area</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Division</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Charge</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Est. Days</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs lg:text-[10px] font-black text-[#94A3B8] uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#EEF2F7]">
+                  {filteredZones.map(zone => (
+                    <tr key={zone.id} className="hover:bg-[#F8FAFC]/80 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-md bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
+                            <MapPin className="w-4 h-4 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-extrabold text-[#0F172A]">{zone.area_name}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-extrabold text-[#0F172A]">{zone.area_name}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs lg:text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md uppercase">{zone.division}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-black text-emerald-600">৳ {zone.delivery_charge.toLocaleString("en-BD")}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-bold text-[#475569] flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-[#94A3B8]" />
+                          {zone.estimated_days} {zone.estimated_days === 1 ? "day" : "days"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={"text-xs lg:text-[10px] font-black uppercase px-2.5 py-1 rounded-md border inline-flex items-center gap-1.5 shadow-sm " + (zone.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-slate-50 text-slate-600 border-slate-200/50")}>
+                          <span className={"w-1.5 h-1.5 rounded-sm " + (zone.is_active ? "bg-emerald-500" : "bg-slate-400")} />
+                          {zone.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2.5">
+                          <button onClick={() => handleToggleStatus(zone)}
+                            className={"relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors shadow-inner " + (!zone.is_active ? "bg-slate-200" : "bg-emerald-500")}>
+                            <span className={"pointer-events-none inline-block h-4 w-4 transform rounded-md bg-white shadow-sm transition duration-200 " + (!zone.is_active ? "translate-x-0" : "translate-x-4")} />
+                          </button>
+                          <button onClick={() => openEdit(zone)}
+                            className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer">
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => handleDelete(zone.id, zone.area_name)}
+                            className="p-2 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md uppercase">
-                        {zone.division}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-black text-emerald-600">
-                        ৳ {zone.delivery_charge.toLocaleString("en-BD")}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-bold text-[#475569] flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-[#94A3B8]" />
-                        {zone.estimated_days} {zone.estimated_days === 1 ? "day" : "days"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={"text-[10px] font-black uppercase px-2.5 py-1 rounded-md border inline-flex items-center gap-1.5 shadow-sm " + (zone.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-slate-50 text-slate-600 border-slate-200/50")}>
-                        <span className={"w-1.5 h-1.5 rounded-sm " + (zone.is_active ? "bg-emerald-500" : "bg-slate-400")} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="lg:hidden divide-y divide-[#EEF2F7]">
+              {filteredZones.map(zone => (
+                <div key={zone.id} className="p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
+                      <MapPin className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-extrabold text-[#0F172A]">{zone.area_name}</p>
+                      <p className="text-xs text-[#64748B] mt-0.5">{zone.division}</p>
+                      <span className={"mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-black uppercase " + (zone.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : "bg-slate-50 text-slate-600 border-slate-200/50")}>
+                        <span className={"w-1 h-1 rounded-sm " + (zone.is_active ? "bg-emerald-500" : "bg-slate-400")} />
                         {zone.is_active ? "Active" : "Inactive"}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2.5">
-                        <button onClick={() => handleToggleStatus(zone)}
-                          className={"relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors duration-200 shadow-inner hover:scale-105 active:scale-95 " + (!zone.is_active ? "bg-slate-200" : "bg-emerald-500")}>
-                          <span className={"pointer-events-none inline-block h-4 w-4 transform rounded-md bg-white shadow-sm ring-0 transition duration-200 " + (!zone.is_active ? "translate-x-0" : "translate-x-4")} />
-                        </button>
-                        <button onClick={() => openEdit(zone)}
-                          className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer">
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => handleDelete(zone.id, zone.area_name)}
-                          className="p-2 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-[#94A3B8] font-semibold">Delivery Charge</span>
+                      <p className="font-black text-emerald-600">৳ {zone.delivery_charge.toLocaleString("en-BD")}</p>
+                    </div>
+                    <div>
+                      <span className="text-[#94A3B8] font-semibold">Est. Days</span>
+                      <p className="font-bold text-[#0F172A]">{zone.estimated_days} {zone.estimated_days === 1 ? "day" : "days"}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button onClick={() => handleToggleStatus(zone)}
+                      className={"relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors " + (!zone.is_active ? "bg-slate-200" : "bg-emerald-500")}>
+                      <span className={"pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white shadow-sm transition duration-200 " + (!zone.is_active ? "translate-x-0" : "translate-x-4")} />
+                    </button>
+                    <button onClick={() => openEdit(zone)} className="p-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(zone.id, zone.area_name)} className="p-2.5 rounded-lg border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -431,14 +474,14 @@ export default function AdminDeliveryPage() {
             <form onSubmit={isAddModalOpen ? handleAdd : handleUpdate} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Area Name *</label>
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Area Name *</label>
                   <input type="text" required value={formData.area_name}
                     onChange={e => setFormData({ ...formData, area_name: e.target.value })}
                     placeholder="e.g. Gulshan"
                     className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Division *</label>
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Division *</label>
                   <input type="text" required value={formData.division}
                     onChange={e => setFormData({ ...formData, division: e.target.value })}
                     placeholder="e.g. Dhaka"
@@ -447,13 +490,13 @@ export default function AdminDeliveryPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Delivery Charge (৳)</label>
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Delivery Charge (৳)</label>
                   <input type="number" min="0" value={formData.delivery_charge}
                     onChange={e => setFormData({ ...formData, delivery_charge: Number(e.target.value) })}
                     className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Est. Delivery (days)</label>
+                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Est. Delivery (days)</label>
                   <input type="number" min="1" value={formData.estimated_days}
                     onChange={e => setFormData({ ...formData, estimated_days: Number(e.target.value) })}
                     className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />

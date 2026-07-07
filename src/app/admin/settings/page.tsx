@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
-  Settings,
-  Store,
-  PhoneCall,
-  Truck,
-  Share2,
-  Save,
-  Loader2,
-  AlertCircle
+    AlertCircle,
+    Loader2,
+    PhoneCall,
+    Save,
+    Settings,
+    Share2,
+    Store,
+    Truck
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export default function AdminSettingsPage() {
@@ -204,7 +204,7 @@ export default function AdminSettingsPage() {
   if (schemaError) {
     return (
       <div className="flex flex-col gap-4 p-8 max-w-4xl mx-auto mt-10 bg-rose-50 border-2 border-rose-200 rounded-lg">
-        <h2 className="text-2xl font-black text-rose-700 flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-black text-rose-700 flex items-center gap-2">
           <AlertCircle className="w-8 h-8" /> Database Setup Required!
         </h2>
         <p className="text-sm font-semibold text-rose-900">
@@ -249,11 +249,11 @@ NOTIFY pgrst, 'reload schema';`} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-serif-heading text-2xl font-black text-[#0F172A] flex items-center gap-2">
-            <Settings className="w-6 h-6 text-slate-700" />
+          <h2 className="font-serif-heading text-xl sm:text-xl sm:text-2xl font-black text-[#0F172A] flex items-center gap-2">
+            <Settings className="w-5 sm:w-6 h-5 sm:h-6 text-slate-700" />
             Global Settings
           </h2>
-          <p className="text-xs text-[#475569] mt-1">
+          <p className="text-sm sm:text-xs text-[#475569] mt-1">
             Manage your store's identity, contact information, and global shipping rules.
           </p>
         </div>
@@ -276,11 +276,11 @@ NOTIFY pgrst, 'reload schema';`} />
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Store Name *</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Store Name *</label>
               <input type="text" name="store_name" required value={formData.store_name} onChange={handleChange} className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
             </div>
             <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Store Tagline</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Store Tagline</label>
               <input type="text" name="store_tagline" value={formData.store_tagline} onChange={handleChange} placeholder="e.g. Premium Mangoes Delivered" className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
             </div>
           </div>
@@ -294,15 +294,15 @@ NOTIFY pgrst, 'reload schema';`} />
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Support Email *</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Support Email *</label>
               <input type="email" name="contact_email" required value={formData.contact_email} onChange={handleChange} className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Support Phone *</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Support Phone *</label>
               <input type="text" name="contact_phone" required value={formData.contact_phone} onChange={handleChange} className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
             </div>
             <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Physical Address / Headquarters</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Physical Address / Headquarters</label>
               <textarea rows={3} name="store_address" value={formData.store_address} onChange={handleChange} className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
             </div>
           </div>
@@ -316,13 +316,13 @@ NOTIFY pgrst, 'reload schema';`} />
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Default Delivery Charge (৳)</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Default Delivery Charge (৳)</label>
               <input type="number" min="0" name="default_delivery_charge" value={formData.default_delivery_charge} onChange={handleChange} className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Free Delivery Threshold (৳)</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Free Delivery Threshold (৳)</label>
               <input type="number" min="0" name="free_delivery_threshold" value={formData.free_delivery_threshold} onChange={handleChange} placeholder="0 to disable" className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
-              <p className="text-[9px] text-[#94A3B8] font-semibold mt-1">Orders above this amount get free shipping. Set to 0 to disable.</p>
+              <p className="text-[11px] lg:text-[9px] text-[#94A3B8] font-semibold mt-1">Orders above this amount get free shipping. Set to 0 to disable.</p>
             </div>
             <div className="md:col-span-2 pt-2 border-t border-[#EEF2F7]">
               <label className="flex items-center gap-2 text-xs font-bold text-[#0F172A] cursor-pointer w-fit">
@@ -341,11 +341,11 @@ NOTIFY pgrst, 'reload schema';`} />
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Facebook URL</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Facebook URL</label>
               <input type="url" name="social_facebook" value={formData.social_facebook} onChange={handleChange} placeholder="https://facebook.com/..." className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-[#475569]">Instagram URL</label>
+              <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Instagram URL</label>
               <input type="url" name="social_instagram" value={formData.social_instagram} onChange={handleChange} placeholder="https://instagram.com/..." className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-slate-500" />
             </div>
           </div>

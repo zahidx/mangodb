@@ -108,7 +108,7 @@ export default function AdminAbandonedCartsPage() {
                 <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
                   <ShoppingCart className="w-5 h-5 text-amber-600" />
                 </div>
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">24h+ Abandoned</span>
+                <span className="text-xs lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wider">24h+ Abandoned</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{stats?.total_abandoned || 0}</h3>
               <p className="text-xs text-gray-500 mt-0.5">Carts untouched for &gt;24 hours</p>
@@ -119,7 +119,7 @@ export default function AdminAbandonedCartsPage() {
                 <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
                   <User className="w-5 h-5 text-blue-600" />
                 </div>
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Registered Users</span>
+                <span className="text-xs lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Registered Users</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{stats?.abandoned_users_count || 0}</h3>
               <p className="text-xs text-gray-500 mt-0.5">Logged-in users with abandoned carts</p>
@@ -130,7 +130,7 @@ export default function AdminAbandonedCartsPage() {
                 <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
                   <Mail className="w-5 h-5 text-purple-600" />
                 </div>
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Guest Records</span>
+                <span className="text-xs lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Guest Records</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{stats?.abandoned_guest_records || 0}</h3>
               <p className="text-xs text-gray-500 mt-0.5">Guest checkouts with saved emails</p>
