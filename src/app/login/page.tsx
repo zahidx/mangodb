@@ -15,9 +15,7 @@ import {
     Shield,
     ShoppingBag,
     Sun,
-    Truck,
-    User,
-    UserRound,
+    Truck
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -33,11 +31,8 @@ export default function LoginPage() {
   const [customerPassword, setCustomerPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"customer" | "admin">("customer");
-  const [adminUsername, setAdminUsername] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
+  const activeTab = "customer" as const;
   const [showCustomerPassword, setShowCustomerPassword] = useState(false);
-  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
@@ -65,90 +60,6 @@ export default function LoginPage() {
     } else {
       document.documentElement.classList.remove("light");
       document.documentElement.classList.add("dark");
-    }
-  };
-
-  const handleAdminSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!adminUsername || !adminPassword) {
-      toast.error("Please enter both username and password");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const email = adminUsername.includes("@")
-        ? adminUsername
-        : `${adminUsername}@mangodb.com`;
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: adminPassword,
-      });
-
-      if (!error && data.user) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", data.user.id)
-          .single<{ role: string }>();
-
-        if (profileData?.role === "admin") {
-          toast.success("Admin login successful!");
-          await refreshSession();
-          setIsLoading(false);
-          router.push("/admin");
-          return;
-        } else {
-          await supabase.auth.signOut();
-          toast.error("This account does not have admin privileges.");
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      if (adminUsername === "admin" && adminPassword === "admin123") {
-        toast.success("Admin login successful!");
-
-        localStorage.setItem(
-          "mangodb-user",
-          JSON.stringify({
-            phone: "admin",
-            name: "Administrator",
-            role: "admin",
-            email: "admin@mangodb.com",
-          })
-        );
-
-        await refreshSession();
-        setIsLoading(false);
-        router.push("/admin");
-        return;
-      }
-
-      setIsLoading(false);
-      toast.error("Invalid admin credentials");
-    } catch {
-      setIsLoading(false);
-      if (adminUsername === "admin" && adminPassword === "admin123") {
-        toast.success("Admin login successful!");
-
-        localStorage.setItem(
-          "mangodb-user",
-          JSON.stringify({
-            phone: "admin",
-            name: "Administrator",
-            role: "admin",
-            email: "admin@mangodb.com",
-          })
-        );
-
-        await refreshSession();
-        router.push("/admin");
-      } else {
-        toast.error("Invalid admin credentials");
-      }
     }
   };
 
@@ -255,8 +166,8 @@ export default function LoginPage() {
   const isDark = theme === "dark";
 
   const fieldWrapClass = isDark
-    ? "group flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3.5 py-3 backdrop-blur-sm transition-all duration-200 focus-within:border-blue-400 focus-within:bg-white/10 focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]"
-    : "group flex items-center gap-3 rounded-md border border-white/60 bg-white/50 px-3.5 py-3 backdrop-blur-sm transition-all duration-200 focus-within:border-blue-500 focus-within:bg-white/80 focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.15)]";
+    ? "group flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-4 py-3.5 backdrop-blur-sm transition-all duration-200 focus-within:border-emerald-500 focus-within:bg-white/10 focus-within:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]"
+    : "group flex items-center gap-3 rounded-md border border-white/60 bg-white/50 px-4 py-3.5 backdrop-blur-sm transition-all duration-200 focus-within:border-emerald-600 focus-within:bg-white/80 focus-within:shadow-[0_0_0_3px_rgba(16,185,129,0.15)]";
 
   const inputClass = isDark
     ? "w-full border-0 bg-transparent text-sm font-semibold text-neutral-100 placeholder:text-neutral-500 placeholder:font-normal outline-none"
@@ -267,48 +178,36 @@ export default function LoginPage() {
     : "mb-2.5 block text-[13px] font-semibold text-neutral-700";
 
   const primaryBtnClass = isDark
-    ? "group flex w-full items-center justify-center gap-2 rounded-md border border-blue-500 bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 transition-all duration-200 hover:bg-blue-400 hover:shadow-md hover:shadow-blue-600/30 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
-    : "group flex w-full items-center justify-center gap-2 rounded-md border border-blue-600/80 bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 transition-all duration-200 hover:bg-blue-700 hover:shadow-md hover:shadow-blue-600/30 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+    ? "group flex w-full items-center justify-center gap-2 rounded-md border border-emerald-500 bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm shadow-emerald-600/20 transition-all duration-200 hover:bg-emerald-500 hover:shadow-md hover:shadow-emerald-600/25 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+    : "group flex w-full items-center justify-center gap-2 rounded-md border border-emerald-600 bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm shadow-emerald-600/20 transition-all duration-200 hover:bg-emerald-700 hover:shadow-md hover:shadow-emerald-600/25 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
 
   const secondaryBtnClass = isDark
-    ? "flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-neutral-200 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-blue-400/40 hover:bg-white/10 hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
-    : "flex items-center justify-center gap-2 rounded-md border border-white/70 bg-white/40 px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-blue-200 hover:bg-white/70 hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50";
+    ? "flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-neutral-200 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-emerald-500/30 hover:bg-white/10 hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 focus:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
+    : "flex items-center justify-center gap-2 rounded-md border border-white/70 bg-white/40 px-4 py-3 text-sm font-medium text-neutral-700 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-emerald-500/20 hover:bg-white/70 hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50";
 
   const iconFieldClass = isDark
-    ? "h-4 w-4 shrink-0 text-neutral-500 transition-colors group-focus-within:text-blue-400"
-    : "h-4 w-4 shrink-0 text-neutral-400 transition-colors group-focus-within:text-blue-500";
+    ? "h-4 w-4 shrink-0 text-neutral-500 transition-colors group-focus-within:text-emerald-500"
+    : "h-4 w-4 shrink-0 text-neutral-400 transition-colors group-focus-within:text-emerald-600";
 
   const iconToggleClass = isDark
     ? "shrink-0 text-neutral-500 transition-colors hover:text-neutral-200 cursor-pointer"
     : "shrink-0 text-neutral-400 transition-colors hover:text-neutral-700 cursor-pointer";
 
-  const inactiveTabClass = isDark
-    ? "text-neutral-400 hover:bg-white/10 hover:text-white"
-    : "text-neutral-600 hover:bg-white/70 hover:text-neutral-900";
-
   const cardClass = isDark
-    ? "relative z-10 w-full max-w-md overflow-hidden rounded-md border border-blue-500/40 bg-neutral-900/75 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-xl"
-    : "relative z-10 w-full max-w-md overflow-hidden rounded-md border border-blue-400/70 bg-white/55 shadow-[0_8px_32px_rgba(37,99,235,0.12)] backdrop-blur-xl";
+    ? "relative z-10 w-full max-w-3xl overflow-hidden rounded-lg border border-emerald-500/20 bg-neutral-900/75 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+    : "relative z-10 w-full max-w-3xl overflow-hidden rounded-lg border border-emerald-600/20 bg-white/55 shadow-[0_8px_32px_rgba(16,185,129,0.06)] backdrop-blur-xl";
 
   const cardBarClass = isDark
-    ? "h-1 w-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"
-    : "h-1 w-full bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400";
+    ? "h-1 w-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500"
+    : "h-1 w-full bg-gradient-to-r from-emerald-600 via-amber-500 to-emerald-600";
 
   const titleClass = isDark
-    ? "text-2xl font-semibold tracking-tight text-white"
-    : "text-2xl font-semibold tracking-tight text-neutral-900";
+    ? "text-xl sm:text-2xl font-semibold tracking-tight text-white"
+    : "text-xl sm:text-2xl font-semibold tracking-tight text-neutral-900";
 
   const subtitleClass = isDark
-    ? "text-sm text-neutral-400"
-    : "text-sm text-neutral-500";
-
-  const tabWrapClass = isDark
-    ? "grid grid-cols-2 gap-1 rounded-md border border-white/10 bg-white/5 p-1 backdrop-blur-sm"
-    : "grid grid-cols-2 gap-1 rounded-md border border-white/60 bg-white/40 p-1 backdrop-blur-sm";
-
-  const activeTabClass = isDark
-    ? "bg-blue-500 text-white shadow-sm"
-    : "bg-blue-600 text-white shadow-sm";
+    ? "text-xs sm:text-sm text-neutral-400"
+    : "text-xs sm:text-sm text-neutral-500";
 
   const dividerLineClass = isDark
     ? "w-full border-t border-white/10"
@@ -319,20 +218,16 @@ export default function LoginPage() {
     : "bg-white/70 px-2 text-xs font-medium uppercase tracking-wide text-neutral-400 backdrop-blur-sm";
 
   const footerWrapClass = isDark
-    ? "space-y-3 border-t border-white/10 pt-4"
-    : "space-y-3 border-t border-white/50 pt-4";
+    ? "space-y-2 border-t border-white/10 pt-4"
+    : "space-y-2 border-t border-white/50 pt-4";
 
   const footerTextClass = isDark
     ? "text-center text-sm text-neutral-400"
     : "text-center text-sm text-neutral-500";
 
   const footerLinkClass = isDark
-    ? "font-semibold text-blue-400 transition-colors hover:text-blue-300 hover:underline"
-    : "font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline";
-
-  const legalClass = isDark
-    ? "text-center text-xs leading-relaxed text-neutral-500"
-    : "text-center text-xs leading-relaxed text-neutral-400";
+    ? "font-semibold text-emerald-400 transition-colors hover:text-emerald-300 hover:underline"
+    : "font-semibold text-emerald-600 transition-colors hover:text-emerald-700 hover:underline";
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-background text-foreground overflow-hidden font-sans relative select-none">
@@ -486,67 +381,55 @@ export default function LoginPage() {
 
       {/* Right Panel */}
       <div className="flex flex-col lg:col-span-7 items-center justify-center p-6 sm:p-12 relative min-h-screen z-10">
-        <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
+
+        {/* Minimal localized top navigation bar */}
+        <div className="absolute top-0 left-0 right-0 h-20 flex items-center justify-between px-6 sm:px-12 z-20 pointer-events-auto">
+          {/* Left Side: Back to Store */}
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm font-semibold text-muted hover:text-[#fbbf24] transition-colors bg-card/80 border border-border px-4 py-2 rounded-xl backdrop-blur-md shadow-sm"
+            className="group inline-flex items-center gap-2 text-sm font-semibold text-neutral-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            Back to Store
           </Link>
 
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-card/80 border border-border text-muted-foreground hover:text-[#fbbf24] transition-all cursor-pointer backdrop-blur-md shadow-sm"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4" />
-            ) : (
-              <Moon className="w-4 h-4" />
-            )}
-          </button>
+          {/* Right Side: Admin Portal + Theme Toggle */}
+          <div className="flex items-center gap-5">
+            <Link
+              href="/admin-login"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-500 dark:text-neutral-400 hover:text-[#fbbf24] dark:hover:text-[#fbbf24] transition-colors duration-200"
+            >
+              <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              Admin
+            </Link>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-[#fbbf24] dark:hover:text-[#fbbf24] transition-colors duration-200 cursor-pointer"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Form card only */}
-        <div className={cardClass}>
-          <div className={cardBarClass} />
+        {/* Form card */}
+        <div className="relative mt-8">
+          <div className={cardClass}>
+            <div className={cardBarClass} />
 
-          <div className="space-y-6 p-6 sm:p-8">
-            <div className="space-y-1 text-center">
-              <h2 className={titleClass}>Welcome Back</h2>
-              <p className={subtitleClass}>
-                {activeTab === "customer"
-                  ? "Sign in to access your account."
-                  : "Sign in to manage the admin panel."}
-              </p>
-            </div>
+            <div className="space-y-4.5 py-6 px-8 sm:py-7 sm:px-10">
+              <div className="space-y-1 text-center">
+                <h2 className={titleClass}>Welcome Back</h2>
+                <p className={subtitleClass}>
+                  Sign in to access your account.
+                </p>
+              </div>
 
-            <div className={tabWrapClass}>
-              <button
-                type="button"
-                onClick={() => setActiveTab("customer")}
-                className={`flex items-center justify-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-200 cursor-pointer ${
-                  activeTab === "customer" ? activeTabClass : inactiveTabClass
-                }`}
-              >
-                <UserRound className="h-3.5 w-3.5" />
-                Customer
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("admin")}
-                className={`flex items-center justify-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-200 cursor-pointer ${
-                  activeTab === "admin" ? activeTabClass : inactiveTabClass
-                }`}
-              >
-                <Shield className="h-3.5 w-3.5" />
-                Admin Panel
-              </button>
-            </div>
-
-            {activeTab === "customer" ? (
-              <form onSubmit={handleCustomerSubmit} className="space-y-5">
+              <form onSubmit={handleCustomerSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="customer-email" className={labelClass}>
                     Email Address
@@ -594,7 +477,7 @@ export default function LoginPage() {
                     </button>
                   </div>
                   <div className="flex justify-end mt-1">
-                    <Link href="/forgot-password" className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors">
+                    <Link href="/forgot-password" className="text-[11px] font-bold text-emerald-600 dark:text-emerald-450 hover:text-emerald-700 dark:hover:text-emerald-350 hover:underline transition-colors">
                       Forgot Password?
                     </Link>
                   </div>
@@ -604,7 +487,7 @@ export default function LoginPage() {
                   type="submit"
                   disabled={isLoading}
                   className={primaryBtnClass}
-                  style={{ marginTop: "10px" }}
+                  style={{ marginTop: "4px" }}
                 >
                   {isLoading ? (
                     <>
@@ -628,7 +511,7 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
                     onClick={() => handleOAuthLogin("google")}
@@ -636,22 +519,10 @@ export default function LoginPage() {
                     className={secondaryBtnClass}
                   >
                     <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        fill="#EA4335"
-                        d="M12.24 10.285V14.4h6.887c-.275 1.41-1.023 2.605-2.186 3.415v2.834h3.545c2.07-1.907 3.265-4.712 3.265-8.05 0-.78-.07-1.532-.2-2.25H12.24z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12.24 23c2.97 0 5.46-.98 7.28-2.66l-3.545-2.834c-.98.66-2.23 1.06-3.735 1.06-2.87 0-5.3-1.94-6.16-4.55H2.41v2.92C4.22 20.53 7.94 23 12.24 23z"
-                      />
-                      <path
-                        fill="#4A90E2"
-                        d="M6.08 14.016c-.22-.66-.35-1.36-.35-2.086s.13-1.426.35-2.086V6.924H2.41C1.47 8.79 1 10.84 1 11.93c0 1.09.47 3.14 1.41 5.006l3.67-2.92z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M12.24 4.75c1.615 0 3.06.555 4.2 1.645l3.15-3.15C17.695 1.49 15.205.5 12.24.5 7.94.5 4.22 2.97 2.41 6.924l3.67 2.92c.86-2.61 3.29-4.55 6.16-4.55z"
-                      />
+                      <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.41-1.023 2.605-2.186 3.415v2.834h3.545c2.07-1.907 3.265-4.712 3.265-8.05 0-.78-.07-1.532-.2-2.25H12.24z" />
+                      <path fill="#34A853" d="M12.24 23c2.97 0 5.46-.98 7.28-2.66l-3.545-2.834c-.98.66-2.23 1.06-3.735 1.06-2.87 0-5.3-1.94-6.16-4.55H2.41v2.92C4.22 20.53 7.94 23 12.24 23z" />
+                      <path fill="#4A90E2" d="M6.08 14.016c-.22-.66-.35-1.36-.35-2.086s.13-1.426.35-2.086V6.924H2.41C1.47 8.79 1 10.84 1 11.93c0 1.09.47 3.14 1.41 5.006l3.67-2.92z" />
+                      <path fill="#FBBC05" d="M12.24 4.75c1.615 0 3.06.555 4.2 1.645l3.15-3.15C17.695 1.49 15.205.5 12.24.5 7.94.5 4.22 2.97 2.41 6.924l3.67 2.92c.86-2.61 3.29-4.55 6.16-4.55z" />
                     </svg>
                     Google
                   </button>
@@ -662,116 +533,21 @@ export default function LoginPage() {
                     className={secondaryBtnClass}
                   >
                     <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        fill="#1877F2"
-                        d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.513c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"
-                      />
+                      <path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.513c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
                     </svg>
                     Facebook
                   </button>
                 </div>
               </form>
-            ) : (
-              <form onSubmit={handleAdminSubmit} className="space-y-5">
-                <div>
-                  <label htmlFor="admin-username" className={labelClass}>
-                    Username
-                  </label>
-                  <div className={fieldWrapClass}>
-                    <User className={iconFieldClass} />
-                    <input
-                      id="admin-username"
-                      type="text"
-                      required
-                      placeholder="Username or email"
-                      value={adminUsername}
-                      onChange={(e) => setAdminUsername(e.target.value)}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
 
-                <div>
-                  <label htmlFor="admin-password" className={labelClass}>
-                    Password
-                  </label>
-                  <div className={fieldWrapClass}>
-                    <Lock className={iconFieldClass} />
-                    <input
-                      id="admin-password"
-                      type={showAdminPassword ? "text" : "password"}
-                      required
-                      placeholder="Enter your password"
-                      value={adminPassword}
-                      onChange={(e) => setAdminPassword(e.target.value)}
-                      className={inputClass}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowAdminPassword((v) => !v)}
-                      className={iconToggleClass}
-                      aria-label={showAdminPassword ? "Hide password" : "Show password"}
-                    >
-                      {showAdminPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={primaryBtnClass}
-                  style={{ marginTop: "10px" }}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="h-4 w-4" />
-                      Log In as Admin
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
-
-            <div className={footerWrapClass}>
-              <p className={footerTextClass}>
-                Don&apos;t have an account?{" "}
-                <Link href="/signup" className={footerLinkClass}>
-                  Sign Up
-                </Link>
-              </p>
-
-              {/* Guest Checkout */}
-              <div className="relative py-1">
-                <div className="absolute inset-0 flex items-center">
-                  <div className={dividerLineClass} />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className={dividerTextClass}>or</span>
-                </div>
+              <div className={footerWrapClass}>
+                <p className={footerTextClass}>
+                  Don&apos;t have an account?{" "}
+                  <Link href="/signup" className={footerLinkClass}>
+                    Sign Up
+                  </Link>
+                </p>
               </div>
-
-              <Link
-                href="/checkout"
-                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg border-2 border-dashed border-amber-400/60 text-sm font-semibold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:border-amber-500 transition-all"
-              >
-                <ShoppingBag className="h-4 w-4" />
-                Continue as Guest
-              </Link>
-
-              <p className={legalClass}>
-                By continuing, you agree to MangoDB&apos;s Terms of Service and
-                Privacy Policy.
-              </p>
             </div>
           </div>
         </div>

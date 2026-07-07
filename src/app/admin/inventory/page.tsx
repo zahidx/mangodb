@@ -258,7 +258,7 @@ export default function AdminInventoryPage() {
           <button
             onClick={handleSaveAdjustments}
             disabled={isSaving}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md disabled:opacity-50 disabled:pointer-events-none animate-pulse-border"
+            className="w-fit self-end sm:self-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md disabled:opacity-50 disabled:pointer-events-none animate-pulse-border"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {isSaving ? "Saving..." : "Save Adjustments"}
@@ -477,7 +477,7 @@ export default function AdminInventoryPage() {
                   <div key={product.id} className={`p-4 space-y-3 ${isModified ? 'bg-blue-50/20' : ''}`}>
                     {/* Top row: image + info + status */}
                     <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+                      <div className="w-12 h-12 rounded-md bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
                         {product.images?.[0] ? (
                           <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
@@ -507,8 +507,8 @@ export default function AdminInventoryPage() {
                     </div>
 
                     {/* Stock bar */}
-                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div className={`h-full rounded-full transition-all ${
+                    <div className="w-full bg-slate-100 rounded-md h-2 overflow-hidden">
+                      <div className={`h-full rounded-md transition-all ${
                         currentStock > 10 ? "bg-emerald-500" : 
                         currentStock > 0 ? "bg-amber-500" : "bg-rose-500"
                       }`} style={{ width: `${Math.min((currentStock / 100) * 100, 100)}%` }} />
@@ -555,7 +555,7 @@ export default function AdminInventoryPage() {
           <div className="flex items-center gap-2">
             <TrendingDown className="w-4 h-4 text-blue-600" />
             <span className="text-xs font-black text-[#0F172A] uppercase tracking-wider">Stock Change History</span>
-            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] lg:text-[9px] font-bold rounded-full border border-blue-200">
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] lg:text-[9px] font-bold rounded-md border border-blue-200">
               {stockHistory.length} entries
             </span>
           </div>
@@ -601,7 +601,7 @@ export default function AdminInventoryPage() {
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
                             {entry.product?.images?.[0] && (
-                              <img src={entry.product.images[0]} alt="" className="w-6 h-6 rounded object-cover" />
+                              <img src={entry.product.images[0]} alt="" className="w-6 h-6 rounded-md object-cover" />
                             )}
                             <span className="font-semibold text-[#0F172A] truncate max-w-[180px]">
                               {entry.product?.name || "Unknown product"}

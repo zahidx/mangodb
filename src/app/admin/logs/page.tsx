@@ -116,7 +116,7 @@ export default function AdminLogsPage() {
                   <tr key={i}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-3.5 h-3.5 bg-slate-200 rounded-full shrink-0"></div>
+                        <div className="w-3.5 h-3.5 bg-slate-200 rounded-md shrink-0"></div>
                         <div className="flex flex-col space-y-2">
                           <div className="h-3 w-20 bg-slate-200 rounded"></div>
                           <div className="h-2 w-16 bg-slate-200 rounded"></div>

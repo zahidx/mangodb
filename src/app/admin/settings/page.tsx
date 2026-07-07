@@ -203,7 +203,7 @@ export default function AdminSettingsPage() {
 
   if (schemaError) {
     return (
-      <div className="flex flex-col gap-4 p-8 max-w-4xl mx-auto mt-10 bg-rose-50 border-2 border-rose-200 rounded-lg">
+      <div className="flex flex-col gap-4 p-8 max-w-4xl mx-auto mt-10 bg-rose-50 border-2 border-rose-200 rounded-md">
         <h2 className="text-xl sm:text-2xl font-black text-rose-700 flex items-center gap-2">
           <AlertCircle className="w-8 h-8" /> Database Setup Required!
         </h2>

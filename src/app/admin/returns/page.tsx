@@ -121,7 +121,7 @@ export default function AdminReturnsPage() {
                   <tr key={i}>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-slate-200 rounded-full shrink-0"></div>
+                        <div className="w-4 h-4 bg-slate-200 rounded-md shrink-0"></div>
                         <div className="space-y-2">
                           <div className="h-4 w-24 bg-slate-200 rounded"></div>
                           <div className="h-3 w-32 bg-slate-200 rounded"></div>

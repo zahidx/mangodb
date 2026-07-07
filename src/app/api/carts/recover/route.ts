@@ -35,13 +35,20 @@ export async function GET(req: Request) {
     if (dbError) throw dbError;
 
     // Also check abandoned_carts table for guest records
-    const { data: abandonedRecords, error: abError } = await supabase
+    let abandonedRecords: any[] = [];
+    const { data: abRecs, error: abError } = await supabase
       .from("abandoned_carts")
       .select("*")
       .eq("recovered", false)
       .lt("created_at", cutoff);
 
-    if (abError) throw abError;
+    if (abError) {
+      if (!abError.message?.includes("schema cache") && !abError.message?.includes("does not exist")) {
+        throw abError;
+      }
+    } else {
+      abandonedRecords = abRecs || [];
+    }
 
     const uniqueUsers = new Set((dbCarts || []).map((c: any) => c.user_id));
 
@@ -67,13 +74,20 @@ export async function POST(req: Request) {
     const discountCode = "COMEBACK5";
 
     // 1. Recover abandoned guest records from the abandoned_carts table
-    const { data: guestRecords, error: guestError } = await supabase
+    let guestRecords: any[] = [];
+    const { data: gRecs, error: guestError } = await supabase
       .from("abandoned_carts")
       .select("*")
       .eq("recovered", false)
       .lt("created_at", cutoff);
 
-    if (guestError) throw guestError;
+    if (guestError) {
+      if (!guestError.message?.includes("schema cache") && !guestError.message?.includes("does not exist")) {
+        throw guestError;
+      }
+    } else {
+      guestRecords = gRecs || [];
+    }
 
     for (const record of guestRecords || []) {
       if (!record.email) continue;

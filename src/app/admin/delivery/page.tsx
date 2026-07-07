@@ -265,7 +265,7 @@ export default function AdminDeliveryPage() {
         </div>
         <button
           onClick={() => { resetForm(); setIsAddModalOpen(true); }}
-          className="px-4.5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
+          className="w-fit self-end sm:self-auto px-4.5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
         >
           <Plus className="w-4 h-4" />
           Add Zone
@@ -412,7 +412,7 @@ export default function AdminDeliveryPage() {
               {filteredZones.map(zone => (
                 <div key={zone.id} className="p-4 space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
+                    <div className="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
                       <MapPin className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -441,10 +441,10 @@ export default function AdminDeliveryPage() {
                       className={"relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-md border-2 border-transparent transition-colors " + (!zone.is_active ? "bg-slate-200" : "bg-emerald-500")}>
                       <span className={"pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white shadow-sm transition duration-200 " + (!zone.is_active ? "translate-x-0" : "translate-x-4")} />
                     </button>
-                    <button onClick={() => openEdit(zone)} className="p-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer">
+                    <button onClick={() => openEdit(zone)} className="p-2.5 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer">
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(zone.id, zone.area_name)} className="p-2.5 rounded-lg border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer">
+                    <button onClick={() => handleDelete(zone.id, zone.area_name)} className="p-2.5 rounded-md border border-rose-200 bg-rose-50/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -458,63 +458,66 @@ export default function AdminDeliveryPage() {
       {/* ====== ADD/EDIT MODAL ====== */}
       {(isAddModalOpen || isEditModalOpen) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
-          <div className="relative w-full max-w-lg bg-white border border-[#EEF2F7] rounded-md shadow-2xl overflow-hidden z-10 text-left">
-            <div className="p-6 border-b border-[#EEF2F7] flex items-center justify-between bg-[#F8FAFC]">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
+          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-md shadow-2xl overflow-hidden z-10 flex flex-col text-left font-sans text-slate-800 animate-modal-enter">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
               <div>
-                <h3 className="font-serif-heading text-lg font-bold text-[#0F172A]">
+                <h3 className="font-serif-heading text-lg font-black text-slate-900 leading-tight">
                   {isAddModalOpen ? "Add Delivery Zone" : "Edit Zone"}
                 </h3>
+                <p className="text-xs text-slate-400 mt-1">Configure shipping charge and estimated days.</p>
               </div>
-              <button onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }}
-                className="p-1.5 rounded-md border border-[#EEF2F7] bg-white text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">
-                <X className="w-4 h-4" />
+              <button
+                onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }}
+                className="w-8 h-8 rounded-full border border-slate-200/60 bg-white flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 duration-200 cursor-pointer shadow-xs"
+              >
+                <X className="w-4 h-4" strokeWidth={2.5} />
               </button>
             </div>
             <form onSubmit={isAddModalOpen ? handleAdd : handleUpdate} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Area Name *</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Area Name *</label>
                   <input type="text" required value={formData.area_name}
                     onChange={e => setFormData({ ...formData, area_name: e.target.value })}
                     placeholder="e.g. Gulshan"
-                    className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
+                    className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Division *</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Division *</label>
                   <input type="text" required value={formData.division}
                     onChange={e => setFormData({ ...formData, division: e.target.value })}
                     placeholder="e.g. Dhaka"
-                    className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
+                    className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Delivery Charge (৳)</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Delivery Charge (৳)</label>
                   <input type="number" min="0" value={formData.delivery_charge}
                     onChange={e => setFormData({ ...formData, delivery_charge: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
+                    className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs lg:text-[10px] font-black uppercase text-[#475569]">Est. Delivery (days)</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Est. Delivery (days)</label>
                   <input type="number" min="1" value={formData.estimated_days}
                     onChange={e => setFormData({ ...formData, estimated_days: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-emerald-500" />
+                    className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200" />
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-xs font-bold text-[#0F172A] cursor-pointer w-fit">
+              <label className="flex items-center gap-2.5 text-xs font-bold text-slate-700 cursor-pointer select-none w-fit">
                 <input type="checkbox" checked={formData.is_active}
                   onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
-                Zone is Active
+                  className="w-4 h-4 rounded border-slate-350 text-emerald-600 focus:ring-emerald-500/20 cursor-pointer" />
+                <span>Zone is Active</span>
               </label>
-              <div className="border-t border-[#EEF2F7] pt-4 flex justify-end gap-3">
+              <div className="border-t border-slate-100 pt-5 mt-6 flex justify-end gap-3 shrink-0">
                 <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }}
-                  className="px-4 py-2 border border-[#EEF2F7] hover:bg-[#F8FAFC] text-[#475569] font-bold text-xs rounded-md transition-all cursor-pointer">
+                  className="px-4.5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800 font-black text-xs uppercase tracking-wider rounded-md transition-all duration-200 cursor-pointer">
                   Cancel
                 </button>
                 <button type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-md shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-md shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer">
                   {isAddModalOpen ? "Create Zone" : "Save Changes"}
                 </button>
               </div>

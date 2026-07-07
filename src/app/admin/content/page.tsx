@@ -220,7 +220,7 @@ export default function AdminContentPage() {
 
   if (schemaError) {
     return (
-      <div className="flex flex-col gap-4 p-8 max-w-4xl mx-auto mt-10 bg-rose-50 border-2 border-rose-200 rounded-lg">
+      <div className="flex flex-col gap-4 p-8 max-w-4xl mx-auto mt-10 bg-rose-50 border-2 border-rose-200 rounded-md">
         <h2 className="text-2xl font-black text-rose-700 flex items-center gap-2">
           <AlertCircle className="w-8 h-8" /> Database Setup Required!
         </h2>
@@ -358,7 +358,7 @@ NOTIFY pgrst, 'reload schema';`} />
         </div>
         <button
           onClick={() => { resetForm(); setIsAddModalOpen(true); }}
-          className="px-4.5 py-2.5 bg-slate-900 hover:bg-fuchsia-600 text-white font-black text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
+          className="w-fit self-end sm:self-auto px-4.5 py-2.5 bg-slate-900 hover:bg-fuchsia-600 text-white font-black text-xs uppercase tracking-wider rounded-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
         >
           <Plus className="w-4 h-4 text-current" />
           Add Content Block
@@ -374,15 +374,20 @@ NOTIFY pgrst, 'reload schema';`} />
       {/* ====== CONTENT MODAL ====== */}
       {(isAddModalOpen || isEditModalOpen) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
-          <div className="relative w-full max-w-lg bg-white border border-[#EEF2F7] rounded-md shadow-2xl overflow-hidden z-10 animate-fade-in text-left flex flex-col">
-            <div className="p-6 border-b border-[#EEF2F7] flex items-center justify-between bg-[#F8FAFC] shrink-0">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
+          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-md shadow-2xl overflow-hidden z-10 flex flex-col text-left font-sans text-slate-800 animate-modal-enter">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
               <div>
-                <h3 className="font-serif-heading text-lg font-bold text-[#0F172A]">{isAddModalOpen ? "New Content Block" : "Edit Content Block"}</h3>
-                <p className="text-[10px] text-[#94A3B8]">Configure visual elements for the storefront.</p>
+                <h3 className="font-serif-heading text-lg font-black text-slate-900 leading-tight">
+                  {isAddModalOpen ? "New Content Block" : "Edit Content Block"}
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">Configure visual elements for the storefront.</p>
               </div>
-              <button onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="p-1.5 rounded-md border border-[#EEF2F7] bg-white text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">
-                <X className="w-4 h-4" />
+              <button
+                onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }}
+                className="w-8 h-8 rounded-full border border-slate-200/60 bg-white flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 duration-200 cursor-pointer shadow-xs"
+              >
+                <X className="w-4 h-4" strokeWidth={2.5} />
               </button>
             </div>
 
@@ -390,37 +395,37 @@ NOTIFY pgrst, 'reload schema';`} />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5 col-span-2">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Headline / Title *</label>
-                  <input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="e.g. Summer Mango Festival" className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-bold focus:outline-none focus:border-fuchsia-500" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Headline / Title *</label>
+                  <input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="e.g. Summer Mango Festival" className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-bold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 transition-all duration-200" />
                 </div>
                 
                 <div className="space-y-1.5 col-span-2">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Subtitle</label>
-                  <input type="text" value={formData.subtitle} onChange={(e) => setFormData({...formData, subtitle: e.target.value})} placeholder="e.g. Get 20% off all Fazli mangoes" className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-fuchsia-500" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Subtitle</label>
+                  <input type="text" value={formData.subtitle} onChange={(e) => setFormData({...formData, subtitle: e.target.value})} placeholder="e.g. Get 20% off all Fazli mangoes" className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 transition-all duration-200" />
                 </div>
 
                 <div className="space-y-1.5 col-span-2">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Image URL *</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Image URL *</label>
                   <div className="flex gap-2">
-                    <div className="w-10 h-10 rounded-md border border-[#EEF2F7] bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-10 h-10 rounded-md border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden">
                       {formData.image_url ? (
                         <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
                       ) : (
                         <ImageIcon className="w-4 h-4 text-slate-400" />
                       )}
                     </div>
-                    <input type="url" required value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-fuchsia-500 flex-grow" />
+                    <input type="url" required value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 transition-all duration-200 flex-grow" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5 col-span-2">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Target Link URL (Optional)</label>
-                  <input type="url" value={formData.link_url} onChange={(e) => setFormData({...formData, link_url: e.target.value})} placeholder="/collections/summer-sale" className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-fuchsia-500" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Target Link URL (Optional)</label>
+                  <input type="url" value={formData.link_url} onChange={(e) => setFormData({...formData, link_url: e.target.value})} placeholder="/collections/summer-sale" className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 transition-all duration-200" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Placement Area</label>
-                  <select value={formData.position} onChange={(e) => setFormData({...formData, position: e.target.value as any})} className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-bold focus:outline-none focus:border-fuchsia-500 cursor-pointer">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Placement Area</label>
+                  <select value={formData.position} onChange={(e) => setFormData({...formData, position: e.target.value as any})} className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 transition-all duration-200 cursor-pointer">
                     <option value="hero">Homepage Hero Slider</option>
                     <option value="promo">Promo Banner</option>
                     <option value="offer">Offer Strip</option>
@@ -428,21 +433,21 @@ NOTIFY pgrst, 'reload schema';`} />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-[#475569]">Sort Order</label>
-                  <input type="number" value={formData.sort_order} onChange={(e) => setFormData({...formData, sort_order: e.target.value})} placeholder="0" className="w-full px-3 py-2.5 rounded-md border border-[#EEF2F7] text-xs font-semibold focus:outline-none focus:border-fuchsia-500" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Sort Order</label>
+                  <input type="number" value={formData.sort_order} onChange={(e) => setFormData({...formData, sort_order: e.target.value})} placeholder="0" className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 transition-all duration-200" />
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-xs font-bold text-[#0F172A] cursor-pointer mt-2 pt-2 border-t border-[#EEF2F7]">
-                <input type="checkbox" checked={formData.is_active} onChange={(e) => setFormData({...formData, is_active: e.target.checked})} className="rounded border-slate-300 text-fuchsia-600 focus:ring-fuchsia-500" />
-                Publish this block (Visible on storefront)
+              <label className="flex items-center gap-2.5 text-xs font-bold text-slate-700 cursor-pointer select-none mt-2 pt-3 border-t border-slate-100 w-fit">
+                <input type="checkbox" checked={formData.is_active} onChange={(e) => setFormData({...formData, is_active: e.target.checked})} className="w-4 h-4 rounded border-slate-350 text-fuchsia-600 focus:ring-fuchsia-500/20 cursor-pointer" />
+                <span>Publish this block (Visible on storefront)</span>
               </label>
 
-              <div className="pt-2 flex justify-end gap-3 shrink-0">
-                <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="px-4 py-2 border border-[#EEF2F7] hover:bg-[#F8FAFC] text-[#475569] font-bold text-xs rounded-md transition-all cursor-pointer">
+              <div className="border-t border-slate-100 pt-5 mt-6 flex justify-end gap-3 shrink-0">
+                <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="px-4.5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800 font-black text-xs uppercase tracking-wider rounded-md transition-all duration-200 cursor-pointer">
                   Cancel
                 </button>
-                <button type="submit" className="px-5 py-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-extrabold text-xs rounded-md shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+                <button type="submit" className="px-5 py-2.5 bg-slate-900 hover:bg-fuchsia-600 text-white font-black text-xs uppercase tracking-wider rounded-md shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer">
                   {isAddModalOpen ? "Save Content" : "Update Content"}
                 </button>
               </div>

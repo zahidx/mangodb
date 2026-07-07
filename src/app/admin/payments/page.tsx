@@ -281,9 +281,9 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* Payments List Table */}
-      <div className="bg-white border border-[#EEF2F7] rounded-md shadow-sm overflow-hidden">
+      <div className="bg-white lg:border lg:border-[#EEF2F7] lg:rounded-md lg:shadow-sm overflow-hidden">
         {filteredOrders.length === 0 ? (
-          <div className="p-16 text-center text-[#94A3B8] text-sm">
+          <div className="p-16 text-center text-[#94A3B8] text-sm bg-white border border-[#EEF2F7] rounded-md shadow-sm">
             <Banknote className="w-10 h-10 mx-auto text-[#CBD5E1] mb-3" />
             <p className="font-bold">No transactions found</p>
             <p className="text-xs text-[#94A3B8] mt-1">Try adjusting your search or filters.</p>
@@ -364,7 +364,7 @@ export default function AdminPaymentsPage() {
             </div>
 
             {/* Mobile cards */}
-            <div className="lg:hidden divide-y divide-[#EEF2F7]">
+            <div className="lg:hidden flex flex-col gap-4 p-4 bg-slate-50/50">
               {filteredOrders.map((order) => {
                 const isPaid = order.payment_status === "paid";
                 const isPending = order.payment_status === "pending";
@@ -372,49 +372,66 @@ export default function AdminPaymentsPage() {
                 const isRefunded = order.payment_status === "refunded";
 
                 return (
-                  <div key={order.id} className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-sm font-extrabold text-[#0F172A]">Order #{order.id.slice(0, 8).toUpperCase()}</p>
-                        <p className="text-xs text-[#64748B] mt-0.5">{order.profile?.full_name || "Unknown Customer"}</p>
-                      </div>
-                      <span className={`text-[11px] font-black uppercase px-2 py-0.5 rounded-md border inline-flex items-center gap-1 shrink-0 ${isPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : isPending ? "bg-amber-50 text-amber-700 border-amber-200/50" : isRefunded ? "bg-slate-50 text-slate-700 border-slate-200/50" : "bg-rose-50 text-rose-700 border-rose-200/50"}`}>
+                  <div key={order.id} className="bg-white border border-[#EEF2F7] rounded-md shadow-sm p-4.5 space-y-3.5">
+                    {/* Top Header: Order ID & Status */}
+                    <div className="flex items-center justify-between gap-2 border-b border-[#F8FAFC] pb-2.5">
+                      <span className="text-sm font-extrabold text-slate-900">
+                        Order #{order.id.slice(0, 8).toUpperCase()}
+                      </span>
+                      <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border inline-flex items-center gap-1 shrink-0 ${isPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : isPending ? "bg-amber-50 text-amber-700 border-amber-200/50" : isRefunded ? "bg-slate-50 text-slate-700 border-slate-200/50" : "bg-rose-50 text-rose-700 border-rose-200/50"}`}>
                         <span className={`w-1 h-1 rounded-sm ${isPaid ? "bg-emerald-500" : isPending ? "bg-amber-500" : isRefunded ? "bg-slate-500" : "bg-rose-500"}`} />
                         {order.payment_status}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    {/* Middle Section: Customer Name */}
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Customer</span>
+                      <p className="text-sm font-extrabold text-slate-800 truncate mt-0.5">
+                        {order.profile?.full_name || "Unknown Customer"}
+                      </p>
+                    </div>
+
+                    {/* Stats Box: Amount & Date */}
+                    <div className="bg-slate-50/50 border border-slate-100/60 p-3 rounded-md grid grid-cols-2 gap-4 divide-x divide-slate-100 text-left">
                       <div>
-                        <span className="text-[#94A3B8] font-semibold">Amount</span>
-                        <p className="font-black text-[#0F172A]">{formatCurrency(order.total)}</p>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Amount</span>
+                        <span className="text-sm font-black text-slate-900 mt-0.5 block">{formatCurrency(order.total)}</span>
                       </div>
-                      <div>
-                        <span className="text-[#94A3B8] font-semibold">Date</span>
-                        <p className="font-medium text-[#475569]">{new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                      <div className="pl-4">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Date</span>
+                        <span className="text-xs font-semibold text-slate-600 mt-1 block">
+                          {new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-xs text-[#64748B] font-mono">TxID: {order.payment_id || "N/A"}</span>
-                      <div className="relative">
+                    {/* Bottom Actions Row */}
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <div className="min-w-0 pr-2">
+                        <span className="text-[9px] font-mono text-slate-400 block truncate">
+                          TxID: {order.payment_id || "N/A (Cash/Manual)"}
+                        </span>
+                      </div>
+
+                      <div className="relative shrink-0">
                         {updating === order.id ? (
                           <div className="p-2"><Loader2 className="w-4 h-4 animate-spin text-emerald-600" /></div>
                         ) : (
                           <>
                             <button onClick={() => setActiveMenu(activeMenu === order.id ? null : order.id)}
-                              className="p-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors shadow-sm cursor-pointer">
-                              <MoreVertical className="w-4 h-4" />
+                              className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors shadow-sm cursor-pointer focus:outline-none">
+                              <MoreVertical className="w-3.5 h-3.5" />
                             </button>
                             {activeMenu === order.id && (
                               <>
                                 <div className="fixed inset-0 z-10" onClick={() => setActiveMenu(null)}></div>
-                                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white border border-[#EEF2F7] ring-1 ring-black ring-opacity-5 z-20 py-1">
-                                  <div className="px-3 py-2 text-xs font-black uppercase tracking-wider text-[#94A3B8] border-b border-[#EEF2F7] bg-[#F8FAFC]">Change Payment Status</div>
-                                  {!isPaid && <button onClick={() => handleUpdatePaymentStatus(order.id, "paid")} className="w-full text-left block px-4 py-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50">Mark as Paid</button>}
-                                  {!isPending && <button onClick={() => handleUpdatePaymentStatus(order.id, "pending")} className="w-full text-left block px-4 py-2.5 text-xs font-bold text-amber-600 hover:bg-amber-50">Mark as Pending</button>}
-                                  {!isRefunded && isPaid && <button onClick={() => { if(window.confirm("Are you sure?")) handleUpdatePaymentStatus(order.id, "refunded"); }} className="w-full text-left block px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50">Mark as Refunded</button>}
-                                  {!isFailed && <button onClick={() => handleUpdatePaymentStatus(order.id, "failed")} className="w-full text-left block px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50">Mark as Failed</button>}
+                                <div className="origin-bottom-right absolute right-0 bottom-full mb-2 w-48 rounded-md shadow-lg bg-white border border-[#EEF2F7] ring-1 ring-black ring-opacity-5 z-20 py-1">
+                                  <div className="px-3 py-2 text-[9px] font-black uppercase tracking-wider text-[#94A3B8] border-b border-[#EEF2F7] bg-[#F8FAFC]">Change Status</div>
+                                  {!isPaid && <button onClick={() => handleUpdatePaymentStatus(order.id, "paid")} className="w-full text-left block px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50">Mark as Paid</button>}
+                                  {!isPending && <button onClick={() => handleUpdatePaymentStatus(order.id, "pending")} className="w-full text-left block px-4 py-2 text-xs font-bold text-amber-600 hover:bg-amber-50">Mark as Pending</button>}
+                                  {!isRefunded && isPaid && <button onClick={() => { if(window.confirm("Are you sure?")) handleUpdatePaymentStatus(order.id, "refunded"); }} className="w-full text-left block px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">Mark as Refunded</button>}
+                                  {!isFailed && <button onClick={() => handleUpdatePaymentStatus(order.id, "failed")} className="w-full text-left block px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50">Mark as Failed</button>}
                                 </div>
                               </>
                             )}

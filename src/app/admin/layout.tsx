@@ -30,7 +30,7 @@ export default function AdminLayout({
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
           <div className="relative">
-            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-md shadow-amber-500/20 animate-pulse">
+            <div className="w-16 h-16 rounded-md bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-md shadow-amber-500/20 animate-pulse">
               <ShoppingBag className="w-8 h-8 text-black" />
             </div>
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white animate-pulse" />

@@ -285,6 +285,10 @@ export default function Footer() {
             <Link href="/legal/terms" className="hover:text-emerald-600 transition-colors font-medium">Terms</Link>
             <Link href="/legal/shipping" className="hover:text-emerald-600 transition-colors font-medium">Shipping</Link>
             <Link href="/legal/refund" className="hover:text-emerald-600 transition-colors font-medium">Refunds</Link>
+            <Link href="/admin-login" className="text-blue-500 hover:text-blue-600 transition-colors font-semibold flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" />
+              Admin
+            </Link>
           </div>
         </div>
       </div>

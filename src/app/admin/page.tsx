@@ -202,7 +202,7 @@ export default function AdminDashboardPage() {
     <div className="flex flex-col gap-8 max-w-[1400px]">
 
       {/* ===== WELCOME HEADER ===== */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50 via-amber-50 to-orange-50 border border-amber-200/40 p-7 sm:p-10">
+      <div className="relative overflow-hidden rounded-md bg-gradient-to-br from-emerald-50 via-amber-50 to-orange-50 border border-amber-200/40 p-7 sm:p-10">
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-300/10 rounded-full blur-3xl" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div className="space-y-1.5">
@@ -238,7 +238,7 @@ export default function AdminDashboardPage() {
 
       {/* ===== SEED PROMPT ===== */}
       {productCount === 0 && categoryCount === 0 && (
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/60 p-6">
+        <div className="relative overflow-hidden rounded-md bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/60 p-6">
           <div className="absolute top-0 right-0 w-40 h-40 bg-amber-200/30 rounded-full blur-2xl" />
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-1">
@@ -273,7 +273,7 @@ export default function AdminDashboardPage() {
           return (
             <div
               key={stat.label}
-              className="group relative bg-white rounded-lg border border-slate-200/80 p-5 hover:shadow-md hover:shadow-slate-200/50 transition-all duration-300"
+              className="group relative bg-white rounded-md border border-slate-200/80 p-5 hover:shadow-md hover:shadow-slate-200/50 transition-all duration-300"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em]">
@@ -298,7 +298,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ===== ADVANCED ANALYTICS CHART ===== */}
-      <div className="bg-white rounded-lg border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-md border border-slate-200/80 shadow-sm overflow-hidden">
         {/* Chart Header */}
         <div className="px-5 sm:px-6 py-4 border-b border-slate-100">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -455,10 +455,10 @@ export default function AdminDashboardPage() {
       {/* ===== TWO-COLUMN SECTION ===== */}
       <div className="grid lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200/80 shadow-sm overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-md border border-slate-200/80 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-md bg-emerald-50 flex items-center justify-center">
                 <Clock className="w-4 h-4 text-emerald-600" />
               </div>
               <div>
@@ -476,7 +476,7 @@ export default function AdminDashboardPage() {
 
           {recentOrders.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-              <div className="w-14 h-14 rounded-lg bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+              <div className="w-14 h-14 rounded-md bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
                 <ShoppingCart className="w-6 h-6 text-slate-300" />
               </div>
               <p className="text-sm font-bold text-slate-400">No orders yet</p>
@@ -524,10 +524,10 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Low Stock Alerts */}
-        <div className="bg-white rounded-lg border border-slate-200/80 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-md border border-slate-200/80 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-md bg-rose-50 flex items-center justify-center">
                 <AlertTriangle className="w-4 h-4 text-rose-500" />
               </div>
               <div>
@@ -539,7 +539,7 @@ export default function AdminDashboardPage() {
 
           {lowStock.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-              <div className="w-14 h-14 rounded-lg bg-emerald-50 flex items-center justify-center mb-4 border border-emerald-100">
+              <div className="w-14 h-14 rounded-md bg-emerald-50 flex items-center justify-center mb-4 border border-emerald-100">
                 <Package className="w-6 h-6 text-emerald-400" />
               </div>
               <p className="text-sm font-bold text-emerald-600">All Stocked Up ✅</p>
@@ -571,9 +571,9 @@ export default function AdminDashboardPage() {
                           {product.name}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
-                          <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                          <div className="flex-1 h-1.5 rounded-md bg-slate-100 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-500 ${
+                              className={`h-full rounded-md transition-all duration-500 ${
                                 isOut ? "bg-red-500" : stockPercent < 50 ? "bg-amber-400" : "bg-emerald-400"
                               }`}
                               style={{ width: `${isOut ? 0 : stockPercent}%` }}
@@ -600,7 +600,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ===== QUICK ACTIONS ===== */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm">
+      <div className="bg-white rounded-md border border-slate-200/80 p-5 sm:p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-5">
           <div className="w-9 h-9 rounded-md bg-indigo-50 flex items-center justify-center">
             <Zap className="w-4 h-4 text-indigo-500" />
@@ -642,70 +642,68 @@ export default function AdminDashboardPage() {
       {/* ===== BROADCAST MODAL ===== */}
       {showBroadcast && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowBroadcast(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-lg shadow-xl shadow-black/5 overflow-hidden z-10">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300" onClick={() => setShowBroadcast(false)} />
+          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-md shadow-2xl overflow-hidden z-10 flex flex-col text-left font-sans text-slate-800 animate-modal-enter">
             {/* Header */}
-            <div className="relative px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-sm">
-                    <Megaphone className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900">Send Notification</h3>
-                    <p className="text-xs lg:text-[10px] text-slate-400 font-medium">Broadcast a message to all customers</p>
-                  </div>
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-gradient-to-br from-rose-550 to-pink-500 flex items-center justify-center shadow-sm">
+                  <Megaphone className="w-5 h-5 text-white" />
                 </div>
-                <button
-                  onClick={() => setShowBroadcast(false)}
-                  className="p-1.5 rounded border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div>
+                  <h3 className="font-serif-heading text-sm font-black text-slate-900 leading-tight">Send Notification</h3>
+                  <p className="text-xs text-slate-400 mt-1">Broadcast a message to all customers</p>
+                </div>
               </div>
+              <button
+                onClick={() => setShowBroadcast(false)}
+                className="w-8 h-8 rounded-full border border-slate-200/60 bg-white flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 duration-200 cursor-pointer shadow-xs"
+              >
+                <X className="w-4 h-4" strokeWidth={2.5} />
+              </button>
             </div>
 
             {/* Form */}
             <form onSubmit={handleBroadcast} className="p-6 space-y-5">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Title *</label>
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Title *</label>
                 <input
                   type="text" required value={broadcastTitle} onChange={e => setBroadcastTitle(e.target.value)}
                   placeholder="e.g. New Mango Harvest Available!"
-                  className="w-full px-4 py-3 rounded-md border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-500/10 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all duration-200"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Message *</label>
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Message *</label>
                 <textarea
                   required rows={4} value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)}
                   placeholder="Write your notification message..."
-                  className="w-full px-4 py-3 rounded-md border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-500/10 transition-all resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-md border border-slate-200 bg-slate-50/50 focus:bg-white text-xs font-semibold text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all duration-200 resize-none"
                 />
               </div>
-              <div className="bg-amber-50 border border-amber-200/60 rounded p-4">
+              <div className="bg-amber-50 border border-amber-200/60 rounded-md p-4">
                 <p className="text-[10px] text-amber-800 font-medium flex items-start gap-2">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span>This will send a push notification to all registered users across the platform.</span>
                 </p>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="border-t border-slate-100 pt-5 mt-6 flex justify-end gap-3 shrink-0">
                 <button
                   type="button" onClick={() => setShowBroadcast(false)}
-                  className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs rounded-md transition-all cursor-pointer"
+                  className="px-4.5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800 font-black text-xs uppercase tracking-wider rounded-md transition-all duration-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit" disabled={broadcasting}
-                  className="px-6 py-2.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs rounded-md shadow-sm hover:shadow-md hover:shadow-rose-500/20 active:scale-[0.97] transition-all cursor-pointer disabled:opacity-50 flex items-center gap:2"
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-rose-600 text-white font-black text-xs uppercase tracking-wider rounded-md shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50 flex items-center gap-2"
                 >
                   {broadcasting ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <Megaphone className="w-3.5 h-3.5" />
                   )}
-                  {broadcasting ? "Sending..." : "Send to All Users"}
+                  <span>{broadcasting ? "Sending..." : "Send to All Users"}</span>
                 </button>
               </div>
             </form>
