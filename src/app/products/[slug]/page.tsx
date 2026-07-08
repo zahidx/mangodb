@@ -1062,8 +1062,7 @@ export default function ProductDetailsPage() {
       </main>
       </div>
 
-      {/* Recently Viewed */}
-      <RecentlyViewed />
+
 
       {/* Image Zoom Lightbox */}
       {isZoomed && (

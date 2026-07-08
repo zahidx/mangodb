@@ -155,11 +155,9 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Breadcrumb-style title */}
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span className="font-medium">Admin</span>
-            <span className="text-slate-300">/</span>
-            <h1 className="text-sm font-black text-slate-800 tracking-tight">
+          {/* Page Title */}
+          <div className="flex items-center">
+            <h1 className="text-base font-black text-slate-800 tracking-tight">
               {pageTitle}
             </h1>
           </div>

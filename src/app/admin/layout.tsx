@@ -20,7 +20,7 @@ export default function AdminLayout({
   // Redirect non-admin users
   useEffect(() => {
     if (!loading && (!profile || profile.role !== "admin")) {
-      router.push("/login");
+      router.push("/admin-login");
     }
   }, [profile, loading, router]);
 

@@ -58,20 +58,9 @@ export function useInfiniteProducts(
     setLoading(true);
     isFetchingRef.current = false;
 
-    // Nuclear safety timeout: guarantee loading clears after 8s
-    const safetyTimer = setTimeout(() => {
-      if (isFetchingRef.current) {
-        isFetchingRef.current = false;
-      }
-      setLoading(false);
-      setLoadingMore(false);
-      setError("Could not load products. Database may be unavailable.");
-    }, 8000);
-
     loadPage(0, true);
 
     return () => {
-      clearTimeout(safetyTimer);
       isFetchingRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,6 +70,16 @@ export function useInfiniteProducts(
     async (offset: number, isInitial: boolean) => {
       if (isFetchingRef.current) return;
       isFetchingRef.current = true;
+
+      // Request timeout: guarantee loading clears after 8s if it hangs
+      const safetyTimer = setTimeout(() => {
+        if (isFetchingRef.current) {
+          isFetchingRef.current = false;
+          setLoading(false);
+          setLoadingMore(false);
+          setError("Could not load products. Database may be unavailable.");
+        }
+      }, 8000);
 
       try {
         const res = await getProducts({
@@ -116,6 +115,7 @@ export function useInfiniteProducts(
       } catch (err: any) {
         setError(err.message || "Failed to load products");
       } finally {
+        clearTimeout(safetyTimer);
         isFetchingRef.current = false;
         setLoading(false);
         setLoadingMore(false);

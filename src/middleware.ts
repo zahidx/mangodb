@@ -3,10 +3,19 @@
 // ===========================================
 // Handles auth session refresh and route protection
 
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
+  // Check for demo admin cookie
+  const isAdminCookie = request.cookies.get("mangodb-admin")?.value === "true";
+  
+  if (isAdminCookie && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin";
+    return NextResponse.redirect(url);
+  }
+
   return await updateSession(request);
 }
 

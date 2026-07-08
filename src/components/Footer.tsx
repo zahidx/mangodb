@@ -61,8 +61,8 @@ export default function Footer() {
                   <span className="text-emerald-700 font-medium text-sm">You&apos;re subscribed! Welcome to the MangoDB family. 🥭</span>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full">
+                  <div className="relative w-full max-w-[280px] sm:max-w-none sm:flex-1">
                     <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="email"
@@ -75,7 +75,7 @@ export default function Footer() {
                   </div>
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-sm"
+                    className="self-center sm:self-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-sm"
                   >
                     Subscribe
                     <ArrowRight className="w-4 h-4" />
@@ -200,7 +200,7 @@ export default function Footer() {
       {/* ===== TRUST BADGES ===== */}
       <div className="border-t border-gray-100 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { icon: Leaf, label: "100% Organic", desc: "Naturally ripened, no chemicals" },
               { icon: Truck, label: "Express Delivery", desc: "24-hour delivery from orchard" },
@@ -223,12 +223,12 @@ export default function Footer() {
 
       {/* ===== PAYMENT METHODS ===== */}
       <div className="border-t border-gray-100 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col xl:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider flex items-center gap-2 text-center">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             Secure Payments
           </p>
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap justify-center items-center gap-2.5">
             {/* VISA */}
             <div className="px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-1.5">
               <svg className="w-8 h-5" viewBox="0 0 48 30" fill="none"><rect width="48" height="30" rx="4" fill="#1A1F71"/><path d="M19.5 10L17 20h3l2.5-10h-3zM15 10l-2.5 7.5L12 15l-.5-2.5L15 10z" fill="white"/><path d="M28 10l-3 10h-2.5l3-10H28zM34.5 10c-1.5 0-3 .5-3.5 1.5l-.5 2.5h3l.5-1.5c.5-1 1.5-1.5 2.5-1.5h1.5l1-5h-2c-1 0-2 .5-2.5 1.5L34.5 10z" fill="white"/></svg>
@@ -276,11 +276,11 @@ export default function Footer() {
 
       {/* ===== BOTTOM BAR ===== */}
       <div className="border-t border-gray-100 bg-gray-50/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-gray-400 font-medium">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+          <p className="text-xs text-gray-400 font-medium leading-relaxed">
             &copy; {new Date().getFullYear()} <span className="text-gray-600 font-semibold">MangoDB</span>. All rights reserved. Made with <Heart className="w-3 h-3 text-red-400 inline fill-red-400/30" /> in Bangladesh.
           </p>
-          <div className="flex items-center gap-6 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs text-gray-400">
             <Link href="/legal/privacy" className="hover:text-emerald-600 transition-colors font-medium">Privacy</Link>
             <Link href="/legal/terms" className="hover:text-emerald-600 transition-colors font-medium">Terms</Link>
             <Link href="/legal/shipping" className="hover:text-emerald-600 transition-colors font-medium">Shipping</Link>

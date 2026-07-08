@@ -46,7 +46,7 @@ import toast from "react-hot-toast";
 
 export default function HomePage() {
   const router = useRouter();
-  const { profile: user } = useAuth();
+  const { profile: user, isAdmin, loading } = useAuth();
   const { addToCart } = useCart();
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const supabase = createClient() as any;
@@ -394,8 +394,7 @@ export default function HomePage() {
         {/* 4. Featured Products — Horizontal Scroll */}
         <FeaturedProducts />
 
-        {/* 5. Recently Viewed */}
-        <RecentlyViewed />
+
 
         {/* 3. Category Navigation Tabs */}
         <section className="max-w-7xl mx-auto px-4 mt-8 relative z-20">

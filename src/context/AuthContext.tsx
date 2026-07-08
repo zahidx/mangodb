@@ -146,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       localStorage.removeItem("mangodb-user");
+      document.cookie = "mangodb-admin=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       await supabase.auth.signOut();
       setUser(null);
       setProfile(null);

@@ -54,6 +54,7 @@ export default function AdminLoginPage() {
 
         if (profileData?.role === "admin") {
           toast.success("Admin login successful!");
+          document.cookie = "mangodb-admin=true; path=/; max-age=86400;";
           await refreshSession();
           setIsLoading(false);
           router.push("/admin");
@@ -78,6 +79,7 @@ export default function AdminLoginPage() {
             email: "admin@mangodb.com",
           })
         );
+        document.cookie = "mangodb-admin=true; path=/; max-age=86400;";
         await refreshSession();
         setIsLoading(false);
         router.push("/admin");
@@ -99,6 +101,7 @@ export default function AdminLoginPage() {
             email: "admin@mangodb.com",
           })
         );
+        document.cookie = "mangodb-admin=true; path=/; max-age=86400;";
         await refreshSession();
         router.push("/admin");
       } else {

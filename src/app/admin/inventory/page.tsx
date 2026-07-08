@@ -176,12 +176,12 @@ export default function AdminInventoryPage() {
         {/* KPI Stats Skeleton */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="h-3 w-20 bg-slate-200 rounded"></div>
-                <div className="w-8 h-8 rounded-md bg-slate-200"></div>
+            <div key={i} className="bg-white border border-[#EEF2F7] rounded-xl p-5 sm:p-6 flex flex-col items-center text-center gap-3 sm:gap-4 shadow-sm">
+              <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg sm:rounded-xl bg-slate-200 shrink-0"></div>
+              <div className="flex flex-col items-center w-full">
+                <div className="h-3 w-20 bg-slate-200 rounded mb-2"></div>
+                <div className="h-8 sm:h-10 w-24 bg-slate-200 rounded"></div>
               </div>
-              <div className="h-8 w-24 bg-slate-200 rounded"></div>
             </div>
           ))}
         </div>
@@ -268,44 +268,44 @@ export default function AdminInventoryPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Total Units</span>
-            <div className="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center">
-              <Boxes className="w-4 h-4 text-slate-600" />
-            </div>
+        <div className="bg-white border border-[#EEF2F7] rounded-xl p-5 sm:p-6 flex flex-col items-center text-center gap-3 sm:gap-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] hover:shadow-[0_8px_20px_-6px_rgba(6,81,237,0.1)] transition-all duration-300">
+          <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg sm:rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+            <Boxes className="w-5 sm:w-6 h-5 sm:h-6 text-slate-600" />
           </div>
-          <p className="text-xl sm:text-2xl font-black text-[#0F172A]">{totalItemsInStock.toLocaleString()}</p>
+          <div>
+            <span className="text-[11px] sm:text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-1 block">Total Units</span>
+            <p className="text-2xl sm:text-3xl font-black text-[#0F172A]">{totalItemsInStock.toLocaleString()}</p>
+          </div>
         </div>
 
-        <div className="bg-white border border-[#EEF2F7] rounded-md p-5 space-y-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs lg:text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Stock Value</span>
-            <div className="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            </div>
+        <div className="bg-white border border-[#EEF2F7] rounded-xl p-5 sm:p-6 flex flex-col items-center text-center gap-3 sm:gap-4 shadow-[0_2px_10px_-3px_rgba(16,185,129,0.05)] hover:shadow-[0_8px_20px_-6px_rgba(16,185,129,0.1)] transition-all duration-300">
+          <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg sm:rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 sm:w-6 h-5 sm:h-6 text-emerald-600" />
           </div>
-          <p className="text-xl sm:text-2xl font-black text-emerald-600">{formatCurrency(totalInventoryValue)}</p>
+          <div>
+            <span className="text-[11px] sm:text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-1 block">Stock Value</span>
+            <p className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(totalInventoryValue)}</p>
+          </div>
         </div>
 
-        <div className="bg-white border border-amber-200 rounded-md p-5 space-y-3 shadow-sm bg-amber-50/30">
-          <div className="flex items-center justify-between">
-            <span className="text-xs lg:text-[10px] font-bold text-amber-700 uppercase tracking-wider">Low Stock (≤10)</span>
-            <div className="w-8 h-8 rounded-md bg-amber-100 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-            </div>
+        <div className="bg-white border border-amber-200/60 rounded-xl p-5 sm:p-6 flex flex-col items-center text-center gap-3 sm:gap-4 shadow-[0_2px_10px_-3px_rgba(245,158,11,0.05)] hover:shadow-[0_8px_20px_-6px_rgba(245,158,11,0.1)] transition-all duration-300 bg-amber-50/20">
+          <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg sm:rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 sm:w-6 h-5 sm:h-6 text-amber-600" />
           </div>
-          <p className="text-xl sm:text-2xl font-black text-amber-700">{lowStockCount}</p>
+          <div>
+            <span className="text-[11px] sm:text-xs font-bold text-amber-700/80 uppercase tracking-wider mb-1 block">Low Stock (≤10)</span>
+            <p className="text-2xl sm:text-3xl font-black text-amber-700">{lowStockCount}</p>
+          </div>
         </div>
 
-        <div className="bg-white border border-rose-200 rounded-md p-5 space-y-3 shadow-sm bg-rose-50/30">
-          <div className="flex items-center justify-between">
-            <span className="text-xs lg:text-[10px] font-bold text-rose-700 uppercase tracking-wider">Out of Stock</span>
-            <div className="w-8 h-8 rounded-md bg-rose-100 flex items-center justify-center">
-              <XCircle className="w-4 h-4 text-rose-600" />
-            </div>
+        <div className="bg-white border border-rose-200/60 rounded-xl p-5 sm:p-6 flex flex-col items-center text-center gap-3 sm:gap-4 shadow-[0_2px_10px_-3px_rgba(225,29,72,0.05)] hover:shadow-[0_8px_20px_-6px_rgba(225,29,72,0.1)] transition-all duration-300 bg-rose-50/20">
+          <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg sm:rounded-xl bg-rose-100 flex items-center justify-center shrink-0">
+            <XCircle className="w-5 sm:w-6 h-5 sm:h-6 text-rose-600" />
           </div>
-          <p className="text-xl sm:text-2xl font-black text-rose-700">{outOfStockCount}</p>
+          <div>
+            <span className="text-[11px] sm:text-xs font-bold text-rose-700/80 uppercase tracking-wider mb-1 block">Out of Stock</span>
+            <p className="text-2xl sm:text-3xl font-black text-rose-700">{outOfStockCount}</p>
+          </div>
         </div>
       </div>
 
@@ -466,7 +466,7 @@ export default function AdminInventoryPage() {
             </div>
 
             {/* Mobile cards */}
-            <div className="lg:hidden divide-y divide-[#EEF2F7]">
+            <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50/50">
               {filteredProducts.map((product) => {
                 const currentStock = pendingAdjustments[product.id] !== undefined 
                   ? pendingAdjustments[product.id] 
@@ -474,31 +474,36 @@ export default function AdminInventoryPage() {
                 const isModified = pendingAdjustments[product.id] !== undefined;
 
                 return (
-                  <div key={product.id} className={`p-4 space-y-3 ${isModified ? 'bg-blue-50/20' : ''}`}>
-                    {/* Top row: image + info + status */}
-                    <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 rounded-md bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+                  <div key={product.id} className={`rounded-xl border ${isModified ? 'border-blue-200 bg-blue-50/10' : 'border-[#EEF2F7] bg-white'} shadow-sm overflow-hidden flex flex-col transition-colors`}>
+                    <div className="p-4 flex gap-4">
+                      {/* Image */}
+                      <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/60 overflow-hidden shadow-inner">
                         {product.images?.[0] ? (
                           <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
-                          <Boxes className="w-5 h-5 text-slate-400" />
+                          <Boxes className="w-6 h-6 text-slate-400" />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-extrabold text-[#0F172A]">{product.name}</p>
-                        <p className="text-xs text-[#64748B]">{formatCurrency(product.price)} / unit</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded uppercase">
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                          <p className="text-sm font-extrabold text-[#0F172A] truncate">{product.name}</p>
+                          <p className="text-xs font-semibold text-[#64748B] mt-0.5">{formatCurrency(product.price)} <span className="text-[10px] font-medium text-slate-400">/ unit</span></p>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded uppercase max-w-[80px] truncate">
                             {product.category?.name || "Uncategorized"}
                           </span>
-                          <span className={`text-[11px] font-black uppercase px-2 py-0.5 rounded-md border inline-flex items-center gap-1 ${
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md border inline-flex items-center gap-1.5 shadow-sm ${
                             currentStock > 10 ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" : 
                             currentStock > 0 ? "bg-amber-50 text-amber-700 border-amber-200/50" : 
                             "bg-rose-50 text-rose-700 border-rose-200/50"
                           }`}>
-                            <span className={`w-1 h-1 rounded-sm ${
+                            <span className={`w-1.5 h-1.5 rounded-full ${
                               currentStock > 10 ? "bg-emerald-500" : 
-                              currentStock > 0 ? "bg-amber-500" : "bg-rose-500"
+                              currentStock > 0 ? "bg-amber-500 animate-pulse" : "bg-rose-500"
                             }`} />
                             {currentStock > 10 ? "In Stock" : currentStock > 0 ? "Low Stock" : "Out of Stock"}
                           </span>
@@ -506,33 +511,45 @@ export default function AdminInventoryPage() {
                       </div>
                     </div>
 
-                    {/* Stock bar */}
-                    <div className="w-full bg-slate-100 rounded-md h-2 overflow-hidden">
-                      <div className={`h-full rounded-md transition-all ${
-                        currentStock > 10 ? "bg-emerald-500" : 
-                        currentStock > 0 ? "bg-amber-500" : "bg-rose-500"
-                      }`} style={{ width: `${Math.min((currentStock / 100) * 100, 100)}%` }} />
-                    </div>
+                    {/* Stock section */}
+                    <div className="px-4 pb-4 mt-auto">
+                      <div className="bg-slate-50/80 rounded-lg p-3 border border-slate-100 flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between">
+                           <span className="text-[10px] font-bold text-slate-500 uppercase">Stock Level</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between gap-4">
+                           <div className="flex-1">
+                             <div className="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden">
+                               <div className={`h-full rounded-full transition-all duration-500 ${
+                                 currentStock > 10 ? "bg-emerald-500" : 
+                                 currentStock > 0 ? "bg-amber-500" : "bg-rose-500"
+                               }`} style={{ width: `${Math.min((currentStock / 100) * 100, 100)}%` }} />
+                             </div>
+                           </div>
 
-                    {/* Stock adjuster */}
-                    <div className="flex items-center justify-between gap-3 pt-1">
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => handleDecrement(product.id, product.stock)}
-                          className="w-9 h-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors shadow-sm cursor-pointer">
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <input type="number" min="0" value={currentStock}
-                          onChange={(e) => handleStockChange(product.id, Number(e.target.value))}
-                          className={`w-20 h-9 text-center rounded-md border text-sm font-black shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-                            isModified ? "border-blue-400 bg-blue-50 text-blue-700" : "border-slate-200 bg-slate-50 text-slate-700"
-                          }`} />
-                        <button onClick={() => handleIncrement(product.id, product.stock)}
-                          className="w-9 h-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors shadow-sm cursor-pointer">
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                           <div className="flex items-center gap-1 shrink-0 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                             <button onClick={() => handleDecrement(product.id, product.stock)}
+                               className="w-7 h-7 rounded-md bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors cursor-pointer border border-slate-200/50">
+                               <Minus className="w-3 h-3" />
+                             </button>
+                             <input type="number" min="0" value={currentStock}
+                               onChange={(e) => handleStockChange(product.id, Number(e.target.value))}
+                               className={`w-12 h-7 text-center bg-transparent text-sm font-black focus:outline-none focus:ring-0 p-0 border-0 ${
+                                 isModified ? "text-blue-600" : "text-[#0F172A]"
+                               }`} />
+                             <button onClick={() => handleIncrement(product.id, product.stock)}
+                               className="w-7 h-7 rounded-md bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors cursor-pointer border border-slate-200/50">
+                               <Plus className="w-3 h-3" />
+                             </button>
+                           </div>
+                        </div>
                       </div>
                       {isModified && (
-                        <span className="text-[11px] text-blue-600 font-bold">was {product.stock}</span>
+                        <p className="text-[10px] text-blue-600 font-bold mt-2 text-right px-1 flex items-center justify-end gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          Unsaved change (was {product.stock})
+                        </p>
                       )}
                     </div>
                   </div>
