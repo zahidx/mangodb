@@ -1,15 +1,12 @@
 "use client";
 
 import {
-    ArrowRight,
-    BadgeCheck,
     Camera,
     ChevronRight,
     Clock,
     Globe,
     Heart,
     Leaf,
-    Mail,
     MapPin,
     MessageCircle,
     Package,
@@ -21,71 +18,17 @@ import {
     Video
 } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React from "react";
 
 export default function Footer() {
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setSubscribed(true);
-      setEmail("");
-      setTimeout(() => setSubscribed(false), 3000);
-    }
-  };
 
   return (
     <footer className="bg-white border-t border-gray-100 relative">
       {/* ===== TOP GRADIENT BAR ===== */}
       <div className="h-1 bg-linear-to-r from-emerald-400 via-amber-400 to-emerald-400" />
 
-      {/* ===== NEWSLETTER BANNER ===== */}
-      <div className="border-b border-gray-100 bg-linear-to-r from-emerald-50/40 via-white to-amber-50/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center shrink-0">
-                <Mail className="w-6 h-6 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="text-gray-900 font-bold text-base">Stay in the Loop</h3>
-                <p className="text-gray-500 text-xs">Get exclusive offers, harvest updates &amp; mango tips</p>
-              </div>
-            </div>
-            <form onSubmit={handleSubscribe} className="w-full lg:w-auto shrink-0 lg:min-w-105">
-              {subscribed ? (
-                <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3.5">
-                  <BadgeCheck className="w-5 h-5 text-emerald-600" />
-                  <span className="text-emerald-700 font-medium text-sm">You&apos;re subscribed! Welcome to the MangoDB family. 🥭</span>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full">
-                  <div className="relative w-full max-w-[280px] sm:max-w-none sm:flex-1">
-                    <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email address"
-                      required
-                      className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-sm"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="self-center sm:self-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-sm"
-                  >
-                    Subscribe
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </form>
-          </div>
-        </div>
-      </div>
+
 
       {/* ===== MAIN CONTENT ===== */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

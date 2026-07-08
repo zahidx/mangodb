@@ -48,12 +48,16 @@ export default function Navbar() {
         return;
       }
       if (!profile.id.startsWith("demo-")) {
-        const { count } = await supabase
-          .from("notifications")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", profile.id)
-          .eq("is_read", false);
-        if (count !== null) setUnreadNotifs(count);
+        try {
+          const { count, error } = await supabase
+            .from("notifications")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", profile.id)
+            .eq("is_read", false);
+          if (!error && count !== null) setUnreadNotifs(count);
+        } catch (err) {
+          console.error("Failed to fetch notifications:", err);
+        }
       } else {
         const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
         const count = storedNotifs.filter((n: any) => !n.is_read).length;
@@ -71,13 +75,17 @@ export default function Navbar() {
     const p = profile;
     async function loadFull() {
       if (!p.id.startsWith("demo-")) {
-        const { data } = await supabase
-          .from("notifications")
-          .select("*")
-          .eq("user_id", p.id)
-          .order("created_at", { ascending: false })
-          .limit(10);
-        if (data) setNotifList(data);
+        try {
+          const { data, error } = await supabase
+            .from("notifications")
+            .select("*")
+            .eq("user_id", p.id)
+            .order("created_at", { ascending: false })
+            .limit(10);
+          if (!error && data) setNotifList(data);
+        } catch (err) {
+          console.error("Failed to fetch full notifications:", err);
+        }
       } else {
         const stored = JSON.parse(localStorage.getItem(`mangodb-notifications-${p.id}`) || "[]");
         setNotifList(stored.slice(0, 10));

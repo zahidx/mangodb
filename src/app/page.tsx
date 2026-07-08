@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import PromoBanners from "@/components/PromoBanners";
 import QuickViewModal from "@/components/QuickViewModal";
-import RecentlyViewed from "@/components/RecentlyViewed";
 import { ProductGridSkeleton } from "@/components/skeletons";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 import { useAuth } from "@/context/AuthContext";
@@ -19,18 +18,12 @@ import {
     ArrowRight,
     Award,
     Check,
-    Citrus,
     Coins,
     CreditCard,
-    CupSoda,
-    Droplet,
     Heart,
-    Hexagon,
     Leaf,
     Loader2,
-    Nut,
     Package,
-    Palmtree,
     ShoppingBag,
     Sparkles,
     Star,
@@ -397,38 +390,49 @@ export default function HomePage() {
 
 
         {/* 3. Category Navigation Tabs */}
-        <section className="max-w-7xl mx-auto px-4 mt-8 relative z-20">
-           <div className="flex flex-wrap items-center justify-center gap-3">
-              <button 
-                onClick={() => setActiveCategory("all")}
-                className={`flex items-center gap-2 px-6 py-3 rounded-md text-sm font-bold shadow-md transition-all ${activeCategory === "all" ? "bg-[#527d62] text-white" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-100"}`}
-              >
-                 <ShoppingBag className="w-4 h-4" />
-                 All Products
-              </button>
-              {dynamicCategories.map((cat, i) => {
-                 const getCategoryIcon = (slug: string) => {
+        <section className="max-w-7xl mx-auto px-4 mt-12 relative z-20">
+           <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-3 sm:p-5 overflow-hidden">
+             <div className="flex flex-nowrap sm:flex-wrap items-center justify-start sm:justify-center gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide">
+               {/* All Products */}
+               <button 
+                 onClick={() => setActiveCategory("all")}
+                 className={`flex-shrink-0 w-24 h-[104px] sm:w-[120px] sm:h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl transition-all duration-300 border bg-white ${activeCategory === "all" ? "border-emerald-500 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-100 hover:border-emerald-200 hover:shadow-md"}`}
+               >
+                 <div className="w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full overflow-hidden relative shadow-inner bg-emerald-50 flex items-center justify-center">
+                    <Image src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=150&auto=format&fit=crop&q=80" alt="All Products" fill className="object-cover" />
+                 </div>
+                 <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight">All Products</span>
+               </button>
+
+               {/* Dynamic Categories */}
+               {dynamicCategories.map((cat, i) => {
+                 const getCategoryFallbackImage = (slug: string) => {
                    switch (slug) {
-                     case 'mango': return <Citrus className="w-4 h-4" />;
-                     case 'dates': return <Palmtree className="w-4 h-4" />;
-                     case 'ghee': return <Droplet className="w-4 h-4" />;
-                     case 'honey': return <Hexagon className="w-4 h-4" />;
-                     case 'nuts': return <Nut className="w-4 h-4" />;
-                     case 'cold-drinks': return <CupSoda className="w-4 h-4" />;
-                     default: return <Leaf className="w-4 h-4" />;
+                     case 'mango': return "https://images.unsplash.com/photo-1553279768-865429fa0078?w=150&auto=format&fit=crop&q=80";
+                     case 'dates': return "https://images.unsplash.com/photo-1528659138676-e91851e18dc9?w=150&auto=format&fit=crop&q=80";
+                     case 'ghee': return "https://images.unsplash.com/photo-1589134712613-207d571f28b5?w=150&auto=format&fit=crop&q=80";
+                     case 'honey': return "https://images.unsplash.com/photo-1587049352847-4d4b1f41b2a2?w=150&auto=format&fit=crop&q=80";
+                     case 'nuts': return "https://images.unsplash.com/photo-1599598425947-33002621743a?w=150&auto=format&fit=crop&q=80";
+                     case 'cold-drinks': return "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=150&auto=format&fit=crop&q=80";
+                     case 'combo-package': return "https://images.unsplash.com/photo-1598144073024-db080e7bbfa8?w=150&auto=format&fit=crop&q=80";
+                     case 'pickle': return "https://images.unsplash.com/photo-1627042633145-b780d842ba45?w=150&auto=format&fit=crop&q=80";
+                     default: return "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=150&auto=format&fit=crop&q=80";
                    }
                  };
                  return (
                    <button 
                       key={cat.id || i} 
                       onClick={() => setActiveCategory(cat.slug)}
-                      className={`flex items-center gap-2 px-6 py-3 rounded-md text-sm font-bold shadow-md transition-all ${activeCategory === cat.slug ? "bg-[#527d62] text-white" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-100"}`}
+                      className={`flex-shrink-0 w-24 h-[104px] sm:w-[120px] sm:h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl transition-all duration-300 border bg-white ${activeCategory === cat.slug ? "border-emerald-500 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-100 hover:border-emerald-200 hover:shadow-md"}`}
                    >
-                      {getCategoryIcon(cat.slug)}
-                      {cat.name}
+                     <div className="w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full overflow-hidden relative shadow-inner bg-emerald-50 flex items-center justify-center">
+                        <Image src={cat.image_url || getCategoryFallbackImage(cat.slug)} alt={cat.name} fill className="object-cover" />
+                     </div>
+                     <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight">{cat.name}</span>
                    </button>
                  );
-              })}
+               })}
+             </div>
            </div>
         </section>
 
@@ -473,14 +477,14 @@ export default function HomePage() {
              </div>
            )}
 
-           <div className="flex flex-wrap justify-center gap-6">
+           <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-3 sm:gap-6">
               {allProducts.map(prod => (
                  <div key={prod.id} className="w-full sm:w-[280px] shrink-0 group bg-white rounded-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100">
-                    <div className="relative h-48 sm:h-52 w-full overflow-hidden shrink-0 bg-gray-50">
+                    <div className="relative h-36 sm:h-52 w-full overflow-hidden shrink-0 bg-gray-50">
                       <Link href={`/products/${prod.slug}`} className="block w-full h-full">
-                        <Image src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"} alt={prod.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-black bg-[#FFC107] rounded-sm shadow-sm z-10">
-                          <Truck className="w-3 h-3" /> Free Delivery
+                        <Image src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"} alt={prod.name} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <span className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 text-[8px] sm:text-[10px] font-medium text-black bg-[#FFC107] rounded-sm shadow-sm z-10">
+                          <Truck className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden sm:inline">Free Delivery</span><span className="sm:hidden">Free</span>
                         </span>
                         {/* Quick View overlay */}
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
@@ -495,8 +499,7 @@ export default function HomePage() {
                       <button onClick={(e) => { e.stopPropagation(); toggleWishlist(prod.id); }} className="absolute top-2 left-2 p-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-black/60 transition-colors z-20 cursor-pointer">
                         <Heart className={`w-4 h-4 ${wishlist.includes(prod.id) ? "fill-red-500 text-red-500 border-none" : ""}`} />
                       </button>
-                      {/* Compare checkbox */}
-                      <label className="absolute bottom-2 left-2 z-20 flex items-center gap-1 px-2 py-1 rounded-md bg-black/40 backdrop-blur-sm border border-white/20 text-white cursor-pointer hover:bg-black/60 transition-colors text-[10px] font-medium">
+                      <label className="absolute bottom-2 left-2 z-20 flex items-center gap-1 px-1.5 py-1 sm:px-2 sm:py-1 rounded-md bg-black/40 backdrop-blur-sm border border-white/20 text-white cursor-pointer hover:bg-black/60 transition-colors text-[9px] sm:text-[10px] font-medium">
                         <input
                           type="checkbox"
                           checked={isInCompare(prod.id)}
@@ -504,37 +507,37 @@ export default function HomePage() {
                             if (e.target.checked) addToCompare(prod);
                             else removeFromCompare(prod.id);
                           }}
-                          className="w-3 h-3 rounded border-white/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 bg-white/20"
+                          className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded border-white/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 bg-white/20"
                         />
-                        Compare
+                        <span className="hidden sm:inline">Compare</span>
                       </label>
                     </div>
-                    <div className="p-4 flex flex-col grow justify-between space-y-3 text-center">
+                    <div className="p-2.5 sm:p-4 flex flex-col grow justify-between space-y-2 sm:space-y-3 text-center">
                       <Link href={`/products/${prod.slug}`} className="space-y-1 block group-hover:opacity-95">
-                        <h3 className="font-sans font-bold text-gray-800 text-[15px] leading-tight line-clamp-2">{prod.name}</h3>
-                        <div className="text-[11px] text-gray-500 leading-relaxed pt-1">
-                          <p>5/10/20 Kg Package Available.</p>
-                          <p>Approximate Delivery Date Within 6-8 July</p>
+                        <h3 className="font-sans font-bold text-gray-800 text-[12px] sm:text-[15px] leading-tight line-clamp-2">{prod.name}</h3>
+                        <div className="text-[9px] sm:text-[11px] text-gray-500 leading-relaxed pt-1">
+                          <p className="line-clamp-1 sm:line-clamp-none">5/10/20 Kg Package Available.</p>
+                          <p className="line-clamp-1 sm:line-clamp-none">Approximate Delivery Date Within 6-8 July</p>
                         </div>
                       </Link>
-                      <div className="flex flex-col items-center gap-3 pt-1">
-                        <div className="text-[#4A7C59] font-bold text-[17px]">
+                      <div className="flex flex-col items-center gap-2 sm:gap-3 pt-1">
+                        <div className="text-[#4A7C59] font-bold text-[14px] sm:text-[17px]">
                           {prod.sale_price ? <span>৳ {prod.sale_price} - ৳ {prod.sale_price * 3}</span> : <span>৳ {prod.price} - ৳ {prod.price * 4}</span>}
                         </div>
-                        <div className="flex items-center gap-2 w-full px-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 w-full px-1 sm:px-2">
                           <button 
                             onClick={(e) => { e.preventDefault(); addToCart(prod, 1, "10kg", false); router.push("/checkout"); }} 
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] font-semibold shadow-sm" 
+                            className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 bg-[#527d62] hover:bg-[#436750] text-white rounded sm:rounded-md transition-colors cursor-pointer active:scale-95 text-[10px] sm:text-[11px] font-semibold shadow-sm" 
                             title="Buy Now"
                           >
-                            <Zap className="w-3.5 h-3.5 fill-white" /> Buy Now
+                            <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-white" /> <span className="whitespace-nowrap">Buy Now</span>
                           </button>
                           <button
                             onClick={(e) => handleAddToCart(e, prod)}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 border-2 border-[#527d62] text-[#527d62] hover:bg-[#527d62]/10 rounded-md transition-colors cursor-pointer active:scale-95 text-[11px] font-bold shadow-sm relative overflow-hidden group"
+                            className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 border sm:border-2 border-[#527d62] text-[#527d62] hover:bg-[#527d62]/10 rounded sm:rounded-md transition-colors cursor-pointer active:scale-95 text-[10px] sm:text-[11px] font-bold shadow-sm relative overflow-hidden group"
                             title="Add to Cart"
                           >
-                            <ShoppingBag className="w-3.5 h-3.5" /> Cart
+                            <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="whitespace-nowrap">Cart</span>
                           </button>
                         </div>
                       </div>
