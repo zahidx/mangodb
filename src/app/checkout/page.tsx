@@ -71,7 +71,7 @@ export default function CheckoutPage() {
   const [deliveryMethod, setDeliveryMethod] = useState<"home" | "pickup">("home");
   const [paymentType, setPaymentType] = useState<"full" | "partial">("full");
 
-  const [geoData, setGeoData] = useState({ divisions: [], districts: [], upazilas: [] });
+  const [geoData, setGeoData] = useState<{ divisions: any[], districts: any[], upazilas: any[] }>({ divisions: [], districts: [], upazilas: [] });
   
   useEffect(() => {
     async function loadGeo() {
