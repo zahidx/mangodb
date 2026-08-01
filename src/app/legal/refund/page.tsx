@@ -35,7 +35,7 @@ export default function RefundPolicy() {
           </ul>
 
           <h2 className="text-xl font-bold mt-8 mb-4 text-hero-text border-b border-border pb-2">4. How to Request a Refund</h2>
-          <p>Contact us within 24 hours of delivery via WhatsApp at <strong>+88 01742-805845</strong> or email <a href="mailto:support@mangodb.com" className="text-emerald-600 hover:underline font-bold">support@mangodb.com</a> with your Order ID and clear photos of the issue. We typically process refunds within 3-5 business days.</p>
+          <p>Contact us within 24 hours of delivery via WhatsApp at <strong>+88 01742-805845</strong> or email <a href="mailto:support@mangobite.com" className="text-emerald-600 hover:underline font-bold">support@mangobite.com</a> with your Order ID and clear photos of the issue. We typically process refunds within 3-5 business days.</p>
 
           <h2 className="text-xl font-bold mt-8 mb-4 text-hero-text border-b border-border pb-2">5. Refund Method</h2>
           <p>Refunds will be issued to the original payment method. For COD orders, refunds will be processed via bKash or bank transfer to an account you provide.</p>

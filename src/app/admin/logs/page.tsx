@@ -298,7 +298,7 @@ NOTIFY pgrst, 'reload schema';`} />
                           </div>
                           <div className="flex flex-col">
                             <span className="text-xs font-bold text-[#0F172A]">{log.admin?.full_name || "System Automated"}</span>
-                            <span className="text-xs lg:text-[10px] text-[#64748B]">{log.admin?.email || "system@mangodb.local"}</span>
+                            <span className="text-xs lg:text-[10px] text-[#64748B]">{log.admin?.email || "system@mangobite.local"}</span>
                           </div>
                         </div>
                       </td>
@@ -388,7 +388,7 @@ NOTIFY pgrst, 'reload schema';`} />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-[#0F172A]">{log.admin?.full_name || "System Automated"}</span>
-                      <span className="text-xs text-[#64748B]">{log.admin?.email || "system@mangodb.local"}</span>
+                      <span className="text-xs text-[#64748B]">{log.admin?.email || "system@mangobite.local"}</span>
                     </div>
                   </div>
 

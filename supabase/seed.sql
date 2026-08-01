@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Seed Data (Mango Edition)
+-- MangoBite Market — Seed Data (Mango Edition)
 -- ===========================================
 -- Run this AFTER all migrations to populate sample data
 

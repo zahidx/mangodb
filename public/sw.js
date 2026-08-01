@@ -1,7 +1,7 @@
 // ===========================================
-// MangoDB — Service Worker
+// MangoBite — Service Worker
 // ===========================================
-const CACHE_NAME = "mangodb-cache-v1";
+const CACHE_NAME = "mangobite-cache-v1";
 const STATIC_ASSETS = [
   "/",
   "/products",

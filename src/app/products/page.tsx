@@ -132,17 +132,20 @@ export default function ProductsPage() {
           <p className="text-[#3b574a] mt-2 text-sm">Browse our complete catalog of farm-fresh products</p>
           
           {/* Category Tabs */}
-          <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-3 sm:p-5 overflow-hidden mt-6">
-             <div className="flex flex-nowrap sm:flex-wrap items-center justify-start sm:justify-start gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-3 sm:p-5 w-full mt-6">
+             <div 
+               className="flex flex-nowrap sm:flex-wrap items-center justify-start sm:justify-start gap-3 sm:gap-4 overflow-x-auto overflow-y-hidden pb-4 pt-2 w-full"
+               style={{ WebkitOverflowScrolling: 'touch' }}
+             >
                {/* All Products */}
                <button 
                  onClick={() => setSelectedCategory("all")}
-                 className={`flex-shrink-0 w-24 h-[104px] sm:w-[120px] sm:h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl transition-all duration-300 border bg-white ${selectedCategory === "all" ? "border-emerald-500 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-100 hover:border-emerald-200 hover:shadow-md"}`}
+                 className={`flex-shrink-0 w-24 min-h-[104px] sm:w-[120px] sm:min-h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-xl transition-all duration-300 border-2 bg-white py-2 cursor-pointer ${selectedCategory === "all" ? "border-emerald-600 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-200"}`}
                >
                  <div className="w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full overflow-hidden relative shadow-inner bg-emerald-50 flex items-center justify-center">
-                    <Image src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=150&auto=format&fit=crop&q=80" alt="All Products" fill className="object-cover" />
+                    <Image src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=150&auto=format&fit=crop&q=80" alt="All Products" fill className="object-cover pointer-events-none" draggable={false} />
                  </div>
-                 <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight">All Products</span>
+                 <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight select-none">All Products</span>
                </button>
 
                {/* Dynamic Categories */}
@@ -164,12 +167,12 @@ export default function ProductsPage() {
                    <button 
                       key={cat.id || i} 
                       onClick={() => setSelectedCategory(cat.slug)}
-                      className={`flex-shrink-0 w-24 h-[104px] sm:w-[120px] sm:h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl transition-all duration-300 border bg-white ${selectedCategory === cat.slug ? "border-emerald-500 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-100 hover:border-emerald-200 hover:shadow-md"}`}
+                      className={`flex-shrink-0 w-24 min-h-[104px] sm:w-[120px] sm:min-h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-xl transition-all duration-300 border-2 bg-white py-2 cursor-pointer ${selectedCategory === cat.slug ? "border-emerald-600 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-200"}`}
                    >
                      <div className="w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full overflow-hidden relative shadow-inner bg-emerald-50 flex items-center justify-center">
-                        <Image src={cat.image_url || getCategoryFallbackImage(cat.slug)} alt={cat.name} fill className="object-cover" />
+                        <Image src={cat.image_url || getCategoryFallbackImage(cat.slug)} alt={cat.name} fill className="object-cover pointer-events-none" draggable={false} />
                      </div>
-                     <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight">{cat.name}</span>
+                     <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight select-none">{cat.name}</span>
                    </button>
                  );
                })}
@@ -215,7 +218,7 @@ export default function ProductsPage() {
 
             {/* Loading / Empty States */}
             {loading ? (
-              <ProductGridSkeleton count={8} />
+              <ProductGridSkeleton count={10} />
             ) : productsError ? (
               <div className="h-96 flex flex-col items-center justify-center gap-4 bg-card/20 border border-red-500/20 rounded-3xl text-center p-8">
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
@@ -262,7 +265,7 @@ export default function ProductsPage() {
               </div>
             ) : (
               /* Products Grid */
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
                 {products.map((prod) => {
                   const isWished = isInWishlist(prod.id);
                   const origin = (prod.metadata as any)?.origin_district || "Rajshahi";

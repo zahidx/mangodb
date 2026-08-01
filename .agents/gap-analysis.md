@@ -1,7 +1,7 @@
-# MangoDB — Gap Analysis & Improvement Roadmap (Updated)
+# MangoBite — Gap Analysis & Improvement Roadmap (Updated)
 
 > **Generated:** 2026-07-07
-> **Project:** MangoDB — Premium Rajshahi Mango E-commerce
+> **Project:** MangoBite — Premium Rajshahi Mango E-commerce
 > **Stack:** Next.js 16 (App Router) + Supabase + Tailwind CSS 4 + TypeScript
 
 ---
@@ -175,4 +175,4 @@
 
 ---
 
-*This analysis compares MangoDB against industry-standard e-commerce platforms (Shopify, WooCommerce, Magento) and successful regional e-commerce sites in Bangladesh.*
+*This analysis compares MangoBite against industry-standard e-commerce platforms (Shopify, WooCommerce, Magento) and successful regional e-commerce sites in Bangladesh.*

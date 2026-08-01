@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Migration 012
+-- MangoBite Market — Migration 012
 -- ===========================================
 -- Drop foreign key constraint on profiles.id to allow manual customer creation
 

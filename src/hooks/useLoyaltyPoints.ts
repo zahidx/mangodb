@@ -38,7 +38,7 @@ export function useLoyaltyPoints() {
   const fetchPoints = useCallback(async () => {
     if (!profile || profile.id.startsWith("demo-")) {
       // Demo mode: use localStorage
-      const stored = localStorage.getItem("mangodb-loyalty");
+      const stored = localStorage.getItem("mangobite-loyalty");
       if (stored) {
         setLoyalty(JSON.parse(stored));
       } else {
@@ -71,12 +71,12 @@ export function useLoyaltyPoints() {
   const earnPoints = useCallback(
     async (points: number, type: string, description?: string, referenceId?: string) => {
       if (!profile || profile.id.startsWith("demo-")) {
-        const stored = localStorage.getItem("mangodb-loyalty");
+        const stored = localStorage.getItem("mangobite-loyalty");
         const current = stored ? JSON.parse(stored) : { points: 0, lifetime_earned: 0, tier: "bronze" };
         const newLifetime = current.lifetime_earned + points;
         const tier = (newLifetime >= 5000 ? "platinum" : newLifetime >= 2000 ? "gold" : newLifetime >= 500 ? "silver" : "bronze") as LoyaltyData["tier"];
         const updated: LoyaltyData = { points: current.points + points, lifetime_earned: newLifetime, tier };
-        localStorage.setItem("mangodb-loyalty", JSON.stringify(updated));
+        localStorage.setItem("mangobite-loyalty", JSON.stringify(updated));
         setLoyalty(updated);
         return;
       }

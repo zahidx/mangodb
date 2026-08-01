@@ -25,7 +25,7 @@ import toast from "react-hot-toast";
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
-  const { refreshSession } = useAuth();
+  const { refreshSession, signInWithOAuth } = useAuth();
 
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPassword, setCustomerPassword] = useState("");
@@ -37,7 +37,7 @@ export default function LoginPage() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
-    const saved = localStorage.getItem("mangodb-theme") as "dark" | "light" | null;
+    const saved = localStorage.getItem("mangobite-theme") as "dark" | "light" | null;
     if (saved) {
       setTheme(saved);
       if (saved === "light") {
@@ -53,7 +53,7 @@ export default function LoginPage() {
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
-    localStorage.setItem("mangodb-theme", nextTheme);
+    localStorage.setItem("mangobite-theme", nextTheme);
     if (nextTheme === "light") {
       document.documentElement.classList.remove("dark");
       document.documentElement.classList.add("light");
@@ -64,22 +64,9 @@ export default function LoginPage() {
   };
 
   const handleOAuthLogin = async (provider: "google" | "facebook") => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
-        },
-      });
-      if (error) {
-        toast.error(error.message);
-        setIsLoading(false);
-      }
-    } catch {
-      toast.error(`Failed to log in with ${provider}`);
-      setIsLoading(false);
-    }
+    setIsLoading(true);
+    await signInWithOAuth(provider);
+    setIsLoading(false);
   };
 
   const handleCustomerSubmit = async (e: React.FormEvent) => {
@@ -92,17 +79,17 @@ export default function LoginPage() {
     setIsLoading(true);
 
     if (
-      customerEmail.toLowerCase() === "customer@mangodb.com" &&
+      customerEmail.toLowerCase() === "customer@mangobite.com" &&
       customerPassword === "password123"
     ) {
       setTimeout(async () => {
         toast.success("Customer login successful (Demo Mode)!");
         localStorage.setItem(
-          "mangodb-user",
+          "mangobite-user",
           JSON.stringify({
             phone: "01754309016",
             name: "Premium Customer",
-            email: "customer@mangodb.com",
+            email: "customer@mangobite.com",
             role: "user",
           })
         );
@@ -144,7 +131,7 @@ export default function LoginPage() {
         } catch {}
 
         localStorage.setItem(
-          "mangodb-user",
+          "mangobite-user",
           JSON.stringify({
             phone: data.user.phone || profilePhone,
             name: profileName,
@@ -344,7 +331,7 @@ export default function LoginPage() {
               <ShoppingBag className="h-5 w-5 stroke-[2]" />
             </span>
             <span className="font-display text-[1.85rem] font-semibold tracking-[0.04em] text-white">
-              Mango<span className="italic font-medium text-amber-200">DB</span>
+              Mango<span className="italic font-medium text-amber-200">Bite</span>
             </span>
           </Link>
 

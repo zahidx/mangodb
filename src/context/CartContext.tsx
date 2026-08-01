@@ -62,14 +62,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       // If demo mode or anonymous or DB tables are not ready, use localStorage
       if (!profile || profile.id.startsWith("demo-")) {
-        const stored = localStorage.getItem("mangodb-cart");
+        const stored = localStorage.getItem("mangobite-cart");
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
             setCartItems(parsed);
             setSelectedItemIds(parsed.map((i: any) => i.id));
           } catch (e) {
-            localStorage.removeItem("mangodb-cart");
+            localStorage.removeItem("mangobite-cart");
           }
         }
         setLoading(false);
@@ -99,10 +99,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           });
           setCartItems(formatted);
           setSelectedItemIds(formatted.map(i => i.id));
-          localStorage.setItem("mangodb-cart", JSON.stringify(formatted));
+          localStorage.setItem("mangobite-cart", JSON.stringify(formatted));
         } else {
           // Fallback if table doesn't exist
-          const stored = localStorage.getItem("mangodb-cart");
+          const stored = localStorage.getItem("mangobite-cart");
           if (stored) {
             const parsed = JSON.parse(stored);
             setCartItems(parsed);
@@ -111,7 +111,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (err) {
         // Fallback
-        const stored = localStorage.getItem("mangodb-cart");
+        const stored = localStorage.getItem("mangobite-cart");
         if (stored) {
           const parsed = JSON.parse(stored);
           setCartItems(parsed);
@@ -128,10 +128,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Save guest email/phone for abandoned cart recovery
   const saveGuestCheckoutInfo = (email: string, name?: string, phone?: string) => {
     const profileData = { email, name: name || "", phone: phone || "", createdAt: new Date().toISOString() };
-    localStorage.setItem("mangodb-guest-profile", JSON.stringify(profileData));
+    localStorage.setItem("mangobite-guest-profile", JSON.stringify(profileData));
 
     // Also save to server for cron-based recovery
-    const cartItemsLocal = JSON.parse(localStorage.getItem("mangodb-cart") || "[]");
+    const cartItemsLocal = JSON.parse(localStorage.getItem("mangobite-cart") || "[]");
     if (email && cartItemsLocal.length > 0) {
       const total = cartItemsLocal.reduce((sum: number, item: any) => {
         const price = item.product?.sale_price || item.product?.price || 0;
@@ -155,14 +155,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Save cart to local storage when it changes
   const saveLocalCart = (items: ExtendedCartItem[]) => {
     setCartItems(items);
-    localStorage.setItem("mangodb-cart", JSON.stringify(items));
+    localStorage.setItem("mangobite-cart", JSON.stringify(items));
     // Track cart abandonment timestamp
     if (items.length > 0) {
-      localStorage.setItem("mangodb-cart-last-updated", new Date().toISOString());
+      localStorage.setItem("mangobite-cart-last-updated", new Date().toISOString());
       // Save user email/phone for guest recovery
-      const profileStr = localStorage.getItem("mangodb-guest-profile");
+      const profileStr = localStorage.getItem("mangobite-guest-profile");
       if (!profileStr) {
-        localStorage.setItem("mangodb-guest-profile", JSON.stringify({
+        localStorage.setItem("mangobite-guest-profile", JSON.stringify({
           email: "",
           phone: "",
           createdAt: new Date().toISOString()

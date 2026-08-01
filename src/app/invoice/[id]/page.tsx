@@ -4,6 +4,7 @@ import { ArrowLeft, Download, Printer } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getOrderById } from "@/lib/supabase/queries";
 
 export default function InvoicePage() {
   const params = useParams();
@@ -12,24 +13,87 @@ export default function InvoicePage() {
 
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAutoDownload] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.location.search.includes("download=true");
+    }
+    return false;
+  });
+  const [isDownloading, setIsDownloading] = useState(isAutoDownload);
+
+  // Removed useEffect for isAutoDownload since it's initialized synchronously
 
   useEffect(() => {
     if (!orderId) return;
     
-    // Try to find the order
-    const allOrders = [
-      ...JSON.parse(localStorage.getItem("mangodb-orders") || "[]"),
-      ...JSON.parse(localStorage.getItem("mangodb-guest-orders") || "[]"),
-    ];
-    const found = allOrders.find((o: any) => o.id === orderId);
-    
-    if (found) {
-      setOrder(found);
+    async function fetchOrder() {
+      // Try to find the order in local storage first
+      const allOrders = [
+        ...JSON.parse(localStorage.getItem("mangobite-orders") || "[]"),
+        ...JSON.parse(localStorage.getItem("mangobite-guest-orders") || "[]"),
+      ];
+      let found = allOrders.find((o: any) => o.id === orderId);
+      
+      if (!found) {
+        // If not found locally, fetch from Supabase
+        const { data } = await getOrderById(orderId);
+        if (data) found = data;
+      }
+      
+      if (found) {
+        setOrder(found);
+      }
+      setLoading(false);
     }
-    setLoading(false);
+    
+    fetchOrder();
   }, [orderId]);
 
   const handlePrint = () => window.print();
+
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    try {
+      const { toPng } = await import("html-to-image");
+      const { jsPDF } = await import("jspdf");
+      
+      const element = document.getElementById("invoice-content");
+      if (element) {
+        // html-to-image natively supports modern CSS (oklch, lab, etc) via SVG foreignObject
+        const dataUrl = await toPng(element, { 
+          quality: 1.0, 
+          pixelRatio: 2,
+          backgroundColor: '#ffffff'
+        });
+        
+        // Use jsPDF to generate the PDF
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'pt',
+          format: 'a4'
+        });
+        
+        const imgProps = pdf.getImageProperties(dataUrl);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        // Calculate proportional height
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Invoice-MNG-${orderId}.pdf`);
+      }
+    } catch (e) {
+      console.error("PDF generation failed:", e);
+    }
+    setIsDownloading(false);
+  };
+
+  useEffect(() => {
+    if (!loading && order && isAutoDownload) {
+      handleDownloadPDF().then(() => {
+        setTimeout(() => router.back(), 500);
+      });
+    }
+  }, [loading, order, isAutoDownload]);
 
   if (loading) {
     return (
@@ -56,9 +120,18 @@ export default function InvoicePage() {
   const total = order.total || subtotal + deliveryCharge - discount;
 
   return (
-    <div className="min-h-screen bg-gray-50 print:bg-white">
-      {/* Toolbar — hidden when printing */}
-      <div className="print:hidden sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <>
+      {isAutoDownload && (
+        <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
+          <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-4" />
+          <h2 className="text-xl font-bold text-gray-900">Downloading Invoice...</h2>
+          <p className="text-gray-500 mt-2">Please wait a moment while your PDF is being generated.</p>
+        </div>
+      )}
+
+      <div className={`min-h-screen bg-gray-50 print:bg-white ${isAutoDownload ? 'opacity-0 pointer-events-none absolute' : ''}`}>
+        {/* Toolbar — hidden when printing */}
+        <div className="print:hidden sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/orders" className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900">
             <ArrowLeft className="w-4 h-4" />
@@ -68,11 +141,12 @@ export default function InvoicePage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors cursor-pointer"
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
-            Download PDF
+            {isDownloading ? "Downloading..." : "Download PDF"}
           </button>
           <button
             onClick={handlePrint}
@@ -86,16 +160,16 @@ export default function InvoicePage() {
 
       {/* Invoice Content */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 print:py-0 print:px-0">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 print:shadow-none print:border-none overflow-hidden">
+        <div id="invoice-content" className="bg-white rounded-2xl shadow-sm border border-gray-200 print:shadow-none print:border-none overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-10 print:bg-white print:border-b-2 print:border-emerald-600">
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-white print:text-gray-900">INVOICE</h1>
-                <p className="text-emerald-100 print:text-gray-500 text-sm mt-1">Order Receipt — MangoDB</p>
+                <p className="text-emerald-100 print:text-gray-500 text-sm mt-1">Order Receipt — MangoBite</p>
               </div>
               <div className="text-right text-white print:text-gray-900">
-                <p className="text-xl font-bold">MangoDB</p>
+                <p className="text-xl font-bold">MangoBite</p>
                 <p className="text-xs text-emerald-100 print:text-gray-500">Premium Rajshahi Mangoes</p>
                 <p className="text-xs text-emerald-100 print:text-gray-500 mt-1">Dhaka, Bangladesh</p>
               </div>
@@ -213,22 +287,22 @@ export default function InvoicePage() {
             {/* Footer */}
             <div className="border-t border-gray-200 pt-6 text-center">
               <p className="text-xs text-gray-400">
-                Thank you for choosing MangoDB! Your fresh, premium mangoes are handpicked with care.
+                Thank you for choosing MangoBite! Your fresh, premium mangoes are handpicked with care.
               </p>
               <p className="text-[10px] text-gray-300 mt-1">
-                For any inquiries, contact support@mangodb.com | +880 1700-000000
+                For any inquiries, contact support@mangobite.com | +880 1700-000000
               </p>
             </div>
           </div>
         </div>
       </div>
-
+    </div>
       <style jsx global>{`
         @media print {
           @page { margin: 0.5in; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       `}</style>
-    </div>
+    </>
   );
 }

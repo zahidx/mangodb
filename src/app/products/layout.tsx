@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: "Shop Premium Mangoes",
   description: "Browse our complete catalog of farm-fresh, premium mangoes. Find the best Himsagar, Lengra, and organic varieties harvested directly from Rajshahi.",
   openGraph: {
-    title: "Shop Premium Mangoes | MangoDB",
+    title: "Shop Premium Mangoes | MangoBite",
     description: "Browse our complete catalog of farm-fresh, premium mangoes. Find the best Himsagar, Lengra, and organic varieties harvested directly from Rajshahi.",
   },
 };

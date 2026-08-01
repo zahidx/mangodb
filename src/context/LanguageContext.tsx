@@ -51,7 +51,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Load saved preference
-    const saved = localStorage.getItem("mangodb-locale") as Locale | null;
+    const saved = localStorage.getItem("mangobite-locale") as Locale | null;
     if (saved && (saved === "en" || saved === "bn")) {
       setLocaleState(saved);
       loadMessages(saved).then(setMessages);
@@ -62,7 +62,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
-    localStorage.setItem("mangodb-locale", newLocale);
+    localStorage.setItem("mangobite-locale", newLocale);
     document.documentElement.lang = newLocale;
     document.documentElement.dir = newLocale === "bn" ? "rtl" : "ltr";
     loadMessages(newLocale).then(setMessages);

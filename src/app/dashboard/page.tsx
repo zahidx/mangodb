@@ -16,6 +16,7 @@ import {
     Clock,
     CornerDownLeft,
     CreditCard,
+    FileText,
     Gem,
     Heart,
     LayoutDashboard,
@@ -47,6 +48,7 @@ import Cell from "recharts/lib/component/Cell";
 import ResponsiveContainer from "recharts/lib/component/ResponsiveContainer";
 import RechartsTooltip from "recharts/lib/component/Tooltip";
 import Pie from "recharts/lib/polar/Pie";
+import bdLocations from "@/lib/bd-locations.json";
 
 function DashboardContent() {
   const router = useRouter();
@@ -115,6 +117,17 @@ function DashboardContent() {
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
 
+  // Derived location state
+  const selectedDivision = bdLocations.divisions.find((d: any) => d.name === addressForm.state);
+  const availableDistricts = selectedDivision 
+    ? bdLocations.districts.filter((d: any) => d.division_id === selectedDivision.id)
+    : [];
+    
+  const selectedDistrict = bdLocations.districts.find((d: any) => d.name === addressForm.city);
+  const availableUpazilas = selectedDistrict
+    ? bdLocations.upazilas.filter((u: any) => u.district_id === selectedDistrict.id)
+    : [];
+
   // Payment form
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [paymentForm, setPaymentForm] = useState({
@@ -174,12 +187,12 @@ function DashboardContent() {
           type: "order_cancelled"
         });
       } else {
-        const storedOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
+        const storedOrders = JSON.parse(localStorage.getItem("mangobite-orders") || "[]");
         const updatedOrders = storedOrders.map((o: any) => o.id === orderId ? { ...o, status: "cancelled" } : o);
-        localStorage.setItem("mangodb-orders", JSON.stringify(updatedOrders));
-        const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+        localStorage.setItem("mangobite-orders", JSON.stringify(updatedOrders));
+        const storedNotifs = JSON.parse(localStorage.getItem(`mangobite-notifications-${profile.id}`) || "[]");
         const newNotif = { id: `notif-${Date.now()}`, user_id: profile.id, title: "Order Cancelled", message: `Your order #${orderId} has been cancelled successfully.`, type: "order_cancelled", is_read: false, created_at: new Date().toISOString() };
-        localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify([newNotif, ...storedNotifs]));
+        localStorage.setItem(`mangobite-notifications-${profile.id}`, JSON.stringify([newNotif, ...storedNotifs]));
         setNotifications(prev => [newNotif, ...prev]);
       }
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "cancelled" } : o));
@@ -228,7 +241,7 @@ function DashboardContent() {
     try {
       // 1. Fetch Orders
       let allOrders: any[] = [];
-      const localOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
+      const localOrders = JSON.parse(localStorage.getItem("mangobite-orders") || "[]");
       allOrders = [...localOrders];
 
       const orderRes = await getUserOrders(profile.id);
@@ -242,7 +255,7 @@ function DashboardContent() {
       setOrders(allOrders);
 
       // 2. Fetch Wishlist items (localStorage + server sync)
-      const localWishIds = JSON.parse(localStorage.getItem("mangodb-wishlist") || "[]");
+      const localWishIds = JSON.parse(localStorage.getItem("mangobite-wishlist") || "[]");
       let mergedWishIds = [...localWishIds];
       
       // If authenticated, merge with server wishlist
@@ -254,7 +267,7 @@ function DashboardContent() {
             const serverIds = json.data.map((item: any) => item.product_id);
             mergedWishIds = Array.from(new Set([...localWishIds, ...serverIds]));
             // Persist merged list back to localStorage
-            localStorage.setItem("mangodb-wishlist", JSON.stringify(mergedWishIds));
+            localStorage.setItem("mangobite-wishlist", JSON.stringify(mergedWishIds));
           }
         } catch (e) {
           console.warn("Failed to fetch wishlist from server");
@@ -289,7 +302,7 @@ function DashboardContent() {
           console.error("Failed to fetch addresses from API");
         }
       } else {
-        const storedAddresses = localStorage.getItem(`mangodb-addresses-${profile.id}`);
+        const storedAddresses = localStorage.getItem(`mangobite-addresses-${profile.id}`);
         if (storedAddresses) setAddresses(JSON.parse(storedAddresses));
       }
 
@@ -303,7 +316,7 @@ function DashboardContent() {
           console.error("Failed to fetch notifications from API");
         }
       } else {
-        const storedNotifs = localStorage.getItem(`mangodb-notifications-${profile.id}`);
+        const storedNotifs = localStorage.getItem(`mangobite-notifications-${profile.id}`);
         if (storedNotifs) setNotifications(JSON.parse(storedNotifs));
       }
 
@@ -317,7 +330,7 @@ function DashboardContent() {
           console.error("Failed to fetch payment methods from API");
         }
       } else {
-        const storedPayments = localStorage.getItem(`mangodb-payments-${profile.id}`);
+        const storedPayments = localStorage.getItem(`mangobite-payments-${profile.id}`);
         if (storedPayments) setPaymentMethods(JSON.parse(storedPayments));
       }
 
@@ -355,7 +368,7 @@ function DashboardContent() {
         }
       } else {
         // Mock update
-        const stored = localStorage.getItem("mangodb-user");
+        const stored = localStorage.getItem("mangobite-user");
         if (stored) {
           const parsed = JSON.parse(stored);
           parsed.name = accountForm.fullName;
@@ -364,7 +377,7 @@ function DashboardContent() {
           parsed.gender = accountForm.gender;
           parsed.country = accountForm.country;
           parsed.city = accountForm.city;
-          localStorage.setItem("mangodb-user", JSON.stringify(parsed));
+          localStorage.setItem("mangobite-user", JSON.stringify(parsed));
         }
       }
       await refreshSession();
@@ -421,7 +434,7 @@ function DashboardContent() {
         }
         
         setAddresses(updated);
-        localStorage.setItem(`mangodb-addresses-${profile.id}`, JSON.stringify(updated));
+        localStorage.setItem(`mangobite-addresses-${profile.id}`, JSON.stringify(updated));
       }
       
       toast.success(editingAddressId ? "Address updated!" : "New address added!");
@@ -446,7 +459,7 @@ function DashboardContent() {
       } else {
         const updated = addresses.filter(a => a.id !== id);
         setAddresses(updated);
-        localStorage.setItem(`mangodb-addresses-${profile.id}`, JSON.stringify(updated));
+        localStorage.setItem(`mangobite-addresses-${profile.id}`, JSON.stringify(updated));
       }
       toast.success("Address removed");
     } catch (err) {
@@ -468,7 +481,7 @@ function DashboardContent() {
       } else {
         const updated = addresses.map(a => ({ ...a, is_default: a.id === id }));
         setAddresses(updated);
-        localStorage.setItem(`mangodb-addresses-${profile.id}`, JSON.stringify(updated));
+        localStorage.setItem(`mangobite-addresses-${profile.id}`, JSON.stringify(updated));
       }
       toast.success("Default address updated");
     } catch (err) {
@@ -507,7 +520,7 @@ function DashboardContent() {
           updated.forEach(p => { p.is_default = p.id === updated[updated.length - 1].id; });
         }
         setPaymentMethods(updated);
-        localStorage.setItem(`mangodb-payments-${profile.id}`, JSON.stringify(updated));
+        localStorage.setItem(`mangobite-payments-${profile.id}`, JSON.stringify(updated));
       }
       
       toast.success("Payment method added");
@@ -531,7 +544,7 @@ function DashboardContent() {
       } else {
         const updated = paymentMethods.filter(p => p.id !== id);
         setPaymentMethods(updated);
-        localStorage.setItem(`mangodb-payments-${profile.id}`, JSON.stringify(updated));
+        localStorage.setItem(`mangobite-payments-${profile.id}`, JSON.stringify(updated));
       }
       toast.success("Payment method removed");
     } catch (err) {
@@ -554,7 +567,7 @@ function DashboardContent() {
       } else {
         const updated = paymentMethods.map(p => ({ ...p, is_default: p.id === id }));
         setPaymentMethods(updated);
-        localStorage.setItem(`mangodb-payments-${profile.id}`, JSON.stringify(updated));
+        localStorage.setItem(`mangobite-payments-${profile.id}`, JSON.stringify(updated));
       }
       toast.success("Default payment method updated");
     } catch (err) {
@@ -564,10 +577,10 @@ function DashboardContent() {
 
   const handleRemoveWishlist = (id: string) => {
     if (!profile) return;
-    const stored = localStorage.getItem("mangodb-wishlist");
+    const stored = localStorage.getItem("mangobite-wishlist");
     let saved: string[] = stored ? JSON.parse(stored) : [];
     saved = saved.filter((i: string) => i !== id);
-    localStorage.setItem("mangodb-wishlist", JSON.stringify(saved));
+    localStorage.setItem("mangobite-wishlist", JSON.stringify(saved));
     setWishlistProducts(wishlistProducts.filter(p => p.id !== id));
     toast.success("Removed from wishlist");
 
@@ -611,11 +624,11 @@ function DashboardContent() {
       if (preferences.darkMode) {
         document.documentElement.classList.add("dark");
         document.documentElement.classList.remove("light");
-        localStorage.setItem("mangodb-theme", "dark");
+        localStorage.setItem("mangobite-theme", "dark");
       } else {
         document.documentElement.classList.add("light");
         document.documentElement.classList.remove("dark");
-        localStorage.setItem("mangodb-theme", "light");
+        localStorage.setItem("mangobite-theme", "light");
       }
       await new Promise(r => setTimeout(r, 500));
       toast.success("Preferences updated successfully!");
@@ -718,7 +731,7 @@ function DashboardContent() {
             <div className="w-9 h-9 rounded-xl bg-linear-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-sm">
               <ShoppingBag className="w-4.5 h-4.5 text-gray-900" strokeWidth={2.5} />
             </div>
-            <span className="text-xl font-black tracking-tight text-gray-900">Mango<span className="text-emerald-600">DB</span></span>
+            <span className="text-xl font-black tracking-tight text-gray-900">Mango<span className="text-emerald-600">Bite</span></span>
           </Link>
         </div>
 
@@ -1269,7 +1282,7 @@ function DashboardContent() {
                                   </div>
 
                                   {/* Actions */}
-                                  <div className="flex items-center gap-2 lg:pl-4 lg:border-l lg:border-gray-100 shrink-0">
+                                  <div className="flex flex-wrap items-center gap-2 lg:pl-4 lg:border-l lg:border-gray-100 shrink-0">
                                     {orderTab === 'active' && order.status === 'pending' && (
                                       <button
                                         onClick={() => setCancelOrderId(order.id)}
@@ -1278,6 +1291,13 @@ function DashboardContent() {
                                         Cancel
                                       </button>
                                     )}
+                                    <Link
+                                      href={`/invoice/${order.id}?download=true`}
+                                      className="px-3 py-2 bg-white border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 hover:bg-gray-50 font-medium rounded-lg transition-all text-xs flex items-center gap-1.5"
+                                    >
+                                      <FileText className="w-3.5 h-3.5" />
+                                      Invoice
+                                    </Link>
                                     <Link
                                       href={`/track?id=${order.id}`}
                                       className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-all text-xs flex items-center gap-1.5 shadow-sm"
@@ -1295,13 +1315,16 @@ function DashboardContent() {
                                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                                     <span>{order.payment_method || "COD"} · {order.payment_status === 'paid' ? 'Paid' : 'Pending'}</span>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex flex-wrap justify-end items-center gap-2">
                                     {orderTab === 'active' && order.status === 'pending' && (
                                       <button onClick={() => setCancelOrderId(order.id)} className="px-2.5 py-1.5 border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 rounded-lg text-xs font-medium">Cancel</button>
                                     )}
                                     {orderTab === 'past' && order.status === 'delivered' && (
                                       <button onClick={() => setReturnOrderId(order.id)} className="px-2.5 py-1.5 border border-gray-200 text-gray-500 hover:text-indigo-600 hover:border-indigo-200 rounded-lg text-xs font-medium">Return</button>
                                     )}
+                                    <Link href={`/invoice/${order.id}?download=true`} className="px-2.5 py-1.5 border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 rounded-lg text-xs font-medium flex items-center gap-1">
+                                      <FileText className="w-3 h-3" /> Invoice
+                                    </Link>
                                     <Link href={`/track?id=${order.id}`} className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg text-xs flex items-center gap-1">
                                       {orderTab === 'past' ? 'Details' : 'Track'} <ArrowRight className="w-3 h-3" />
                                     </Link>
@@ -1542,65 +1565,78 @@ function DashboardContent() {
                             />
                           </div>
                           
-                          <div className="space-y-1.5 sm:col-span-2">
-                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Street Address <span className="text-rose-500">*</span></label>
-                            <input
-                              type="text"
-                              required
-                              value={addressForm.street_address}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, street_address: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
-                              placeholder="House No, Road No, Block/Sector"
-                            />
-                          </div>
-
                           <div className="space-y-1.5">
-                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Area / Locality <span className="text-rose-500">*</span></label>
-                            <input
-                              type="text"
-                              required
-                              value={addressForm.area}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, area: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
-                              placeholder="e.g. Dhanmondi, Gulshan"
-                            />
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">City / Town <span className="text-rose-500">*</span></label>
-                            <input
-                              type="text"
-                              required
-                              value={addressForm.city}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
-                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
-                              placeholder="e.g. Dhaka"
-                            />
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">State / Division <span className="text-rose-500">*</span></label>
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Division <span className="text-rose-500">*</span></label>
                             <div className="relative">
                               <select
                                 required
                                 value={addressForm.state}
-                                onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
+                                onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value, city: "", area: "" }))}
                                 className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer"
                               >
                                 <option value="" disabled>Select Division</option>
-                                <option value="Dhaka">Dhaka</option>
-                                <option value="Rajshahi">Rajshahi</option>
-                                <option value="Chittagong">Chittagong</option>
-                                <option value="Khulna">Khulna</option>
-                                <option value="Sylhet">Sylhet</option>
-                                <option value="Barisal">Barisal</option>
-                                <option value="Rangpur">Rangpur</option>
-                                <option value="Mymensingh">Mymensingh</option>
+                                {bdLocations.divisions.map((d: any) => (
+                                  <option key={d.id} value={d.name}>{d.name}</option>
+                                ))}
                               </select>
                               <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                               </div>
                             </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">District <span className="text-rose-500">*</span></label>
+                            <div className="relative">
+                              <select
+                                required
+                                disabled={!addressForm.state}
+                                value={addressForm.city}
+                                onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value, area: "" }))}
+                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <option value="" disabled>Select District</option>
+                                {availableDistricts.map((d: any) => (
+                                  <option key={d.id} value={d.name}>{d.name}</option>
+                                ))}
+                              </select>
+                              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Upazila / Area <span className="text-rose-500">*</span></label>
+                            <div className="relative">
+                              <select
+                                required
+                                disabled={!addressForm.city}
+                                value={addressForm.area}
+                                onChange={(e) => setAddressForm(prev => ({ ...prev, area: e.target.value }))}
+                                className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <option value="" disabled>Select Upazila</option>
+                                {availableUpazilas.map((u: any) => (
+                                  <option key={u.id} value={u.name}>{u.name}</option>
+                                ))}
+                              </select>
+                              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5 sm:col-span-2">
+                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Address (Manually Input) <span className="text-rose-500">*</span></label>
+                            <textarea
+                              required
+                              rows={3}
+                              value={addressForm.street_address}
+                              onChange={(e) => setAddressForm(prev => ({ ...prev, street_address: e.target.value }))}
+                              className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30 resize-none"
+                              placeholder="House No, Road No, Block/Sector, etc."
+                            />
                           </div>
 
                           <div className="space-y-1.5">
@@ -1611,18 +1647,6 @@ function DashboardContent() {
                               onChange={(e) => setAddressForm(prev => ({ ...prev, postal_code: e.target.value }))}
                               className="w-full bg-white dark:bg-muted-bg/20 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#0F172A] dark:text-foreground placeholder:text-muted-foreground/50 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 hover:border-emerald-500/30"
                               placeholder="e.g. 1212"
-                            />
-                          </div>
-                          
-                          <div className="space-y-1.5">
-                            <label className="text-[11px] font-semibold text-[#475569] dark:text-muted-foreground uppercase tracking-wider block">Country <span className="text-rose-500">*</span></label>
-                            <input
-                              type="text"
-                              required
-                              value={addressForm.country}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, country: e.target.value }))}
-                              className="w-full bg-[#F8FAFC] dark:bg-muted/30 border border-[#EEF2F7] dark:border-border/50 rounded-md px-4 py-3 text-sm font-semibold text-[#475569] dark:text-muted-foreground cursor-not-allowed"
-                              readOnly
                             />
                           </div>
 
@@ -1646,6 +1670,12 @@ function DashboardContent() {
                           
                           <div className="sm:col-span-2 pt-2">
                             <label className="flex items-center gap-3 cursor-pointer group w-max">
+                              <input 
+                                type="checkbox" 
+                                className="hidden" 
+                                checked={addressForm.is_default}
+                                onChange={(e) => setAddressForm(prev => ({ ...prev, is_default: e.target.checked }))}
+                              />
                               <div className={`w-5 h-5 rounded flex items-center justify-center transition-all duration-200 ${
                                 addressForm.is_default 
                                   ? "bg-emerald-600 border border-emerald-600 shadow-sm" 
@@ -2009,7 +2039,7 @@ function DashboardContent() {
                               await supabase.from("notifications").update({ is_read: true }).eq("user_id", profile.id);
                             }
                             setNotifications(notifications.map(n => ({ ...n, is_read: true })));
-                            localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(notifications.map(n => ({ ...n, is_read: true }))));
+                            localStorage.setItem(`mangobite-notifications-${profile.id}`, JSON.stringify(notifications.map(n => ({ ...n, is_read: true }))));
                           }}
                           className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-all"
                         >

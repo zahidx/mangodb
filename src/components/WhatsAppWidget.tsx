@@ -6,7 +6,7 @@ export default function WhatsAppWidget() {
   const [isVisible, setIsVisible] = useState(false);
 
   const WHATSAPP_NUMBER = "8801742805845";
-  const DEFAULT_MESSAGE = encodeURIComponent("Hello MangoDB! I have a question regarding my order.");
+  const DEFAULT_MESSAGE = encodeURIComponent("Hello MangoBite! I have a question regarding my order.");
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 2000);

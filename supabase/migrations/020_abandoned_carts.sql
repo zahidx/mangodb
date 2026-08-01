@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Abandoned Cart Recovery
+-- MangoBite Market — Abandoned Cart Recovery
 -- ===========================================
 -- Run this AFTER 019_product_variants.sql
 

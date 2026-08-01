@@ -65,7 +65,7 @@ export async function GET(req: Request) {
       // Send the beautifully designed recovery email
       try {
         await resend.emails.send({
-          from: "MangoDB Support <hello@mangodb.com>", 
+          from: "MangoBite Support <hello@mangobite.com>", 
           to: [profile.email],
           subject: "Did you forget your mangoes? 🥭",
           react: AbandonedCartEmail({

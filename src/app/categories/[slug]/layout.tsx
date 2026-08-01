@@ -32,10 +32,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .maybeSingle();
 
   if (!category) {
-    return { title: "Category Not Found | MangoDB" };
+    return { title: "Category Not Found | MangoBite" };
   }
 
-  const title = `${category.name} — Premium Mangoes | MangoDB`;
+  const title = `${category.name} — Premium Mangoes | MangoBite`;
   const description = category.description || `Browse our selection of premium ${category.name} mangoes. Handpicked and delivered fresh from Rajshahi.`;
   const image = category.image_url || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=1200&h=630&fit=crop&q=80";
 

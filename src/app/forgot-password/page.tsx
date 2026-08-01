@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-lg">
             <Lock className="w-5 h-5 text-black" />
           </div>
-          <span className="font-serif-heading text-2xl font-black text-gray-800">MangoDB</span>
+          <span className="font-serif-heading text-2xl font-black text-gray-800">MangoBite</span>
         </Link>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">

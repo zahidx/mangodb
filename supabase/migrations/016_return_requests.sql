@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Migration 016
+-- MangoBite Market — Migration 016
 -- ===========================================
 -- Return & Refund Request System
 

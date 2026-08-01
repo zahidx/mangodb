@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Storage Buckets
+-- MangoBite Market — Storage Buckets
 -- ===========================================
 -- Run this AFTER 002_rls_policies.sql
 

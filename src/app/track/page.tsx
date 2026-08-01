@@ -115,8 +115,8 @@ function TrackContent() {
         setLoading(false);
         return;
       }
-      const stored = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
-      const guestStored = JSON.parse(localStorage.getItem("mangodb-guest-orders") || "[]");
+      const stored = JSON.parse(localStorage.getItem("mangobite-orders") || "[]");
+      const guestStored = JSON.parse(localStorage.getItem("mangobite-guest-orders") || "[]");
       const matched = [...stored, ...guestStored].find((o: any) => o.id === formattedId);
       if (matched) {
         setOrder(matched);
@@ -143,16 +143,16 @@ function TrackContent() {
 
     try {
       // Search in guest orders by email
-      const byEmail = JSON.parse(localStorage.getItem("mangodb-guest-orders-by-email") || "{}");
+      const byEmail = JSON.parse(localStorage.getItem("mangobite-guest-orders-by-email") || "{}");
       const guestOrderIds: string[] = byEmail[cleanEmail] || [];
 
-      const guestStored = JSON.parse(localStorage.getItem("mangodb-guest-orders") || "[]");
+      const guestStored = JSON.parse(localStorage.getItem("mangobite-guest-orders") || "[]");
       const ordersByEmail = guestStored.filter((o: any) =>
         o._guestEmail?.toLowerCase() === cleanEmail || guestOrderIds.includes(o.id)
       );
 
       // Also search in regular orders where shipping email matches
-      const storedOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
+      const storedOrders = JSON.parse(localStorage.getItem("mangobite-orders") || "[]");
       const matchedStored = storedOrders.filter((o: any) =>
         o.shipping_address?.email?.toLowerCase() === cleanEmail
       );

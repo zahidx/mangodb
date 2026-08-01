@@ -15,7 +15,7 @@ export default function CartRecoveryPrompt() {
   useEffect(() => {
     if (hasShown) return;
     
-    const lastUpdate = localStorage.getItem("mangodb-cart-last-updated");
+    const lastUpdate = localStorage.getItem("mangobite-cart-last-updated");
     if (!lastUpdate) return;
 
     const elapsed = Date.now() - new Date(lastUpdate).getTime();

@@ -15,6 +15,7 @@ interface AuthContextType {
   demoUser: { name: string; phone: string; role: "user" | "admin" } | null;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  signInWithOAuth: (provider: "google" | "facebook") => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -82,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         // 2. Check local storage demo user only if there is no Supabase session
-        const stored = localStorage.getItem("mangodb-user");
+        const stored = localStorage.getItem("mangobite-user");
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
@@ -91,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: parsed.id || "demo-id-123",
               full_name: parsed.name || "Demo User",
               phone: parsed.phone || "01754309016",
-              email: parsed.email || "demo@mangodb.com",
+              email: parsed.email || "demo@mangobite.com",
               avatar_url: null,
               dob: parsed.dob || null,
               gender: parsed.gender || null,
@@ -106,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(false);
             return;
           } catch (e) {
-            localStorage.removeItem("mangodb-user");
+            localStorage.removeItem("mangobite-user");
           }
         }
         
@@ -145,8 +146,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setLoading(true);
     try {
-      localStorage.removeItem("mangodb-user");
-      document.cookie = "mangodb-admin=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      localStorage.removeItem("mangobite-user");
+      document.cookie = "mangobite-admin=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       await supabase.auth.signOut();
       setUser(null);
       setProfile(null);
@@ -155,6 +156,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       toast.error("Logout failed");
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithOAuth = async (provider: "google" | "facebook") => {
+    try {
+      setLoading(true);
+      const redirectTo = `${window.location.origin}/api/auth/callback`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo,
+          queryParams: provider === "google" ? {
+            access_type: "offline",
+            prompt: "consent",
+          } : undefined,
+        },
+      });
+      if (error) {
+        toast.error(error.message || `Failed to connect with ${provider}`);
+        setLoading(false);
+      }
+    } catch (err: any) {
+      toast.error(`Error connecting to ${provider}: ${err?.message || "OAuth error"}`);
       setLoading(false);
     }
   };
@@ -173,6 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         demoUser,
         logout,
         refreshSession,
+        signInWithOAuth,
       }}
     >
       {children}

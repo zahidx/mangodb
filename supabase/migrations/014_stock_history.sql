@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Migration 014
+-- MangoBite Market — Migration 014
 -- ===========================================
 -- Add Stock History table for inventory tracking
 

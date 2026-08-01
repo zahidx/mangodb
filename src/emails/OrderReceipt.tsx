@@ -27,7 +27,7 @@ export const OrderReceipt = ({
   productName = "Premium Rajshahi Himsagar (10kg)",
   shippingAddress = "Dhaka, Bangladesh",
 }: OrderReceiptProps) => {
-  const previewText = `Your MangoDB Order ${orderId} is confirmed!`;
+  const previewText = `Your MangoBite Order ${orderId} is confirmed!`;
 
   return (
     <Html>
@@ -36,7 +36,7 @@ export const OrderReceipt = ({
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Text style={logoText}>MangoDB</Text>
+            <Text style={logoText}>MangoBite</Text>
           </Section>
 
           <Section style={content}>
@@ -76,7 +76,7 @@ export const OrderReceipt = ({
 
           <Section style={footer}>
             <Text style={footerText}>
-              MangoDB — Premium Rajshahi Mangoes
+              MangoBite — Premium Rajshahi Mangoes
               <br />
               100% Carbide-Free & Farm Fresh
             </Text>

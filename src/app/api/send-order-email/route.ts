@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy_key");
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@mangodb.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@mangobite.com";
 
 export async function POST(req: Request) {
   try {
@@ -27,9 +27,9 @@ export async function POST(req: Request) {
 
     // 1. Send order confirmation to customer
     const customerResult = await resend.emails.send({
-      from: "MangoDB Orders <onboarding@resend.dev>",
+      from: "MangoBite Orders <onboarding@resend.dev>",
       to: [email],
-      subject: `Order Confirmed 🥭 - MangoDB #${orderId}`,
+      subject: `Order Confirmed 🥭 - MangoBite #${orderId}`,
       react: OrderReceipt({
         orderId,
         customerName,
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
     // 2. Send admin notification
     const adminResult = await resend.emails.send({
-      from: "MangoDB Orders <onboarding@resend.dev>",
+      from: "MangoBite Orders <onboarding@resend.dev>",
       to: [ADMIN_EMAIL],
       subject: `🛵 New Order: ${orderId} — ${customerName}`,
       react: AdminOrderNotification({

@@ -8,7 +8,7 @@ export default function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("mangodb-cookie-consent");
+    const consent = localStorage.getItem("mangobite-cookie-consent");
     if (!consent) {
       // Show the banner after a short delay
       const timer = setTimeout(() => setIsVisible(true), 1500);
@@ -17,12 +17,12 @@ export default function CookieConsent() {
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem("mangodb-cookie-consent", "accepted");
+    localStorage.setItem("mangobite-cookie-consent", "accepted");
     setIsVisible(false);
   };
 
   const handleReject = () => {
-    localStorage.setItem("mangodb-cookie-consent", "rejected");
+    localStorage.setItem("mangobite-cookie-consent", "rejected");
     setIsVisible(false);
     // Disable GA and Meta Pixel by clearing dataLayer
     if (typeof window !== "undefined") {

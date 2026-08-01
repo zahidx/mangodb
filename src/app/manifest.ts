@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'MangoDB E-Commerce',
-    short_name: 'MangoDB',
+    name: 'MangoBite E-Commerce',
+    short_name: 'MangoBite',
     description: 'Premium quality mangoes delivered directly to your doorstep.',
     start_url: '/',
     display: 'standalone',

@@ -40,7 +40,7 @@ export const AdminOrderNotification = ({
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Text style={logoText}>MangoDB</Text>
+            <Text style={logoText}>MangoBite</Text>
             <Text style={badge}>NEW ORDER — Admin Notification</Text>
           </Section>
 
@@ -93,7 +93,7 @@ export const AdminOrderNotification = ({
 
           <Section style={footer}>
             <Text style={footerText}>
-              MangoDB — Admin Notification System
+              MangoBite — Admin Notification System
               <br />
               This email was sent automatically when a new order was placed.
             </Text>

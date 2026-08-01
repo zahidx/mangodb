@@ -1,5 +1,5 @@
 // ===========================================
-// MangoDB Market — Database Type Definitions
+// MangoBite Market — Database Type Definitions
 // ===========================================
 // These types mirror the Supabase database schema
 

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ===========================================
-   MangoDB Market — Design System with Light/Dark
+   MangoBite Market — Design System with Light/Dark
    =========================================== */
 
 /* DARK MODE (default) */
@@ -101,6 +101,9 @@
   --orb-color-secondary: rgba(16, 185, 129, 0.1); /* Emerald glow */
   --orb-color-tertiary: rgba(132, 204, 22, 0.08); /* Lime glow */
 }
+
+/* Tailwind v4 Dark Mode Variant Configuration */
+@variant dark (&:where(.dark, .dark *));
 
 /* Tailwind v4 Theme Configuration */
 @theme inline {

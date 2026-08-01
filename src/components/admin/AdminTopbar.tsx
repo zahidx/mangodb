@@ -52,7 +52,7 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
           .eq("is_read", false);
         if (count !== null) setUnreadNotifs(count);
       } else {
-        const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+        const storedNotifs = JSON.parse(localStorage.getItem(`mangobite-notifications-${profile.id}`) || "[]");
         const count = storedNotifs.filter((n: any) => !n.is_read).length;
         setUnreadNotifs(count);
       }
@@ -76,7 +76,7 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
           .limit(10);
         if (data) setNotifList(data);
       } else {
-        const stored = JSON.parse(localStorage.getItem(`mangodb-notifications-${p.id}`) || "[]");
+        const stored = JSON.parse(localStorage.getItem(`mangobite-notifications-${p.id}`) || "[]");
         setNotifList(stored.slice(0, 10));
       }
     }
@@ -103,9 +103,9 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
         .eq("user_id", profile.id)
         .eq("is_read", false);
     } else {
-      const stored = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+      const stored = JSON.parse(localStorage.getItem(`mangobite-notifications-${profile.id}`) || "[]");
       const updated = stored.map((n: any) => ({ ...n, is_read: true }));
-      localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(updated));
+      localStorage.setItem(`mangobite-notifications-${profile.id}`, JSON.stringify(updated));
     }
     setUnreadNotifs(0);
     setNotifList(notifList.map((n: any) => ({ ...n, is_read: true })));
@@ -119,9 +119,9 @@ export default function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
         .update({ is_read: true })
         .eq("id", id);
     } else {
-      const stored = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+      const stored = JSON.parse(localStorage.getItem(`mangobite-notifications-${profile.id}`) || "[]");
       const updated = stored.map((n: any) => n.id === id ? { ...n, is_read: true } : n);
-      localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(updated));
+      localStorage.setItem(`mangobite-notifications-${profile.id}`, JSON.stringify(updated));
     }
     setUnreadNotifs(prev => Math.max(0, prev - 1));
     setNotifList(notifList.map((n: any) => n.id === id ? { ...n, is_read: true } : n));

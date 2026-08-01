@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Row Level Security Policies
+-- MangoBite Market — Row Level Security Policies
 -- ===========================================
 -- Run this AFTER 001_initial_schema.sql
 

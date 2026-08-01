@@ -79,7 +79,12 @@ export default function QuickViewModal({
   const isInWishlist = wishlist.includes(product.id);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="quickview-title"
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -91,9 +96,10 @@ export default function QuickViewModal({
         {/* Close button */}
         <button
           onClick={onClose}
+          aria-label="Close product quick view modal"
           className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors cursor-pointer"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" aria-hidden="true" />
         </button>
 
         <div className="flex flex-col md:flex-row overflow-y-auto">

@@ -46,38 +46,38 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "MangoDB — Premium Rajshahi Mangoes Delivered",
-    template: "%s | MangoDB",
+    default: "MangoBite — Premium Rajshahi Mangoes Delivered",
+    template: "%s | MangoBite",
   },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "MangoDB",
+    title: "MangoBite",
   },
   description:
     "Buy fresh, premium carbide-free mangoes online. Handpicked Himsagar, Lengra, Haribhanga and more delivered directly from Rajshahi to your doorstep.",
-  keywords: ["mangoes bangladesh", "rajshahi mango", "himsagar mango", "lengra", "fresh mango delivery", "carbide-free mangoes", "MangoDB"],
-  authors: [{ name: "MangoDB" }],
+  keywords: ["mangoes bangladesh", "rajshahi mango", "himsagar mango", "lengra", "fresh mango delivery", "carbide-free mangoes", "MangoBite"],
+  authors: [{ name: "MangoBite" }],
   openGraph: {
-    title: "MangoDB — Premium Rajshahi Mangoes Delivered",
+    title: "MangoBite — Premium Rajshahi Mangoes Delivered",
     description:
       "Buy fresh, premium carbide-free mangoes online. Handpicked Himsagar, Lengra, Haribhanga and more delivered directly from Rajshahi to your doorstep.",
     type: "website",
     locale: "en_US",
-    siteName: "MangoDB",
+    siteName: "MangoBite",
     images: [
       {
         url: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=1200&h=630&fit=crop&q=80",
         width: 1200,
         height: 630,
-        alt: "MangoDB Premium Harvest",
+        alt: "MangoBite Premium Harvest",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MangoDB — Premium Rajshahi Mangoes",
+    title: "MangoBite — Premium Rajshahi Mangoes",
     description: "Handpicked premium mangoes delivered from orchard to your doorstep.",
     images: ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=1200&h=630&fit=crop&q=80"],
   }
@@ -102,7 +102,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('mangodb-theme');
+                  var theme = localStorage.getItem('mangobite-theme');
                   if (theme === 'light') {
                     document.documentElement.classList.remove('dark');
                     document.documentElement.classList.add('light');
@@ -112,7 +112,7 @@ export default function RootLayout({
                   } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
                     document.documentElement.classList.remove('dark');
                     document.documentElement.classList.add('light');
-                    localStorage.setItem('mangodb-theme', 'light');
+                    localStorage.setItem('mangobite-theme', 'light');
                   }
                 } catch(e) {}
               })();
@@ -126,8 +126,8 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              name: "MangoDB",
-              url: process.env.NEXT_PUBLIC_SITE_URL || "https://mangodb.com",
+              name: "MangoBite",
+              url: process.env.NEXT_PUBLIC_SITE_URL || "https://mangobite.com",
               logo: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=200&h=200&fit=crop&q=80",
               description: "Premium Rajshahi mangoes delivered fresh from orchard to doorstep.",
               contactPoint: {
@@ -137,8 +137,8 @@ export default function RootLayout({
                 availableLanguage: ["English", "Bengali"],
               },
               sameAs: [
-                "https://facebook.com/mangodb",
-                "https://instagram.com/mangodb",
+                "https://facebook.com/mangobite",
+                "https://instagram.com/mangobite",
               ],
             }),
           }}
@@ -150,13 +150,13 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: "MangoDB",
-              url: process.env.NEXT_PUBLIC_SITE_URL || "https://mangodb.com",
+              name: "MangoBite",
+              url: process.env.NEXT_PUBLIC_SITE_URL || "https://mangobite.com",
               potentialAction: {
                 "@type": "SearchAction",
                 target: {
                   "@type": "EntryPoint",
-                  urlTemplate: `${process.env.NEXT_PUBLIC_SITE_URL || "https://mangodb.com"}/products?search={search_term_string}`,
+                  urlTemplate: `${process.env.NEXT_PUBLIC_SITE_URL || "https://mangobite.com"}/products?search={search_term_string}`,
                 },
                 "query-input": "required name=search_term_string",
               },
@@ -171,9 +171,9 @@ export default function RootLayout({
           <CartRecoveryPrompt />
         </Providers>
         <Toaster
-          position="bottom-center"
+          position="top-right"
           gutter={12}
-          containerClassName="mangodb-toaster"
+          containerClassName="mangobite-toaster"
           toastOptions={{
             duration: 3500,
             style: {

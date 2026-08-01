@@ -1,5 +1,5 @@
 // ===========================================
-// MangoDB Toast Helpers — Pre-styled notifications
+// MangoBite Toast Helpers — Pre-styled notifications
 // ===========================================
 // Usage: import { showSuccess, showError } from "@/lib/toast";
 // Or use the original toast directly for loading/ids.

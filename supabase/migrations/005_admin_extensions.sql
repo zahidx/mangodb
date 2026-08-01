@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Admin Dashboard Extensions
+-- MangoBite Market — Admin Dashboard Extensions
 -- ===========================================
 -- Run this AFTER 004_wishlist_coupons.sql
 
@@ -195,16 +195,16 @@ CREATE POLICY "Admins can delete banner images"
 -- 7. SEED DEFAULT SITE SETTINGS
 -- ============================================
 INSERT INTO public.site_settings (key, value) VALUES
-  ('store_name', '"MangoDB — Fresh Mangoes Marketplace"'),
+  ('store_name', '"MangoBite — Fresh Mangoes Marketplace"'),
   ('store_tagline', '"Rajshahi''s Premium Harvest, Delivered Fresh"'),
-  ('contact_email', '"hello@mangodb.com"'),
+  ('contact_email', '"hello@mangobite.com"'),
   ('contact_phone', '"+880 1754-309016"'),
   ('store_address', '"Kansat, Chapainawabganj, Rajshahi Division, Bangladesh"'),
   ('default_delivery_charge', '120'),
   ('free_delivery_threshold', '2000'),
   ('cod_enabled', 'true'),
-  ('social_facebook', '"https://facebook.com/mangodb"'),
-  ('social_instagram', '"https://instagram.com/mangodb"')
+  ('social_facebook', '"https://facebook.com/mangobite"'),
+  ('social_instagram', '"https://instagram.com/mangobite"')
 ON CONFLICT (key) DO NOTHING;
 
 -- ============================================

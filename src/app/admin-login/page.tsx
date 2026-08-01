@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
     try {
       const email = username.includes("@")
         ? username
-        : `${username}@mangodb.com`;
+        : `${username}@mangobite.com`;
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
 
         if (profileData?.role === "admin") {
           toast.success("Admin login successful!");
-          document.cookie = "mangodb-admin=true; path=/; max-age=86400;";
+          document.cookie = "mangobite-admin=true; path=/; max-age=86400;";
           await refreshSession();
           setIsLoading(false);
           router.push("/admin");
@@ -71,15 +71,15 @@ export default function AdminLoginPage() {
       if (username === "admin" && password === "admin123") {
         toast.success("Admin login successful!");
         localStorage.setItem(
-          "mangodb-user",
+          "mangobite-user",
           JSON.stringify({
             phone: "admin",
             name: "Administrator",
             role: "admin",
-            email: "admin@mangodb.com",
+            email: "admin@mangobite.com",
           })
         );
-        document.cookie = "mangodb-admin=true; path=/; max-age=86400;";
+        document.cookie = "mangobite-admin=true; path=/; max-age=86400;";
         await refreshSession();
         setIsLoading(false);
         router.push("/admin");
@@ -93,15 +93,15 @@ export default function AdminLoginPage() {
       if (username === "admin" && password === "admin123") {
         toast.success("Admin login successful!");
         localStorage.setItem(
-          "mangodb-user",
+          "mangobite-user",
           JSON.stringify({
             phone: "admin",
             name: "Administrator",
             role: "admin",
-            email: "admin@mangodb.com",
+            email: "admin@mangobite.com",
           })
         );
-        document.cookie = "mangodb-admin=true; path=/; max-age=86400;";
+        document.cookie = "mangobite-admin=true; path=/; max-age=86400;";
         await refreshSession();
         router.push("/admin");
       } else {
@@ -220,7 +220,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="text-center text-[10px] text-slate-600 mt-4">
-          MangoDB Admin Panel &copy; {new Date().getFullYear()}
+          MangoBite Admin Panel &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

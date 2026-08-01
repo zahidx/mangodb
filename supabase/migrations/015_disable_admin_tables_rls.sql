@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Migration 015
+-- MangoBite Market — Migration 015
 -- ===========================================
 -- Disable RLS on admin-managed tables so the admin API
 -- (which runs without a Service Role Key in dev setups)

@@ -182,7 +182,7 @@ export default function AdminAbandonedCartsPage() {
               <p className="text-xs text-gray-400 leading-relaxed">
                 To automate recovery, set up a cron job to call <code className="bg-gray-100 px-1.5 py-0.5 rounded-sm text-gray-700">POST /api/carts/recover</code> every 24 hours.
                 <br />
-                Example cron: <code className="bg-gray-100 px-1.5 py-0.5 rounded-sm text-gray-700">0 9 * * * curl -X POST https://mangodb.com/api/carts/recover</code>
+                Example cron: <code className="bg-gray-100 px-1.5 py-0.5 rounded-sm text-gray-700">0 9 * * * curl -X POST https://mangobite.com/api/carts/recover</code>
               </p>
             </div>
           </div>

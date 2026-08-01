@@ -21,13 +21,13 @@ interface AbandonedCartEmailProps {
 
 export const AbandonedCartEmail = ({
   customerName = "Valued Customer",
-  checkoutUrl = "https://mangodb.com/checkout",
+  checkoutUrl = "https://mangobite.com/checkout",
   discountCode = "COMEBACK5",
 }: AbandonedCartEmailProps) => {
   return (
     <Html>
       <Head />
-      <Preview>Did you forget something? Complete your MangoDB order!</Preview>
+      <Preview>Did you forget something? Complete your MangoBite order!</Preview>
       <Tailwind>
         <Body className="bg-[#f4f7f5] my-auto mx-auto font-sans px-2">
           <Container className="border border-solid border-[#e6ebec] rounded my-[40px] mx-auto p-[20px] max-w-[465px] bg-white">
@@ -36,7 +36,7 @@ export const AbandonedCartEmail = ({
                 src="https://images.unsplash.com/photo-1553279768-865429fa0078?w=200&h=200&fit=crop&q=80"
                 width="80"
                 height="80"
-                alt="MangoDB"
+                alt="MangoBite"
                 className="my-0 mx-auto rounded-full"
               />
             </Section>
@@ -72,12 +72,12 @@ export const AbandonedCartEmail = ({
 
             <Text className="text-[#666666] text-[12px] leading-[24px] mt-[32px]">
               Best regards,<br />
-              The MangoDB Team
+              The MangoBite Team
             </Text>
 
             <Section className="text-center mt-[32px] border-t border-solid border-[#e6ebec] pt-[32px]">
               <Text className="text-[#999999] text-[10px] leading-[24px]">
-                You received this email because you recently added items to your cart at MangoDB.
+                You received this email because you recently added items to your cart at MangoBite.
                 <br />
                 <a href={`${checkoutUrl.replace('/checkout', '')}/unsubscribe`} className="text-[#999999] underline">
                   Unsubscribe from cart reminders

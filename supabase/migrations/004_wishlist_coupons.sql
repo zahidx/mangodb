@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Wishlist & Coupon System
+-- MangoBite Market — Wishlist & Coupon System
 -- ===========================================
 -- Run this AFTER 003_storage.sql
 

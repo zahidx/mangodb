@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Migration 007
+-- MangoBite Market — Migration 007
 -- ===========================================
 -- Add User Addresses table for multiple shipping addresses
 

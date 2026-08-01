@@ -235,7 +235,7 @@ export async function getUserOrders(userId: string) {
     // Get mock local orders
     let localOrders: Order[] = [];
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("mangodb-orders");
+      const stored = localStorage.getItem("mangobite-orders");
       if (stored) {
         try { localOrders = JSON.parse(stored); } catch (e) {}
       }
@@ -264,7 +264,7 @@ export async function getOrderById(orderId: string) {
     // Fetch from mock local orders
     let localOrders: Order[] = [];
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("mangodb-orders");
+      const stored = localStorage.getItem("mangobite-orders");
       if (stored) {
         try { localOrders = JSON.parse(stored); } catch (e) {}
       }
@@ -292,7 +292,7 @@ export async function getAllOrders() {
   } catch (err) {
     let localOrders: Order[] = [];
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("mangodb-orders");
+      const stored = localStorage.getItem("mangobite-orders");
       if (stored) {
         try { localOrders = JSON.parse(stored); } catch (e) {}
       }
@@ -417,7 +417,7 @@ export async function getAdminStats() {
   } catch (err: any) {
     let localOrders: Order[] = [];
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("mangodb-orders");
+      const stored = localStorage.getItem("mangobite-orders");
       if (stored) {
         try { localOrders = JSON.parse(stored); } catch (e) {}
       }

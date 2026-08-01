@@ -26,7 +26,7 @@ import toast from "react-hot-toast";
 export default function SignupPage() {
   const router = useRouter();
   const supabase = createClient();
-  const { refreshSession } = useAuth();
+  const { refreshSession, signInWithOAuth } = useAuth();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,7 +38,7 @@ export default function SignupPage() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
-    const saved = localStorage.getItem("mangodb-theme") as "dark" | "light" | null;
+    const saved = localStorage.getItem("mangobite-theme") as "dark" | "light" | null;
     if (saved) {
       setTheme(saved);
       if (saved === "light") {
@@ -54,7 +54,7 @@ export default function SignupPage() {
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
-    localStorage.setItem("mangodb-theme", nextTheme);
+    localStorage.setItem("mangobite-theme", nextTheme);
     if (nextTheme === "light") {
       document.documentElement.classList.remove("dark");
       document.documentElement.classList.add("light");
@@ -82,11 +82,11 @@ export default function SignupPage() {
 
     setIsLoading(true);
     if (
-      email.toLowerCase() === "customer@mangodb.com" ||
-      email.toLowerCase() === "demo@mangodb.com"
+      email.toLowerCase() === "customer@mangobite.com" ||
+      email.toLowerCase() === "demo@mangobite.com"
     ) {
       setTimeout(() => {
-        const storedProfiles = JSON.parse(localStorage.getItem("mangodb-all-profiles") || "[]");
+        const storedProfiles = JSON.parse(localStorage.getItem("mangobite-all-profiles") || "[]");
         const newProfile = {
           id: `profile-${Date.now()}`,
           full_name: fullName,
@@ -96,7 +96,7 @@ export default function SignupPage() {
           is_blocked: false,
           created_at: new Date().toISOString()
         };
-        localStorage.setItem("mangodb-all-profiles", JSON.stringify([newProfile, ...storedProfiles]));
+        localStorage.setItem("mangobite-all-profiles", JSON.stringify([newProfile, ...storedProfiles]));
 
         setIsLoading(false);
         toast.success("Registration successful!");
@@ -126,7 +126,7 @@ export default function SignupPage() {
       if (error) {
         toast.error(error.message);
       } else {
-        const storedProfiles = JSON.parse(localStorage.getItem("mangodb-all-profiles") || "[]");
+        const storedProfiles = JSON.parse(localStorage.getItem("mangobite-all-profiles") || "[]");
         const newProfile = {
           id: data?.user?.id || `profile-${Date.now()}`,
           full_name: fullName,
@@ -136,7 +136,7 @@ export default function SignupPage() {
           is_blocked: false,
           created_at: new Date().toISOString()
         };
-        localStorage.setItem("mangodb-all-profiles", JSON.stringify([newProfile, ...storedProfiles]));
+        localStorage.setItem("mangobite-all-profiles", JSON.stringify([newProfile, ...storedProfiles]));
 
         // Automatically sign in the user after successful registration
         await supabase.auth.signInWithPassword({
@@ -156,22 +156,9 @@ export default function SignupPage() {
   };
 
   const handleOAuthSignUp = async (provider: "google" | "facebook") => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
-        },
-      });
-      if (error) {
-        toast.error(error.message);
-        setIsLoading(false);
-      }
-    } catch {
-      toast.error(`Failed to sign in with ${provider}`);
-      setIsLoading(false);
-    }
+    setIsLoading(true);
+    await signInWithOAuth(provider);
+    setIsLoading(false);
   };
 
   const isDark = theme === "dark";
@@ -363,7 +350,7 @@ export default function SignupPage() {
               <ShoppingBag className="h-5 w-5 stroke-[2]" />
             </span>
             <span className="font-display text-[1.85rem] font-semibold tracking-[0.04em] text-white">
-              Mango<span className="italic font-medium text-amber-200">DB</span>
+              Mango<span className="italic font-medium text-amber-200">Bite</span>
             </span>
           </Link>
 
@@ -598,7 +585,7 @@ export default function SignupPage() {
               </p>
 
               <p className={legalClass}>
-                By continuing, you agree to MangoDB&apos;s Terms of Service and
+                By continuing, you agree to MangoBite&apos;s Terms of Service and
                 Privacy Policy.
               </p>
             </div>

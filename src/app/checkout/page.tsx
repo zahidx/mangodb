@@ -107,18 +107,16 @@ export default function CheckoutPage() {
 
   // Dummy payment form fields for realistic UI
   const [paymentForm, setPaymentForm] = useState({
-    bkashTrxId: "",
+    bkashPhone: "",
+    bkashOtp: "",
     bkashPin: "",
-    nagadAccount: "",
+    nagadPhone: "",
+    nagadOtp: "",
     nagadPin: "",
-    rocketWallet: "",
-    rocketPin: "",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCvv: "",
-    cardName: "",
     gpayReady: false,
   });
+  const [bkashStep, setBkashStep] = useState(1);
+  const [nagadStep, setNagadStep] = useState(1);
   const [gpayLoading, setGpayLoading] = useState(false);
   const [cardBrand, setCardBrand] = useState("");
 
@@ -156,7 +154,7 @@ export default function CheckoutPage() {
           const { data } = await supabase.from("user_payment_methods").select("*").eq("user_id", profile.id).order("is_default", { ascending: false });
           if (data) payments = data;
         } else {
-          const stored = localStorage.getItem(`mangodb-payments-${profile.id}`);
+          const stored = localStorage.getItem(`mangobite-payments-${profile.id}`);
           if (stored) payments = JSON.parse(stored);
         }
         setSavedPaymentMethods(payments);
@@ -172,7 +170,7 @@ export default function CheckoutPage() {
           const json = await res.json();
           if (json.data) addrs = json.data;
         } else {
-          const stored = localStorage.getItem(`mangodb-addresses-${profile.id}`);
+          const stored = localStorage.getItem(`mangobite-addresses-${profile.id}`);
           if (stored) addrs = JSON.parse(stored);
         }
         setSavedAddresses(addrs);
@@ -251,8 +249,8 @@ export default function CheckoutPage() {
     });
   };
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePlaceOrder = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!checkoutForm.name.trim() || !checkoutForm.phone.trim() || !checkoutForm.address.trim() || !checkoutForm.division || !checkoutForm.district || !checkoutForm.upazila) {
       toast.error("Please fill in all shipping fields including location details");
       return;
@@ -364,7 +362,7 @@ export default function CheckoutPage() {
 
     // Save order in localStorage for persistence / tracking lookup
     // Use a guest-specific key so guest orders are retrievable by email
-    const storageKey = isGuest ? `mangodb-guest-orders` : `mangodb-orders`;
+    const storageKey = isGuest ? `mangobite-guest-orders` : `mangobite-orders`;
     const existingOrders = JSON.parse(localStorage.getItem(storageKey) || "[]");
     const orderWithMeta = {
       ...orderData,
@@ -376,7 +374,7 @@ export default function CheckoutPage() {
 
     // Also index by email for guest tracking lookup
     if (isGuest && checkoutForm.email) {
-      const emailKey = `mangodb-guest-orders-by-email`;
+      const emailKey = `mangobite-guest-orders-by-email`;
       const byEmail = JSON.parse(localStorage.getItem(emailKey) || "{}");
       const email = checkoutForm.email.toLowerCase().trim();
       if (!byEmail[email]) byEmail[email] = [];
@@ -385,7 +383,7 @@ export default function CheckoutPage() {
     }
 
     if (profile && profile.id.startsWith("demo-")) {
-      const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+      const storedNotifs = JSON.parse(localStorage.getItem(`mangobite-notifications-${profile.id}`) || "[]");
       const newNotif = {
         id: `notif-${Date.now()}`,
         user_id: profile.id,
@@ -395,7 +393,7 @@ export default function CheckoutPage() {
         is_read: false,
         created_at: new Date().toISOString()
       };
-      localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify([newNotif, ...storedNotifs]));
+      localStorage.setItem(`mangobite-notifications-${profile.id}`, JSON.stringify([newNotif, ...storedNotifs]));
     }
 
     // Trigger transactional email (we do this early so they get the receipt even if they drop off on payment gateway, acting as a pending invoice)
@@ -420,8 +418,8 @@ export default function CheckoutPage() {
       }
     }
 
-    // If online payment selected, redirect to SSLCommerz!
-    if (checkoutForm.paymentMethod !== "cod") {
+    // If online payment selected (excluding mock gateways), redirect to SSLCommerz!
+    if (checkoutForm.paymentMethod !== "cod" && checkoutForm.paymentMethod !== "bkash" && checkoutForm.paymentMethod !== "nagad") {
       toast.loading(`Redirecting to Secure Payment Gateway...`, { id: "payment-load" });
       try {
         const response = await fetch("/api/payment/init", {
@@ -480,7 +478,7 @@ export default function CheckoutPage() {
               <CheckCircle2 className="w-8 h-8 text-emerald-600" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mb-1">Order Confirmed!</h1>
-            <p className="text-sm text-slate-500 mb-6">Thank you for shopping at MangoDB. Your fresh mangoes are booked for harvest!</p>
+            <p className="text-sm text-slate-500 mb-6">Thank you for shopping at MangoBite. Your fresh mangoes are booked for harvest!</p>
 
             <div className="bg-slate-50 rounded p-5 text-left space-y-3 mb-6">
               <div className="flex justify-between text-sm">
@@ -517,7 +515,7 @@ export default function CheckoutPage() {
                 : `A receipt has been sent to ${checkoutForm.email}. Use your Order ID or email to track delivery.`}
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Link href={`/invoice/${orderCreatedId}`} className="flex-1 py-2.5 text-center border border-gray-300 rounded-sm text-sm font-medium text-gray-700 hover:bg-slate-50 transition-colors">
+              <Link href={`/invoice/${orderCreatedId}?download=true`} className="flex-1 py-2.5 text-center border border-gray-300 rounded-sm text-sm font-medium text-gray-700 hover:bg-slate-50 transition-colors">
                 📄 Download Invoice
               </Link>
               <Link href={`/track?id=${orderCreatedId}`} className="flex-1 py-2.5 text-center border border-gray-300 rounded-sm text-sm font-medium text-gray-700 hover:bg-slate-50 transition-colors">
@@ -1042,182 +1040,174 @@ export default function CheckoutPage() {
 
                   {/* === bKash Payment Gateway === */}
                   {checkoutForm.paymentMethod === "bkash" && (
-                    <div className="mt-4 overflow-hidden rounded border border-pink-200 shadow-sm">
-                      {/* Gateway Header */}
-                      <div className="bg-pink-500 px-5 py-3.5 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-sm bg-white/20 flex items-center justify-center text-white font-black text-base">bK</div>
-                        <div>
-                          <p className="text-white font-bold text-sm">bKash Payment Gateway</p>
-                          <p className="text-pink-100 text-[10px]">Secured by SSLCommerz</p>
-                        </div>
+                    <div className="mt-4 overflow-hidden rounded shadow-sm border border-gray-300 max-w-[320px] mx-auto bg-white flex flex-col font-sans">
+                      {/* Top Pink Line */}
+                      <div className="h-1.5 w-full bg-[#e2136e]" />
+                      
+                      {/* Logo Area */}
+                      <div className="bg-white py-4 flex justify-center border-b border-gray-200">
+                         <div className="flex items-center gap-1">
+                            <span className="text-[#e2136e] font-sans text-3xl font-light tracking-tight">bKash</span>
+                            <span className="text-[#e2136e] font-sans text-xl font-light opacity-80 mt-1">Payment</span>
+                         </div>
                       </div>
 
-                      {/* Gateway Body */}
-                      <div className="bg-white p-5 space-y-5">
-                        {/* Order Info */}
-                        <div className="bg-slate-50 rounded-sm p-3.5 border border-slate-200">
-                          <div className="flex justify-between items-center text-xs mb-2 pb-2 border-b border-slate-200">
-                            <span className="text-slate-500">Merchant</span>
-                            <span className="font-semibold text-slate-900">MangoDB</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs mb-2 pb-2 border-b border-slate-200">
-                            <span className="text-slate-500">Order Reference</span>
-                            <span className="font-semibold text-slate-900">MNG-{Math.floor(100000 + Math.random() * 900000)}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs mb-2 pb-2 border-b border-slate-200">
-                            <span className="text-slate-500">Send to (Merchant)</span>
-                            <span className="font-semibold text-slate-900 tracking-wider">+880 1700-000000</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-slate-500">Amount</span>
-                            <span className="font-bold text-pink-600 text-base">৳ {payableAmount.toLocaleString()}</span>
-                          </div>
-                        </div>
+                      {/* Merchant/Invoice Area */}
+                      <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
+                         <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center p-2">
+                             <ShoppingBag className="w-5 h-5 text-gray-400" />
+                           </div>
+                           <div className="flex flex-col">
+                             <span className="text-gray-600 text-sm font-medium">MangoBite</span>
+                             <span className="text-gray-400 text-xs">Invoice: MNG-{Math.floor(1000 + Math.random() * 9000)}</span>
+                           </div>
+                         </div>
+                         <div className="text-gray-600 font-medium text-xl">
+                           ৳{payableAmount}
+                         </div>
+                      </div>
 
-                        {/* Instruction */}
-                        <div className="bg-pink-50 rounded-sm p-3.5 text-center border border-pink-100">
-                          <p className="text-xs text-pink-800 font-medium">
-                            Open your bKash app, go to <strong>Send Money</strong>, send the exact amount to the merchant number above, then enter the Transaction ID below.
-                          </p>
-                        </div>
-
-                        {/* Payment Form */}
-                        <div className="space-y-3.5">
-                          <div>
-                            <label className="text-[11px] font-semibold text-gray-700 block mb-1.5">bKash Transaction ID</label>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                placeholder="TR1234ABCD"
-                                value={paymentForm.bkashTrxId}
-                                onChange={(e) => handlePaymentInput("bkashTrxId", e.target.value.toUpperCase())}
-                                className="w-full border border-gray-300 rounded-sm pl-3 pr-10 py-2.5 text-sm text-slate-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-400 font-mono tracking-wider"
-                              />
-                              {paymentForm.bkashTrxId.length > 0 && (
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded font-semibold">Entered</span>
-                              )}
+                      {/* Pink Body Area */}
+                      <div className="bg-gradient-to-br from-[#e2136e] via-[#c61060] to-[#e2136e] px-4 py-8 text-center min-h-[220px] flex flex-col justify-center">
+                         
+                         {bkashStep === 1 && (
+                            <div className="space-y-4 animate-in fade-in duration-300 w-full">
+                               <p className="text-white text-[13px] font-medium">Your bKash Account number</p>
+                               <input type="text" placeholder="e.g 01XXXXXXXXX" value={paymentForm.bkashPhone} onChange={(e) => handlePaymentInput("bkashPhone", e.target.value.replace(/\D/g, "").slice(0, 11))} className="w-full h-11 px-3 bg-white text-gray-700 text-center text-base placeholder-gray-400 outline-none" />
+                               <p className="text-white text-[11px] opacity-90 mt-3">
+                                 By clicking on <strong className="font-bold">Confirm</strong>, you are agreeing to the <a href="#" className="underline font-bold hover:text-white">terms & conditions</a>
+                               </p>
                             </div>
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-semibold text-gray-700 block mb-1.5">bKash PIN</label>
-                            <input
-                              type="password"
-                              placeholder="Enter your 4-digit PIN"
-                              maxLength={4}
-                              value={paymentForm.bkashPin}
-                              onChange={(e) => handlePaymentInput("bkashPin", e.target.value.replace(/\D/g, "").slice(0, 4))}
-                              className="w-full border border-gray-300 rounded-sm px-3 py-2.5 text-sm text-slate-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-400"
-                            />
-                          </div>
-                        </div>
+                         )}
+                         
+                         {bkashStep === 2 && (
+                            <div className="space-y-4 animate-in fade-in duration-300 w-full">
+                               <p className="text-white text-[13px] font-medium">bKash Verification Code sent to <br/><span className="font-bold">{paymentForm.bkashPhone}</span></p>
+                               <input type="text" placeholder="bKash Verification Code" value={paymentForm.bkashOtp} onChange={(e) => handlePaymentInput("bkashOtp", e.target.value.replace(/\D/g, "").slice(0, 6))} className="w-full h-11 px-3 bg-white text-gray-700 text-center text-base placeholder-gray-400 outline-none tracking-widest" />
+                               {paymentForm.bkashOtp.length > 0 && paymentForm.bkashOtp !== "101010" && <p className="text-[#fca5a5] text-xs font-medium">Invalid OTP. System code is 101010.</p>}
+                            </div>
+                         )}
 
-                        {/* Pay Button */}
-                        <button
-                          type="button"
-                          disabled={paymentForm.bkashTrxId.length < 5 || paymentForm.bkashPin.length !== 4}
-                          className={`w-full py-3 rounded-sm font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                            paymentForm.bkashTrxId.length >= 5 && paymentForm.bkashPin.length === 4
-                              ? "bg-pink-500 hover:bg-pink-600 text-white shadow-sm cursor-pointer"
-                              : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          }`}
-                        >
-                          <Lock className="w-3.5 h-3.5" />
-                          Pay ৳ {total.toLocaleString()}
-                        </button>
+                         {bkashStep === 3 && (
+                            <div className="space-y-4 animate-in fade-in duration-300 w-full">
+                               <p className="text-white text-[13px] font-medium">Enter PIN of your bKash Account number<br/>({paymentForm.bkashPhone.slice(0,3)} ** *** {paymentForm.bkashPhone.slice(-3)})</p>
+                               <input type="password" placeholder="bKash PIN" value={paymentForm.bkashPin} onChange={(e) => handlePaymentInput("bkashPin", e.target.value.replace(/\D/g, "").slice(0, 5))} className="w-full h-11 px-3 bg-white text-gray-700 text-center text-3xl tracking-[0.5em] placeholder-gray-400 outline-none placeholder:tracking-normal placeholder:text-base placeholder:-translate-y-1.5" />
+                               {paymentForm.bkashPin.length > 0 && paymentForm.bkashPin !== "12345" && <p className="text-[#fca5a5] text-xs font-medium">Invalid PIN. Try 12345.</p>}
+                            </div>
+                         )}
+                      </div>
 
-                        {/* Security Footer */}
-                        <div className="flex items-center justify-center gap-4 text-[10px] text-gray-400">
-                          <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> 256-bit SSL</span>
-                          <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> PCI Compliant</span>
+                      {/* Footer Buttons */}
+                      <div className="flex bg-[#d1d5db] border-t border-gray-300">
+                         <button type="button" onClick={() => bkashStep > 1 ? setBkashStep(bkashStep - 1) : setCheckoutForm(prev => ({ ...prev, paymentMethod: "cod" }))} className="flex-1 py-3 text-[13px] tracking-wide font-bold text-gray-500 hover:bg-gray-300 transition-colors uppercase cursor-pointer">
+                           Close
+                         </button>
+                         <button type="button" 
+                           disabled={
+                             (bkashStep === 1 && paymentForm.bkashPhone.length !== 11) || 
+                             (bkashStep === 2 && paymentForm.bkashOtp !== "101010") || 
+                             (bkashStep === 3 && paymentForm.bkashPin !== "12345")
+                           } 
+                           onClick={(e: any) => bkashStep === 3 ? handlePlaceOrder(e) : setBkashStep(bkashStep + 1)} 
+                           className="flex-1 py-3 text-[13px] tracking-wide font-bold text-gray-700 hover:bg-gray-300 border-l border-gray-300 transition-colors uppercase disabled:opacity-50 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer">
+                           Confirm
+                         </button>
+                      </div>
+
+                      {/* Hotline Area */}
+                      <div className="bg-white py-2 flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-[#e2136e] flex items-center justify-center">
+                           <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
                         </div>
+                        <span className="text-[#e2136e] font-bold text-sm">16247</span>
                       </div>
                     </div>
                   )}
 
                   {/* === Nagad Payment Gateway === */}
                   {checkoutForm.paymentMethod === "nagad" && (
-                    <div className="mt-4 overflow-hidden rounded border border-orange-200 shadow-sm">
-                      {/* Gateway Header */}
-                      <div className="bg-orange-500 px-5 py-3.5 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-sm bg-white/20 flex items-center justify-center text-white font-black text-base">NG</div>
-                        <div>
-                          <p className="text-white font-bold text-sm">Nagad Payment Gateway</p>
-                          <p className="text-orange-100 text-[10px]">Secured by SSLCommerz</p>
-                        </div>
+                    <div className="mt-4 overflow-hidden rounded shadow-sm border border-gray-300 max-w-[320px] mx-auto bg-white flex flex-col font-sans">
+                      {/* Top Orange Line */}
+                      <div className="h-1.5 w-full bg-[#f37021]" />
+                      
+                      {/* Logo Area */}
+                      <div className="bg-white py-4 flex justify-center border-b border-gray-200">
+                         <div className="flex items-center gap-2">
+                            <span className="text-[#ed1c24] font-sans text-3xl font-black tracking-tighter">NAGAD</span>
+                            <span className="text-[#ed1c24] font-sans text-xl font-light opacity-80 mt-1">Payment</span>
+                         </div>
                       </div>
 
-                      {/* Gateway Body */}
-                      <div className="bg-white p-5 space-y-5">
-                        {/* Order Info */}
-                        <div className="bg-slate-50 rounded-sm p-3.5 border border-slate-200">
-                          <div className="flex justify-between items-center text-xs mb-2 pb-2 border-b border-slate-200">
-                            <span className="text-slate-500">Merchant</span>
-                            <span className="font-semibold text-slate-900">MangoDB</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs mb-2 pb-2 border-b border-slate-200">
-                            <span className="text-slate-500">Merchant Account</span>
-                            <span className="font-semibold text-slate-900 tracking-wider">+880 1700-000001</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-200 mb-2">
-                            <span className="text-slate-500">Reference</span>
-                            <span className="font-semibold text-slate-900">ORD-{Math.floor(10000 + Math.random() * 90000)}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-slate-500">Amount</span>
-                            <span className="font-bold text-orange-600 text-base">৳ {total.toLocaleString()}</span>
-                          </div>
-                        </div>
+                      {/* Merchant/Invoice Area */}
+                      <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
+                         <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded border border-gray-200 flex items-center justify-center p-2">
+                             <ShoppingBag className="w-5 h-5 text-gray-400" />
+                           </div>
+                           <div className="flex flex-col">
+                             <span className="text-gray-600 text-sm font-medium">MangoBite</span>
+                             <span className="text-gray-400 text-xs">Invoice: MNG-{Math.floor(1000 + Math.random() * 9000)}</span>
+                           </div>
+                         </div>
+                         <div className="text-gray-600 font-medium text-xl">
+                           ৳{payableAmount}
+                         </div>
+                      </div>
 
-                        {/* Instruction */}
-                        <div className="bg-orange-50 rounded-sm p-3.5 text-center border border-orange-100">
-                          <p className="text-xs text-orange-800 font-medium">
-                            Open your Nagad app, go to <strong>Send Money</strong>, send to the merchant account above, then enter your details below.
-                          </p>
-                        </div>
+                      {/* Orange Body Area */}
+                      <div className="bg-gradient-to-br from-[#f37021] via-[#ed1c24] to-[#f37021] px-4 py-8 text-center min-h-[220px] flex flex-col justify-center">
+                         
+                         {nagadStep === 1 && (
+                            <div className="space-y-4 animate-in fade-in duration-300 w-full">
+                               <p className="text-white text-[13px] font-medium">Your Nagad Account number</p>
+                               <input type="text" placeholder="e.g 01XXXXXXXXX" value={paymentForm.nagadPhone} onChange={(e) => handlePaymentInput("nagadPhone", e.target.value.replace(/\D/g, "").slice(0, 11))} className="w-full h-11 px-3 bg-white text-gray-700 text-center text-base placeholder-gray-400 outline-none" />
+                               <p className="text-white text-[11px] opacity-90 mt-3">
+                                 By clicking on <strong className="font-bold">Proceed</strong>, you are agreeing to the <a href="#" className="underline font-bold hover:text-white">terms & conditions</a>
+                               </p>
+                            </div>
+                         )}
+                         
+                         {nagadStep === 2 && (
+                            <div className="space-y-4 animate-in fade-in duration-300 w-full">
+                               <p className="text-white text-[13px] font-medium">Nagad Verification Code sent to <br/><span className="font-bold">{paymentForm.nagadPhone}</span></p>
+                               <input type="text" placeholder="Enter Verification Code" value={paymentForm.nagadOtp} onChange={(e) => handlePaymentInput("nagadOtp", e.target.value.replace(/\D/g, "").slice(0, 6))} className="w-full h-11 px-3 bg-white text-gray-700 text-center text-base placeholder-gray-400 outline-none tracking-widest" />
+                               {paymentForm.nagadOtp.length > 0 && paymentForm.nagadOtp !== "101010" && <p className="text-[#fee2e2] text-xs font-medium">Invalid OTP. System code is 101010.</p>}
+                            </div>
+                         )}
 
-                        {/* Payment Form */}
-                        <div className="space-y-3.5">
-                          <div>
-                            <label className="text-[11px] font-semibold text-gray-700 block mb-1.5">Your Nagad Account Number</label>
-                            <input
-                              type="text"
-                              placeholder="01XXXXXXXXX"
-                              value={paymentForm.nagadAccount}
-                              onChange={(e) => handlePaymentInput("nagadAccount", e.target.value.replace(/\D/g, "").slice(0, 11))}
-                              className="w-full border border-gray-300 rounded-sm px-3 py-2.5 text-sm text-slate-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-semibold text-gray-700 block mb-1.5">Nagad PIN</label>
-                            <input
-                              type="password"
-                              placeholder="Enter your 4-digit PIN"
-                              maxLength={4}
-                              value={paymentForm.nagadPin}
-                              onChange={(e) => handlePaymentInput("nagadPin", e.target.value.replace(/\D/g, "").slice(0, 4))}
-                              className="w-full border border-gray-300 rounded-sm px-3 py-2.5 text-sm text-slate-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400"
-                            />
-                          </div>
-                        </div>
+                         {nagadStep === 3 && (
+                            <div className="space-y-4 animate-in fade-in duration-300 w-full">
+                               <p className="text-white text-[13px] font-medium">Enter PIN of your Nagad Account number<br/>({paymentForm.nagadPhone.slice(0,3)} ** *** {paymentForm.nagadPhone.slice(-3)})</p>
+                               <input type="password" placeholder="Nagad PIN" value={paymentForm.nagadPin} onChange={(e) => handlePaymentInput("nagadPin", e.target.value.replace(/\D/g, "").slice(0, 5))} className="w-full h-11 px-3 bg-white text-gray-700 text-center text-3xl tracking-[0.5em] placeholder-gray-400 outline-none placeholder:tracking-normal placeholder:text-base placeholder:-translate-y-1.5" />
+                               {paymentForm.nagadPin.length > 0 && paymentForm.nagadPin !== "12345" && <p className="text-[#fee2e2] text-xs font-medium">Invalid PIN. Try 12345.</p>}
+                            </div>
+                         )}
+                      </div>
 
-                        {/* Pay Button */}
-                        <button
-                          type="button"
-                          disabled={paymentForm.nagadAccount.length !== 11 || paymentForm.nagadPin.length !== 4}
-                          className={`w-full py-3 rounded-sm font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                            paymentForm.nagadAccount.length === 11 && paymentForm.nagadPin.length === 4
-                              ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm cursor-pointer"
-                              : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          }`}
-                        >
-                          <Lock className="w-3.5 h-3.5" />
-                          Pay ৳ {total.toLocaleString()}
-                        </button>
+                      {/* Footer Buttons */}
+                      <div className="flex bg-[#d1d5db] border-t border-gray-300">
+                         <button type="button" onClick={() => nagadStep > 1 ? setNagadStep(nagadStep - 1) : setCheckoutForm(prev => ({ ...prev, paymentMethod: "cod" }))} className="flex-1 py-3 text-[13px] tracking-wide font-bold text-gray-500 hover:bg-gray-300 transition-colors uppercase cursor-pointer">
+                           Close
+                         </button>
+                         <button type="button" 
+                           disabled={
+                             (nagadStep === 1 && paymentForm.nagadPhone.length !== 11) || 
+                             (nagadStep === 2 && paymentForm.nagadOtp !== "101010") || 
+                             (nagadStep === 3 && paymentForm.nagadPin !== "12345")
+                           } 
+                           onClick={(e: any) => nagadStep === 3 ? handlePlaceOrder(e) : setNagadStep(nagadStep + 1)} 
+                           className="flex-1 py-3 text-[13px] tracking-wide font-bold text-gray-700 hover:bg-gray-300 border-l border-gray-300 transition-colors uppercase disabled:opacity-50 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer">
+                           Proceed
+                         </button>
+                      </div>
 
-                        <div className="flex items-center justify-center gap-4 text-[10px] text-gray-400">
-                          <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> 256-bit SSL</span>
-                          <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> PCI Compliant</span>
+                      {/* Hotline Area */}
+                      <div className="bg-white py-2 flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-[#f37021] flex items-center justify-center">
+                           <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
                         </div>
+                        <span className="text-[#f37021] font-bold text-sm">16167</span>
                       </div>
                     </div>
                   )}

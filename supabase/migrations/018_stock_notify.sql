@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Stock Notification Requests
+-- MangoBite Market — Stock Notification Requests
 -- ===========================================
 -- Run this AFTER 017_add_review_images.sql
 

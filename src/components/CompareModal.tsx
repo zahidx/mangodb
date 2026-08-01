@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useCompare } from "@/context/CompareContext";
 import { BarChart3, ShoppingBag, X } from "lucide-react";
@@ -94,21 +95,39 @@ export default function CompareModal({ onClose }: Props) {
     },
   ];
 
+  // Keyboard Escape listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="compare-modal-title"
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 shrink-0">
           <div>
-            <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+            <h2 id="compare-modal-title" className="text-lg font-black text-gray-900 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-emerald-600" />
               Compare Products
             </h2>
             <p className="text-[11px] text-gray-500">Comparing {compareList.length} products side by side</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
-            <X className="w-5 h-5 text-gray-500" />
+          <button 
+            onClick={onClose} 
+            aria-label="Close product comparison modal"
+            className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
           </button>
         </div>
 

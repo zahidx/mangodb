@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Loyalty & Rewards Program
+-- MangoBite Market — Loyalty & Rewards Program
 -- ===========================================
 -- Run this AFTER 020_abandoned_carts.sql
 

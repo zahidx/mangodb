@@ -16,7 +16,7 @@ interface ViewedProduct {
   image: string;
 }
 
-const STORAGE_KEY = "mangodb-recently-viewed";
+const STORAGE_KEY = "mangobite-recently-viewed";
 const MAX_ITEMS = 12;
 
 /** Call this when a user views a product detail page */

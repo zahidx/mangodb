@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Migration 011
+-- MangoBite Market — Migration 011
 -- ===========================================
 -- Disable Row Level Security on profiles table to allow all API requests
 

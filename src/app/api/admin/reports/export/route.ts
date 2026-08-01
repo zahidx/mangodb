@@ -51,7 +51,7 @@ export async function GET(req: Request) {
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="mangodb-orders-${format(new Date(), "yyyy-MM-dd")}.csv"`,
+        "Content-Disposition": `attachment; filename="mangobite-orders-${format(new Date(), "yyyy-MM-dd")}.csv"`,
       },
     });
   } catch (err: any) {

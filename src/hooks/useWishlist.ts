@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-const STORAGE_KEY = "mangodb-wishlist";
+const STORAGE_KEY = "mangobite-wishlist";
 
 export function useWishlist() {
   const { profile } = useAuth();

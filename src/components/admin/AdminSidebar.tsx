@@ -118,7 +118,7 @@ export default function AdminSidebar({
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-black text-slate-800 tracking-tight uppercase">
-                MangoDB
+                MangoBite
               </span>
               <span className="text-[9px] font-bold text-[#20BA5A] uppercase tracking-widest leading-none mt-0.5">
                 Admin Panel
@@ -231,7 +231,7 @@ export default function AdminSidebar({
                   {profile?.full_name || "Administrator"}
                 </p>
                 <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                  {profile?.email || "admin@mangodb.com"}
+                  {profile?.email || "admin@mangobite.com"}
                 </p>
               </div>
             </div>

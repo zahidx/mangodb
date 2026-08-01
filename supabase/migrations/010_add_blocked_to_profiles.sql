@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Migration 010
+-- MangoBite Market — Migration 010
 -- ===========================================
 -- Add is_blocked column to profiles table
 

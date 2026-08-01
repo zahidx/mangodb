@@ -17,7 +17,7 @@ export default function TermsOfService() {
           <p className="font-semibold text-hero-text">Last updated: {new Date().toLocaleDateString()}</p>
           
           <h2 className="text-xl font-bold mt-8 mb-4 text-hero-text border-b border-border pb-2">1. Acceptance of Terms</h2>
-          <p>By accessing and using MangoDB, you accept and agree to be bound by the terms and provision of this agreement. In addition, when using these particular services, you shall be subject to any posted guidelines or rules applicable to such services.</p>
+          <p>By accessing and using MangoBite, you accept and agree to be bound by the terms and provision of this agreement. In addition, when using these particular services, you shall be subject to any posted guidelines or rules applicable to such services.</p>
 
           <h2 className="text-xl font-bold mt-8 mb-4 text-hero-text border-b border-border pb-2">2. Product Quality & Delivery</h2>
           <p>We strive to deliver the highest quality Rajshahi mangoes. Due to the perishable nature of our agricultural products, all claims regarding quality must be submitted within 24 hours of delivery. We are not responsible for delays caused by extreme weather conditions or third-party logistics failures.</p>

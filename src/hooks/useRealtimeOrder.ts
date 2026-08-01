@@ -37,8 +37,8 @@ export function useRealtimeOrder(orderId: string | null) {
       }
 
       // Fallback to localStorage (guest orders)
-      const stored = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
-      const guestStored = JSON.parse(localStorage.getItem("mangodb-guest-orders") || "[]");
+      const stored = JSON.parse(localStorage.getItem("mangobite-orders") || "[]");
+      const guestStored = JSON.parse(localStorage.getItem("mangobite-guest-orders") || "[]");
       const matched = [...stored, ...guestStored].find((o: any) => o.id === id);
 
       if (matched) {

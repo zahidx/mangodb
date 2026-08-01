@@ -24,6 +24,7 @@ import {
     Leaf,
     Loader2,
     Package,
+    ShieldCheck,
     ShoppingBag,
     Sparkles,
     Star,
@@ -103,7 +104,7 @@ export default function HomePage() {
   const [wishlist, setWishlist] = useState<string[]>([]);
 
   useEffect(() => {
-    const savedWish = localStorage.getItem("mangodb-wishlist");
+    const savedWish = localStorage.getItem("mangobite-wishlist");
     if (savedWish) {
       try {
         setWishlist(JSON.parse(savedWish));
@@ -121,7 +122,7 @@ export default function HomePage() {
       toast.success("Added to wishlist");
     }
     setWishlist(nextWish);
-    localStorage.setItem("mangodb-wishlist", JSON.stringify(nextWish));
+    localStorage.setItem("mangobite-wishlist", JSON.stringify(nextWish));
   };
 
   // Prefill shipping info if user is logged in
@@ -252,8 +253,8 @@ export default function HomePage() {
     }
 
     // Save to local storage
-    const existingOrders = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
-    localStorage.setItem("mangodb-orders", JSON.stringify([orderData, ...existingOrders]));
+    const existingOrders = JSON.parse(localStorage.getItem("mangobite-orders") || "[]");
+    localStorage.setItem("mangobite-orders", JSON.stringify([orderData, ...existingOrders]));
 
     // Update the live ordersMap in page state so order tracking works instantly!
     setOrdersMap(prev => ({
@@ -304,7 +305,7 @@ export default function HomePage() {
     }
 
     // Check if in localStorage
-    const stored = JSON.parse(localStorage.getItem("mangodb-orders") || "[]");
+    const stored = JSON.parse(localStorage.getItem("mangobite-orders") || "[]");
     const matched = stored.find((o: any) => o.id === queryId);
     if (matched) {
       const statusMap: Record<string, string> = {
@@ -391,17 +392,20 @@ export default function HomePage() {
 
         {/* 3. Category Navigation Tabs */}
         <section className="max-w-7xl mx-auto px-4 mt-12 relative z-20">
-           <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-3 sm:p-5 overflow-hidden">
-             <div className="flex flex-nowrap sm:flex-wrap items-center justify-start sm:justify-center gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide">
+           <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-3 sm:p-5 w-full">
+             <div 
+               className="flex flex-nowrap sm:flex-wrap items-center justify-start sm:justify-center gap-3 sm:gap-4 overflow-x-auto overflow-y-hidden pb-4 pt-2 w-full" 
+               style={{ WebkitOverflowScrolling: 'touch' }}
+             >
                {/* All Products */}
                <button 
                  onClick={() => setActiveCategory("all")}
-                 className={`flex-shrink-0 w-24 h-[104px] sm:w-[120px] sm:h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl transition-all duration-300 border bg-white ${activeCategory === "all" ? "border-emerald-500 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-100 hover:border-emerald-200 hover:shadow-md"}`}
+                 className={`flex-shrink-0 w-24 min-h-[104px] sm:w-[120px] sm:min-h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-xl transition-all duration-300 border-2 bg-white py-2 cursor-pointer ${activeCategory === "all" ? "border-emerald-600 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-200"}`}
                >
                  <div className="w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full overflow-hidden relative shadow-inner bg-emerald-50 flex items-center justify-center">
-                    <Image src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=150&auto=format&fit=crop&q=80" alt="All Products" fill className="object-cover" />
+                    <Image src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=150&auto=format&fit=crop&q=80" alt="All Products" fill className="object-cover pointer-events-none" draggable={false} />
                  </div>
-                 <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight">All Products</span>
+                 <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight select-none">All Products</span>
                </button>
 
                {/* Dynamic Categories */}
@@ -423,12 +427,12 @@ export default function HomePage() {
                    <button 
                       key={cat.id || i} 
                       onClick={() => setActiveCategory(cat.slug)}
-                      className={`flex-shrink-0 w-24 h-[104px] sm:w-[120px] sm:h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-2xl transition-all duration-300 border bg-white ${activeCategory === cat.slug ? "border-emerald-500 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-100 hover:border-emerald-200 hover:shadow-md"}`}
+                      className={`flex-shrink-0 w-24 min-h-[104px] sm:w-[120px] sm:min-h-[120px] flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-xl transition-all duration-300 border-2 bg-white py-2 cursor-pointer ${activeCategory === cat.slug ? "border-emerald-600 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.3)] scale-105 z-10 relative" : "border-gray-200"}`}
                    >
                      <div className="w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full overflow-hidden relative shadow-inner bg-emerald-50 flex items-center justify-center">
-                        <Image src={cat.image_url || getCategoryFallbackImage(cat.slug)} alt={cat.name} fill className="object-cover" />
+                        <Image src={cat.image_url || getCategoryFallbackImage(cat.slug)} alt={cat.name} fill className="object-cover pointer-events-none" draggable={false} />
                      </div>
-                     <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight">{cat.name}</span>
+                     <span className="text-[11px] sm:text-sm font-bold text-gray-700 text-center leading-tight select-none">{cat.name}</span>
                    </button>
                  );
                })}
@@ -467,7 +471,7 @@ export default function HomePage() {
 
            {/* Initial Loading */}
            {allLoading && allProducts.length === 0 && !allProductsError && (
-             <ProductGridSkeleton count={8} />
+             <ProductGridSkeleton count={10} />
            )}
 
            {/* Empty State */}
@@ -477,9 +481,9 @@ export default function HomePage() {
              </div>
            )}
 
-           <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-3 sm:gap-6">
+           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
               {allProducts.map(prod => (
-                 <div key={prod.id} className="w-full sm:w-[280px] shrink-0 group bg-white rounded-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100">
+                 <div key={prod.id} className="w-full group bg-white rounded-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-300 border border-gray-100">
                     <div className="relative h-36 sm:h-52 w-full overflow-hidden shrink-0 bg-gray-50">
                       <Link href={`/products/${prod.slug}`} className="block w-full h-full">
                         <Image src={prod.images?.[0] || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80"} alt={prod.name} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -569,34 +573,43 @@ export default function HomePage() {
         <section className="py-16 bg-white border-y border-gray-100">
            <div className="max-w-7xl mx-auto px-4">
               <div className="text-center mb-12">
-                 <h2 className="text-3xl font-black text-gray-800">Why We Are Different</h2>
-                 <div className="w-16 h-1 bg-[#FFC107] mx-auto mt-4 rounded"></div>
+                 <h2 className="text-3xl font-black text-gray-800 tracking-tight">Why We Are Different</h2>
+                 <div className="w-16 h-1 bg-[#FFC107] mx-auto mt-4 rounded-full"></div>
               </div>
 
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                  {/* Left Feature image card */}
-                 <div className="relative rounded-2xl overflow-hidden h-[400px] flex items-end p-8 shadow-lg">
-                    <Image src="https://images.unsplash.com/photo-1552474030-b3a5b5f04e2e?w=800&auto=format&fit=crop&q=80" alt="Premium Mangoes" fill className="object-cover absolute inset-0 z-0" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
-                    <div className="relative z-20 text-white">
-                       <h3 className="text-2xl font-bold mb-2">Registered Safe Garden</h3>
-                       <p className="text-gray-200 text-sm leading-relaxed max-w-sm">We source directly from gardens certified for safe farming practices, ensuring chemical-free, fresh produce for you and your family.</p>
+                 <div className="group relative rounded-3xl overflow-hidden h-[420px] sm:h-[460px] flex items-end p-8 shadow-xl border border-gray-100 cursor-pointer">
+                    <Image 
+                      src="/mango_garden_safe.jpg" 
+                      alt="Registered Safe Garden" 
+                      fill 
+                      priority
+                      className="object-cover absolute inset-0 z-0 transition-transform duration-700 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-85" />
+                    <div className="relative z-20 text-white transform transition-transform duration-300 group-hover:-translate-y-1">
+                       <div className="w-12 h-1 bg-emerald-500 mb-4 rounded-full"></div>
+                       <h3 className="text-3xl font-black mb-3 text-white drop-shadow-md">Registered Safe Garden</h3>
+                       <p className="text-gray-200 text-sm sm:text-base leading-relaxed max-w-md drop-shadow">
+                         We source directly from gardens certified for safe farming practices, ensuring chemical-free, fresh produce for you and your family.
+                       </p>
                     </div>
                  </div>
                  
                  {/* Right small cards */}
-                 <div className="grid gap-4">
+                 <div className="grid gap-5">
                     {[
                       { title: "Premium Quality", icon: Award, desc: "Only the finest, export-quality handpicked mangoes." },
                       { title: "Premium Packaging", icon: Package, desc: "Safe, beautiful, and sustainable packaging ensuring zero damage." },
                       { title: "Garden Fresh Delivery", icon: Truck, desc: "Delivered straight from the orchards to your doorstep within 48 hours." }
                     ].map((feature, idx) => (
-                       <div key={idx} className="flex items-center gap-6 p-6 rounded-2xl bg-[#f8f9fa] border border-gray-100 hover:shadow-md transition-shadow">
-                          <div className="w-14 h-14 rounded-full bg-[#e6f0eb] flex items-center justify-center shrink-0">
-                             <feature.icon className="w-7 h-7 text-[#527d62]" />
+                       <div key={idx} className="group flex items-center gap-5 sm:gap-6 p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                          <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100/60 flex items-center justify-center shrink-0 group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-colors duration-300 shadow-sm">
+                             <feature.icon className="w-7 h-7 text-emerald-600 group-hover:text-white transition-colors duration-300" />
                           </div>
                           <div>
-                             <h4 className="text-lg font-bold text-gray-800 mb-1">{feature.title}</h4>
+                             <h4 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-emerald-700 transition-colors">{feature.title}</h4>
                              <p className="text-sm text-gray-500 leading-relaxed">{feature.desc}</p>
                           </div>
                        </div>
@@ -679,21 +692,21 @@ export default function HomePage() {
                 {
                   title: "Certified Safe Orchards",
                   desc: "Every orchard in our network is certified for chemical-free farming. No formalin, no carbide — just pure, sun-ripened mangoes.",
-                  image: "https://images.unsplash.com/photo-1592982537447-6f2334816be5?w=600&auto=format&fit=crop&q=80",
+                  image: "https://images.unsplash.com/photo-1550828520-4cb496926fc9?w=600&auto=format&fit=crop&q=80",
                   tags: ["Formalin Free", "Certified"],
                   color: "from-emerald-600/30 to-emerald-800/10"
                 },
                 {
                   title: "Direct Farmer Partnerships",
                   desc: "We work hand-in-hand with 50+ family-run orchards, ensuring fair prices and sustainable farming practices that have been passed down for generations.",
-                  image: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600&auto=format&fit=crop&q=80",
+                  image: "https://images.unsplash.com/photo-1590682680695-43b964a3ae17?w=600&auto=format&fit=crop&q=80",
                   tags: ["Fair Trade", "Sustainable"],
                   color: "from-amber-600/30 to-amber-800/10"
                 },
                 {
                   title: "Premium Quality Control",
                   desc: "Each mango is hand-inspected for ripeness, size, and sweetness before being carefully packed in ventilated eco-crates for delivery.",
-                  image: "https://images.unsplash.com/photo-1589923158776-cb4485d99fd6?w=600&auto=format&fit=crop&q=80",
+                  image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&auto=format&fit=crop&q=80",
                   tags: ["Handpicked", "Premium Grade"],
                   color: "from-emerald-600/30 to-emerald-800/10",
                   lgOnly: true
@@ -769,7 +782,7 @@ export default function HomePage() {
                      name: "Nusrat Jahan",
                      location: "Dhanmondi, Dhaka",
                      rating: 5,
-                     comment: "I was highly skeptical about buying mangoes online due to formalin scares, but MangoDB's safe, certified orchards promise was 100% true. Fresh and sweet!",
+                     comment: "I was highly skeptical about buying mangoes online due to formalin scares, but MangoBite's safe, certified orchards promise was 100% true. Fresh and sweet!",
                      date: "June 29, 2026",
                      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
                    },
@@ -785,7 +798,7 @@ export default function HomePage() {
                      name: "Farhana Yasmin",
                      location: "Uttara, Dhaka",
                      rating: 5,
-                     comment: "Best Langra mangoes I've ever had! Perfectly sweet, juicy, and prompt delivery. Highly recommend MangoDB for anyone looking for authentic taste.",
+                     comment: "Best Langra mangoes I've ever had! Perfectly sweet, juicy, and prompt delivery. Highly recommend MangoBite for anyone looking for authentic taste.",
                      date: "June 25, 2026",
                      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80"
                    }
@@ -802,7 +815,7 @@ export default function HomePage() {
                      name: "Nusrat Jahan",
                      location: "Dhanmondi, Dhaka",
                      rating: 5,
-                     comment: "I was highly skeptical about buying mangoes online due to formalin scares, but MangoDB's safe, certified orchards promise was 100% true. Fresh and sweet!",
+                     comment: "I was highly skeptical about buying mangoes online due to formalin scares, but MangoBite's safe, certified orchards promise was 100% true. Fresh and sweet!",
                      date: "June 29, 2026",
                      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
                    },
@@ -818,7 +831,7 @@ export default function HomePage() {
                      name: "Farhana Yasmin",
                      location: "Uttara, Dhaka",
                      rating: 5,
-                     comment: "Best Langra mangoes I've ever had! Perfectly sweet, juicy, and prompt delivery. Highly recommend MangoDB for anyone looking for authentic taste.",
+                     comment: "Best Langra mangoes I've ever had! Perfectly sweet, juicy, and prompt delivery. Highly recommend MangoBite for anyone looking for authentic taste.",
                      date: "June 25, 2026",
                      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80"
                    }
@@ -887,7 +900,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-2">
                     <h4 className="font-serif-heading text-2xl font-bold text-hero-text">Order Confirmed!</h4>
-                    <p className="text-sm text-muted-foreground">Thank you for shopping with MangoDB.</p>
+                    <p className="text-sm text-muted-foreground">Thank you for shopping with MangoBite.</p>
                   </div>
                   <div className="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 inline-block">
                     <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Your Order ID</p>

@@ -59,7 +59,7 @@ export default function Navbar() {
           console.error("Failed to fetch notifications:", err);
         }
       } else {
-        const storedNotifs = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+        const storedNotifs = JSON.parse(localStorage.getItem(`mangobite-notifications-${profile.id}`) || "[]");
         const count = storedNotifs.filter((n: any) => !n.is_read).length;
         setUnreadNotifs(count);
       }
@@ -87,7 +87,7 @@ export default function Navbar() {
           console.error("Failed to fetch full notifications:", err);
         }
       } else {
-        const stored = JSON.parse(localStorage.getItem(`mangodb-notifications-${p.id}`) || "[]");
+        const stored = JSON.parse(localStorage.getItem(`mangobite-notifications-${p.id}`) || "[]");
         setNotifList(stored.slice(0, 10));
       }
     }
@@ -114,9 +114,9 @@ export default function Navbar() {
         .eq("user_id", profile.id)
         .eq("is_read", false);
     } else {
-      const stored = JSON.parse(localStorage.getItem(`mangodb-notifications-${profile.id}`) || "[]");
+      const stored = JSON.parse(localStorage.getItem(`mangobite-notifications-${profile.id}`) || "[]");
       const updated = stored.map((n: any) => ({ ...n, is_read: true }));
-      localStorage.setItem(`mangodb-notifications-${profile.id}`, JSON.stringify(updated));
+      localStorage.setItem(`mangobite-notifications-${profile.id}`, JSON.stringify(updated));
     }
     setUnreadNotifs(0);
     setNotifList(notifList.map((n: any) => ({ ...n, is_read: true })));
@@ -131,7 +131,7 @@ export default function Navbar() {
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
-    localStorage.setItem("mangodb-theme", nextTheme);
+    localStorage.setItem("mangobite-theme", nextTheme);
     if (nextTheme === "light") {
       document.documentElement.classList.remove("dark");
       document.documentElement.classList.add("light");
@@ -172,7 +172,7 @@ export default function Navbar() {
               <ShoppingBag className="w-5 h-5 text-black" strokeWidth={2.5} />
             </div>
             <span className="text-2xl font-black tracking-tight text-red-600 whitespace-nowrap">
-              Mango<span className="text-[#20BA5A]">DB</span>
+              Mango<span className="text-[#20BA5A]">Bite</span>
             </span>
           </Link>
 
@@ -211,10 +211,14 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/#farm"
-              className="text-[15px] font-bold text-[#3b574a] dark:text-muted transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-[#20BA5A] hover:after:w-full after:transition-all after:duration-300"
+              href="/orders"
+              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
+                pathname === "/orders" 
+                  ? "text-[#1a2e24] after:w-full" 
+                  : "text-[#3b574a] dark:text-muted after:w-0"
+              }`}
             >
-              Our Story
+              Orders
             </Link>
           </div>
 
@@ -450,7 +454,7 @@ export default function Navbar() {
               <ShoppingBag className="w-5 h-5 text-black" strokeWidth={2.5} />
             </div>
             <span className="text-xl font-black tracking-tight text-red-600 whitespace-nowrap">
-              Mango<span className="text-[#20BA5A]">DB</span>
+              Mango<span className="text-[#20BA5A]">Bite</span>
             </span>
           </Link>
           <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-md bg-muted-bg border border-border text-foreground hover:border-[#fbbf24]/30 transition-all cursor-pointer shadow-sm">
@@ -484,11 +488,11 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/#farm"
+              href="/orders"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-base font-medium text-muted hover:text-[#fbbf24] transition-colors py-2"
             >
-              Our Story
+              Orders
             </Link>
 
             {/* Quick Actions (Icons Only) */}

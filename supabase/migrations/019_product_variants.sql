@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Product Variants
+-- MangoBite Market — Product Variants
 -- ===========================================
 -- Run this AFTER 018_stock_notify.sql
 

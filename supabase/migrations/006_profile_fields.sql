@@ -1,5 +1,5 @@
 -- ===========================================
--- MangoDB Market — Migration 006
+-- MangoBite Market — Migration 006
 -- ===========================================
 -- Add new profile fields: Date of Birth, Gender, Country, City
 

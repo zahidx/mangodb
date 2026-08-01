@@ -23,9 +23,12 @@ export default function CompareBar() {
                   <img src={p.images?.[0] || ""} alt={p.name} className="w-full h-full object-cover" />
                 </div>
                 <span className="text-xs font-bold text-gray-700 truncate max-w-[120px]">{p.name}</span>
-                <button onClick={() => removeFromCompare(p.id)}
-                  className="p-0.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer shrink-0">
-                  <X className="w-3 h-3 text-gray-400" />
+                <button 
+                  onClick={() => removeFromCompare(p.id)}
+                  aria-label={`Remove ${p.name} from comparison`}
+                  className="p-0.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-3 h-3 text-gray-400" aria-hidden="true" />
                 </button>
               </div>
             ))}

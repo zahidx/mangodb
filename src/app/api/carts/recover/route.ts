@@ -94,9 +94,9 @@ export async function POST(req: Request) {
 
       try {
         const emailResult = await resend.emails.send({
-          from: "MangoDB <onboarding@resend.dev>",
+          from: "MangoBite <onboarding@resend.dev>",
           to: [record.email],
-          subject: "🛒 You left something behind! Complete your MangoDB order",
+          subject: "🛒 You left something behind! Complete your MangoBite order",
           react: AbandonedCartEmail({
             customerName: record.name || "Valued Customer",
             checkoutUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3008"}/checkout`,
@@ -140,9 +140,9 @@ export async function POST(req: Request) {
 
       try {
         const emailResult = await resend.emails.send({
-          from: "MangoDB <onboarding@resend.dev>",
+          from: "MangoBite <onboarding@resend.dev>",
           to: [profile.email],
-          subject: "🛒 Complete your MangoDB order — items waiting in your cart!",
+          subject: "🛒 Complete your MangoBite order — items waiting in your cart!",
           react: AbandonedCartEmail({
             customerName: profile.full_name || "Valued Customer",
             checkoutUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3008"}/checkout`,

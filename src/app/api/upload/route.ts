@@ -1,5 +1,5 @@
 // ===========================================
-// MangoDB Market — Image Upload API
+// MangoBite Market — Image Upload API
 // ===========================================
 // Handles file uploads to Supabase Storage buckets
 // Supported buckets: product-images, category-images

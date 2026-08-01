@@ -26,7 +26,7 @@ export default function PrivacyPolicy() {
           <p>We take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access, disclosure, alteration and destruction.</p>
 
           <h2 className="text-xl font-bold mt-8 mb-4 text-hero-text border-b border-border pb-2">4. Contact Us</h2>
-          <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:privacy@mangodb.com" className="text-emerald-600 hover:underline">privacy@mangodb.com</a>.</p>
+          <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:privacy@mangobite.com" className="text-emerald-600 hover:underline">privacy@mangobite.com</a>.</p>
         </div>
       </div>
       <Footer />

@@ -41,7 +41,7 @@ export default function Footer() {
                 <ShoppingBag className="w-5 h-5 text-gray-900" />
               </div>
               <span className="text-2xl font-black text-gray-900 tracking-tight">
-                Mango<span className="text-amber-500">DB</span>
+                Mango<span className="text-amber-500">Bite</span>
               </span>
             </Link>
             <p className="text-sm leading-relaxed text-gray-500">
@@ -221,7 +221,7 @@ export default function Footer() {
       <div className="border-t border-gray-100 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
           <p className="text-xs text-gray-400 font-medium leading-relaxed">
-            &copy; {new Date().getFullYear()} <span className="text-gray-600 font-semibold">MangoDB</span>. All rights reserved. Made with <Heart className="w-3 h-3 text-red-400 inline fill-red-400/30" /> in Bangladesh.
+            &copy; {new Date().getFullYear()} <span className="text-gray-600 font-semibold">MangoBite</span>. All rights reserved. Made with <Heart className="w-3 h-3 text-red-400 inline fill-red-400/30" /> in Bangladesh.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs text-gray-400">
             <Link href="/legal/privacy" className="hover:text-emerald-600 transition-colors font-medium">Privacy</Link>
