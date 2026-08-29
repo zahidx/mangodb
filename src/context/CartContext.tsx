@@ -3,7 +3,7 @@
 import { showAddToCartToast } from "@/components/AddToCartToast";
 import { createClient } from "@/lib/supabase/client";
 import type { Product } from "@/types/database";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "./AuthContext";
 
@@ -42,7 +42,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const supabase = createClient() as any;
+  const supabase = useMemo(() => createClient() as any, []);
   const { profile } = useAuth();
   const [cartItems, setCartItems] = useState<ExtendedCartItem[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
@@ -123,7 +123,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     loadCart();
-  }, [profile]);
+  }, [profile?.id]);
 
   // Save guest email/phone for abandoned cart recovery
   const saveGuestCheckoutInfo = (email: string, name?: string, phone?: string) => {

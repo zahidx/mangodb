@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
 import { User } from "@supabase/supabase-js";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 interface AuthContextType {
@@ -21,7 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [demoUser, setDemoUser] = useState<AuthContextType["demoUser"]>(null);

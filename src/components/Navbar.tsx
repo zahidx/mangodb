@@ -162,17 +162,17 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#f4f7f5] dark:bg-background border-b border-gray-200 dark:border-border/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 dark:bg-background/95 backdrop-blur-md border-b border-border transition-colors duration-200">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
         <div className="flex items-center justify-between lg:justify-start h-20 lg:gap-12">
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-[12px] bg-[#fbbf24] flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-black" strokeWidth={2.5} />
+            <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-sm">
+              <ShoppingBag className="w-5 h-5 text-gray-950" strokeWidth={2.5} />
             </div>
-            <span className="text-2xl font-black tracking-tight text-red-600 whitespace-nowrap">
-              Mango<span className="text-[#20BA5A]">Bite</span>
+            <span className="text-2xl font-black tracking-tight text-hero-text whitespace-nowrap">
+              Mango<span className="text-emerald-600 dark:text-emerald-400">Bite</span>
             </span>
           </Link>
 
@@ -180,20 +180,20 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-8 mr-auto">
             <Link
               href="/"
-              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
+              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-emerald-500 after:transition-all after:duration-300 hover:after:w-full ${
                 pathname === "/" 
-                  ? "text-[#1a2e24] after:w-full" 
-                  : "text-[#3b574a] dark:text-muted after:w-0"
+                  ? "text-emerald-700 dark:text-emerald-400 after:w-full" 
+                  : "text-muted-foreground hover:text-hero-text after:w-0"
               }`}
             >
               Home
             </Link>
             <Link
               href="/products"
-              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
+              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-emerald-500 after:transition-all after:duration-300 hover:after:w-full ${
                 pathname === "/products" 
-                  ? "text-[#1a2e24] after:w-full" 
-                  : "text-[#3b574a] dark:text-muted after:w-0"
+                  ? "text-emerald-700 dark:text-emerald-400 after:w-full" 
+                  : "text-muted-foreground hover:text-hero-text after:w-0"
               }`}
             >
               Products
@@ -201,10 +201,10 @@ export default function Navbar() {
             
             <Link
               href="/track"
-              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
+              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-emerald-500 after:transition-all after:duration-300 hover:after:w-full ${
                 pathname === "/track" 
-                  ? "text-[#1a2e24] after:w-full" 
-                  : "text-[#3b574a] dark:text-muted after:w-0"
+                  ? "text-emerald-700 dark:text-emerald-400 after:w-full" 
+                  : "text-muted-foreground hover:text-hero-text after:w-0"
               }`}
             >
               Track Order
@@ -212,10 +212,10 @@ export default function Navbar() {
 
             <Link
               href="/orders"
-              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#20BA5A] after:transition-all after:duration-300 hover:after:w-full ${
+              className={`text-[15px] font-bold transition-colors duration-200 relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-emerald-500 after:transition-all after:duration-300 hover:after:w-full ${
                 pathname === "/orders" 
-                  ? "text-[#1a2e24] after:w-full" 
-                  : "text-[#3b574a] dark:text-muted after:w-0"
+                  ? "text-emerald-700 dark:text-emerald-400 after:w-full" 
+                  : "text-muted-foreground hover:text-hero-text after:w-0"
               }`}
             >
               Orders

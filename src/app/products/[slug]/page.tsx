@@ -136,9 +136,9 @@ export default function ProductDetailsPage() {
     ? reviews.filter((r: any) => r.rating === ratingFilter)
     : reviews;
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!product) return;
-    addToCart(product, quantity, selectedWeight, false);
+    await addToCart(product, quantity, selectedWeight, false);
     router.push("/checkout");
   };
 

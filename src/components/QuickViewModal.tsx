@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import type { Product } from "@/types/database";
 import { Heart, Loader2, MapPin, Minus, Plus, Scale, ShoppingBag, Star, X, Zap } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -21,6 +22,7 @@ export default function QuickViewModal({
   wishlist,
   onToggleWishlist,
 }: QuickViewModalProps) {
+  const router = useRouter();
   const { addToCart } = useCart();
 
   const [selectedWeight, setSelectedWeight] = useState("10kg");
@@ -73,7 +75,7 @@ export default function QuickViewModal({
   const handleBuyNow = async () => {
     await addToCart(product, quantity, selectedWeight, false);
     onClose();
-    window.location.href = "/checkout";
+    router.push("/checkout");
   };
 
   const isInWishlist = wishlist.includes(product.id);
